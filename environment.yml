@@ -1,3 +1,4 @@
+name: dager
 channels:
 - pytorch
 - huggingface
@@ -255,14 +256,12 @@ dependencies:
   - nvidia-nvjitlink-cu12==12.6.77
   - nvidia-nvtx-cu12==12.1.105
   - openai==1.51.0
-  - outlines==0.0.46
   - partial-json-parser==0.2.1.1.post4
   - peft==0.13.0
   - prometheus-fastapi-instrumentator==7.0.0
   - prometheus_client==0.21.0
   - protobuf==5.28.2
   - py-cpuinfo==9.0.0
-  - pyairports==2.1.1
   - pycountry==24.6.1
   - pydantic==2.9.2
   - pydantic_core==2.23.4
@@ -287,7 +286,6 @@ dependencies:
   - typing_extensions==4.12.2
   - uvicorn==0.31.0
   - uvloop==0.20.0
-  - vllm==0.6.2
   - watchfiles==0.24.0
   - websockets==13.1
   - xformers==0.0.27.post2
