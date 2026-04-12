@@ -13,10 +13,8 @@
 # limitations under the License.
 """Accuracy metric."""
 
-from sklearn.metrics import accuracy_score
-
 import datasets
-
+from sklearn.metrics import accuracy_score
 
 _DESCRIPTION = """
 Accuracy is the proportion of correct predictions among the total number of cases processed. It can be computed with:
@@ -27,7 +25,6 @@ TN: True negative
 FP: False positive
 FN: False negative
 """
-
 
 _KWARGS_DESCRIPTION = """
 Args:
@@ -44,22 +41,21 @@ Examples:
     Example 1-A simple example
         >>> accuracy_metric = datasets.load_metric("accuracy")
         >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0])
-        >>> print(results)
+        >>> results
         {'accuracy': 0.5}
 
     Example 2-The same as Example 1, except with `normalize` set to `False`.
         >>> accuracy_metric = datasets.load_metric("accuracy")
         >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], normalize=False)
-        >>> print(results)
+        >>> results
         {'accuracy': 3.0}
 
     Example 3-The same as Example 1, except with `sample_weight` set.
         >>> accuracy_metric = datasets.load_metric("accuracy")
         >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], sample_weight=[0.5, 2, 0.7, 0.5, 9, 0.4])
-        >>> print(results)
+        >>> results
         {'accuracy': 0.8778625954198473}
 """
-
 
 _CITATION = """
 @article{scikit-learn,
@@ -103,4 +99,3 @@ class Accuracy(datasets.Metric):
                 accuracy_score(references, predictions, normalize=normalize, sample_weight=sample_weight)
             )
         }
-

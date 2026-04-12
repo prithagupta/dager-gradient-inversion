@@ -1,25 +1,27 @@
-import torch
 import types
-from transformers import GPT2Model, BertModel, LlamaModel 
 from typing import Optional, Tuple, List, Union
-from transformers.cache_utils import Cache, DynamicCache
-from transformers.modeling_attn_mask_utils import _prepare_4d_attention_mask_for_sdpa, _prepare_4d_causal_attention_mask_for_sdpa
 
-def add_partial_forward_gpt2(model:GPT2Model) -> None:
-    
+import torch
+from transformers import GPT2Model, BertModel, LlamaModel
+from transformers.cache_utils import Cache, DynamicCache
+from transformers.modeling_attn_mask_utils import _prepare_4d_attention_mask_for_sdpa, \
+    _prepare_4d_causal_attention_mask_for_sdpa
+
+
+def add_partial_forward_gpt2(model: GPT2Model) -> None:
     def get_hidden_states(
-        self,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        token_type_ids: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        n_layers: Optional[int] = 2
+            self,
+            input_ids: Optional[torch.LongTensor] = None,
+            past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
+            attention_mask: Optional[torch.FloatTensor] = None,
+            token_type_ids: Optional[torch.LongTensor] = None,
+            position_ids: Optional[torch.LongTensor] = None,
+            head_mask: Optional[torch.FloatTensor] = None,
+            inputs_embeds: Optional[torch.FloatTensor] = None,
+            encoder_hidden_states: Optional[torch.Tensor] = None,
+            encoder_attention_mask: Optional[torch.FloatTensor] = None,
+            use_cache: Optional[bool] = None,
+            n_layers: Optional[int] = 2
     ) -> List[torch.FloatTensor]:
         output_attentions = self.config.output_attentions
         use_cache = self.config.use_cache
@@ -130,12 +132,12 @@ def add_partial_forward_gpt2(model:GPT2Model) -> None:
                     attention_mask = attention_mask.to(hidden_states.device)
                 if isinstance(head_mask, torch.Tensor):
                     head_mask = head_mask.to(hidden_states.device)
-                    
+
             all_hidden_states = all_hidden_states + [self.h[i].ln_1(hidden_states)]
 
-            if i >= n_layers or i==len(self.h)-1:
+            if i >= n_layers or i == len(self.h) - 1:
                 return all_hidden_states[1:]
-            
+
             if self.gradient_checkpointing and self.training:
                 outputs = self._gradient_checkpointing_func(
                     block.__call__,
@@ -173,32 +175,31 @@ def add_partial_forward_gpt2(model:GPT2Model) -> None:
         hidden_states = self.ln_f(hidden_states)
 
         hidden_states = hidden_states.view(output_shape)
-        
+
         # Add last hidden state
         all_hidden_states = all_hidden_states + [hidden_states]
 
         return all_hidden_states[1:]
-        
-    model.get_hidden_states = types.MethodType(get_hidden_states, model)
-    
 
-def add_partial_forward_bert(model:BertModel) -> None:
-    
+    model.get_hidden_states = types.MethodType(get_hidden_states, model)
+
+
+def add_partial_forward_bert(model: BertModel) -> None:
     def get_hidden_states_encoder(
-        self,
-        hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
-        output_attentions: Optional[bool] = False,
-        n_layers: Optional[int] = 2
-    ) :
+            self,
+            hidden_states: torch.Tensor,
+            attention_mask: Optional[torch.FloatTensor] = None,
+            head_mask: Optional[torch.FloatTensor] = None,
+            encoder_hidden_states: Optional[torch.FloatTensor] = None,
+            encoder_attention_mask: Optional[torch.FloatTensor] = None,
+            past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+            output_attentions: Optional[bool] = False,
+            n_layers: Optional[int] = 2
+    ):
         all_hidden_states = []
 
         for i, layer_module in enumerate(self.layer):
-            
+
             all_hidden_states = all_hidden_states + [hidden_states]
             if i >= n_layers:
                 continue
@@ -230,22 +231,22 @@ def add_partial_forward_bert(model:BertModel) -> None:
             hidden_states = layer_outputs[0]
 
         return all_hidden_states
-    
+
     model.encoder.get_hidden_states_encoder = types.MethodType(get_hidden_states_encoder, model.encoder)
-    
+
     def get_hidden_states(
-        self,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        token_type_ids: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        n_layers: Optional[int] = 2
+            self,
+            input_ids: Optional[torch.LongTensor] = None,
+            past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
+            attention_mask: Optional[torch.FloatTensor] = None,
+            token_type_ids: Optional[torch.LongTensor] = None,
+            position_ids: Optional[torch.LongTensor] = None,
+            head_mask: Optional[torch.FloatTensor] = None,
+            inputs_embeds: Optional[torch.FloatTensor] = None,
+            encoder_hidden_states: Optional[torch.Tensor] = None,
+            encoder_attention_mask: Optional[torch.FloatTensor] = None,
+            use_cache: Optional[bool] = None,
+            n_layers: Optional[int] = 2
     ) -> List[torch.FloatTensor]:
         output_attentions = self.config.output_attentions
 
@@ -290,10 +291,10 @@ def add_partial_forward_bert(model:BertModel) -> None:
             attention_mask = torch.ones((batch_size, seq_length + past_key_values_length), device=device)
 
         use_sdpa_attention_masks = (
-            self.attn_implementation == "sdpa"
-            and self.position_embedding_type == "absolute"
-            and head_mask is None
-            and not output_attentions
+                self.attn_implementation == "sdpa"
+                and self.position_embedding_type == "absolute"
+                and head_mask is None
+                and not output_attentions
         )
 
         # Expand the attention mask
@@ -353,24 +354,22 @@ def add_partial_forward_bert(model:BertModel) -> None:
             n_layers=n_layers
         )[1:]
 
-        
     model.get_hidden_states = types.MethodType(get_hidden_states, model)
-    
-    
-def add_partial_forward_llama(model:LlamaModel) -> None:
-    
+
+
+def add_partial_forward_llama(model: LlamaModel) -> None:
     def get_hidden_states(
-        self,
-        input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Union[Cache,List[torch.FloatTensor]]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        n_layers: Optional[int] = 2,
+            self,
+            input_ids: torch.LongTensor = None,
+            attention_mask: Optional[torch.Tensor] = None,
+            position_ids: Optional[torch.LongTensor] = None,
+            past_key_values: Optional[Union[Cache, List[torch.FloatTensor]]] = None,
+            inputs_embeds: Optional[torch.FloatTensor] = None,
+            use_cache: Optional[bool] = None,
+            output_attentions: Optional[bool] = None,
+            return_dict: Optional[bool] = None,
+            cache_position: Optional[torch.LongTensor] = None,
+            n_layers: Optional[int] = 2,
     ) -> List[torch.FloatTensor]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
 
@@ -393,7 +392,6 @@ def add_partial_forward_llama(model:LlamaModel) -> None:
                 past_key_values = DynamicCache()
             else:
                 past_key_values = DynamicCache.from_legacy_cache(past_key_values)
-                
 
         if cache_position is None:
             past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
@@ -418,7 +416,7 @@ def add_partial_forward_llama(model:LlamaModel) -> None:
 
         for i, decoder_layer in enumerate(self.layers):
             all_hidden_states += [decoder_layer.input_layernorm(hidden_states)]
-            
+
             if i >= n_layers:
                 return all_hidden_states[1:]
 
@@ -464,5 +462,5 @@ def add_partial_forward_llama(model:LlamaModel) -> None:
             next_cache = next_cache.to_legacy_cache()
 
         return all_hidden_states[1:]
-        
+
     model.get_hidden_states = types.MethodType(get_hidden_states, model)

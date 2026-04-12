@@ -1,15 +1,17 @@
 import argparse
+import logging
+
 import numpy as np
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, DataCollatorWithPadding, AdamW, get_scheduler
 from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
-from sklearn.metrics import matthews_corrcoef
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, get_scheduler
 
 np.random.seed(100)
 torch.manual_seed(100)
 device = 'cuda'
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -23,7 +25,7 @@ def main():
 
     seq_key = 'text' if args.dataset == 'rotten_tomatoes' else 'sentence'
     num_labels = 2
-    
+
     model = AutoModelForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=num_labels).to(device)
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', use_fast=True)
     tokenizer.model_max_length = 512
@@ -48,7 +50,7 @@ def main():
         datasets = load_dataset('glue', args.dataset)
     else:
         datasets = load_dataset(args.dataset)
-    
+
     tokenized_datasets = datasets.map(tokenize_function, batched=True)
     if args.dataset == 'cola' or args.dataset == 'sst2':
         tokenized_datasets = tokenized_datasets.remove_columns(['idx', 'sentence'])
@@ -61,11 +63,11 @@ def main():
 
     train_dataset = tokenized_datasets['train']
     eval_dataset = tokenized_datasets['validation']
-    
+
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size, collate_fn=data_collator)
     eval_loader = DataLoader(eval_dataset, shuffle=True, batch_size=args.batch_size, collate_fn=data_collator)
 
-    opt = AdamW(model.parameters(), lr=5e-5)
+    opt = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
     num_training_steps = args.num_epochs * len(train_loader)
     lr_scheduler = get_scheduler(
@@ -79,7 +81,7 @@ def main():
     model.train()
     n_steps = 0
     train_loss = 0
-    
+
     for epoch in range(args.num_epochs):
         model.train()
         for batch in train_loader:
@@ -88,7 +90,7 @@ def main():
             logits = outputs.logits
             predictions = torch.argmax(logits, dim=1)
             train_metric.add_batch(predictions=predictions, references=batch['labels'])
-            
+
             loss = outputs.loss
             train_loss += loss.item()
             loss.backward()
@@ -105,8 +107,8 @@ def main():
             n_steps += 1
             if n_steps % args.save_every == 0:
                 model.save_pretrained(f'finetune/{args.dataset}/noise_{args.noise}/{n_steps}')
-                print('metric train: ', train_metric.compute())
-                print('loss train: ', train_loss/n_steps)
+                logger.info("metric train: %s", train_metric.compute())
+                logger.info("loss train: %s", train_loss / n_steps)
                 train_loss = 0.0
 
         model.eval()
@@ -119,9 +121,9 @@ def main():
             predictions = torch.argmax(logits, dim=1)
             metric.add_batch(predictions=predictions, references=batch['labels'])
         with open(f'finetune/{args.dataset}/noise_{args.noise}/metric.txt', 'w') as fou:
-            print('metric eval: ', metric.compute(), file=fou)
+            fou.write(f'metric eval: {metric.compute()}\n')
     model.save_pretrained(f'finetune/{args.dataset}/noise_{args.noise}/{n_steps}')
-    
+
 
 if __name__ == '__main__':
     main()

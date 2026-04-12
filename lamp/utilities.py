@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
+
 from constants import BERT_CLS_TOKEN, BERT_SEP_TOKEN, BERT_PAD_TOKEN
+
 
 def compute_grads(model, x_embeds, y_labels, create_graph=False):
     outs = model(inputs_embeds=x_embeds, labels=y_labels)
@@ -53,7 +55,7 @@ def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weigh
     # Get alphas on BERT embeddings --> transfer to GPT-2
     alpha, _ = get_closest_tokens(x_embeds, bert_embeddings_weight)
     # alpha = torch.cdist(x_embeds[:, :-1, :], bert_embeddings_weight, p=2)
-    alpha = F.softmax(-alpha/c, dim=2)
+    alpha = F.softmax(-alpha / c, dim=2)
     gpt2_embeds = alpha.bmm(gpt2_embeddings_weight)
 
     # Pass through GPT-2 and get average perplexity
@@ -70,7 +72,7 @@ def fix_special_tokens(x_embeds, bert_embeddings_weight, pads, is_bert=True, pad
         for sen_id in range(x_embeds.shape[0]):
             x_embeds.data[sen_id, pads[sen_id]:] = bert_embeddings_weight[pad_token]
             if is_bert:
-                x_embeds.data[sen_id, pads[sen_id]-1] = bert_embeddings_weight[BERT_SEP_TOKEN]
+                x_embeds.data[sen_id, pads[sen_id] - 1] = bert_embeddings_weight[BERT_SEP_TOKEN]
     elif x_embeds.shape[0] == 1 and is_bert:
         x_embeds.data[:, -1] = bert_embeddings_weight[BERT_SEP_TOKEN]
     return x_embeds
@@ -79,7 +81,7 @@ def fix_special_tokens(x_embeds, bert_embeddings_weight, pads, is_bert=True, pad
 def remove_padding(tokenizer, ids, is_bert=False):
     for i in range(ids.shape[0] - 1, -1, -1):
         if ids[i] != tokenizer.pad_token_id:
-            ids = ids[:i+1]
+            ids = ids[:i + 1]
             break
-        
+
     return tokenizer.decode(ids)

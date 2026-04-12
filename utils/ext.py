@@ -1,12 +1,15 @@
 import torch
+
 '''
 This function was taken and adapted from the Huggingface implementation for LLaMa
 '''
+
+
 def update_causal_mask(
-    model,
-    attention_mask,
-    input_tensor,
-    past_key_values = None,
+        model,
+        attention_mask,
+        input_tensor,
+        past_key_values=None,
 ):
     past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
     cache_position = torch.arange(
@@ -27,7 +30,7 @@ def update_causal_mask(
     # to infer the attention mask.
     past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
     using_static_cache = False
-    
+
     dtype, device = input_tensor.dtype, input_tensor.device
     min_dtype = torch.finfo(dtype).min
     sequence_length = input_tensor.shape[1]
@@ -65,8 +68,7 @@ def update_causal_mask(
             mask_shape = attention_mask.shape
             mask_slice = (attention_mask.eq(0.0)).to(dtype=dtype) * min_dtype
             causal_mask[
-                : mask_shape[0], : mask_shape[1], offset : mask_shape[2] + offset, : mask_shape[3]
+                : mask_shape[0], : mask_shape[1], offset: mask_shape[2] + offset, : mask_shape[3]
             ] = mask_slice
 
-    
     return causal_mask

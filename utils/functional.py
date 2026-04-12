@@ -1,7 +1,13 @@
-import torch
+import logging
+
 import numpy as np
+import torch
 import torch.nn.functional as F
+
 from constants import config
+
+logger = logging.getLogger(__name__)
+
 
 def remove_padding(tokenizer, ids, left=False):
     if left:
@@ -12,9 +18,10 @@ def remove_padding(tokenizer, ids, left=False):
     else:
         for i in range(ids.shape[0] - 1, -1, -1):
             if ids[i].item() != config['PAD_TOKEN']:
-                ids = ids[:i+1]
+                ids = ids[:i + 1]
                 break
     return tokenizer.decode(ids)
+
 
 def grad_dist(grads1, grads2, args):
     ret = 0.0
@@ -57,16 +64,17 @@ def get_layer_decomp(grad, B=None, tol=None, upcast=False):
         grad = grad.astype(np.float32)
     if B == None:
         if upcast:
-            B = np.linalg.matrix_rank( grad.astype(np.float32) , tol=tol)
+            B = np.linalg.matrix_rank(grad.astype(np.float32), tol=tol)
             grad = grad.float()
         else:
-            B = np.linalg.matrix_rank( grad , tol=tol)
-    U,S,Vh = torch.svd_lowrank(torch.tensor(grad),q=B,niter=10)
+            B = np.linalg.matrix_rank(grad, tol=tol)
+    U, S, Vh = torch.svd_lowrank(torch.tensor(grad), q=B, niter=10)
     if upcast:
         R = Vh.T.half()
     else:
         R = Vh.T
-    return  B, torch.Tensor(R).detach()
+    return B, torch.Tensor(R).detach()
+
 
 def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weight, c=0.1):
     gpt2_embeddings_weight = gpt2_embeddings_weight.repeat(x_embeds.shape[0], 1, 1)
@@ -74,7 +82,7 @@ def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weigh
     # Get alphas on BERT embeddings --> transfer to GPT-2
     alpha, _ = get_closest_tokens(x_embeds, bert_embeddings_weight)
     # alpha = torch.cdist(x_embeds[:, :-1, :], bert_embeddings_weight, p=2)
-    alpha = F.softmax(-alpha/c, dim=2)
+    alpha = F.softmax(-alpha / c, dim=2)
     gpt2_embeds = alpha.bmm(gpt2_embeddings_weight)
 
     # Pass through GPT-2 and get average perplexity
@@ -85,8 +93,8 @@ def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weigh
 
 
 def check_if_in_span(R_K_norm, v, norm='l2'):
-    v /= v.pow(2).sum(-1,keepdim=True).sqrt()
-    proj = torch.einsum('ik,ij,...j->...k', R_K_norm, R_K_norm, v ) 
+    v /= v.pow(2).sum(-1, keepdim=True).sqrt()
+    proj = torch.einsum('ik,ij,...j->...k', R_K_norm, R_K_norm, v)
     out_of_span = proj - v
     if norm == 'l2':
         size = out_of_span.pow(2).sum(-1).sqrt()
@@ -95,21 +103,24 @@ def check_if_in_span(R_K_norm, v, norm='l2'):
 
     return size
 
+
 def filter_in_span(R_K_norm, v, thresh, norm):
     size = check_if_in_span(R_K_norm, v, norm)
     bools = size < thresh
-    return torch.where( bools )
+    return torch.where(bools)
+
 
 def get_top_B_in_span(R_K_norm, v, B, thresh, norm):
     size = check_if_in_span(R_K_norm, v, norm)
     bools = size < thresh
-    which = torch.where( bools )
-    _, idx = torch.sort( size[which] )
+    which = torch.where(bools)
+    _, idx = torch.sort(size[which])
     which_new = []
     for w in which:
-        which_new.append( w[idx] )
-    which_new = tuple( which_new )
+        which_new.append(w[idx])
+    which_new = tuple(which_new)
     return which_new
+
 
 def filter_outliers(d, stage='token', std_thrs=None, maxB=None):
     if std_thrs is None:
@@ -117,39 +128,40 @@ def filter_outliers(d, stage='token', std_thrs=None, maxB=None):
         bools = torch.zeros_like(d).bool()
         bools[res_ids] = True
     elif maxB is None:
-        print(f'Wrong dists: {d.mean()} +- {d.std()}')
-        d = (d - d.mean())/d.std()
+        logger.info(f'Wrong dists: {d.mean()} +- {d.std()}')
+        d = (d - d.mean()) / d.std()
         bools = d < -std_thrs
         res_ids = torch.tensor(np.nonzero(bools)[:, 0])
     else:
         bools = torch.zeros_like(d).bool()
         bools[torch.tensor(d.argsort()[:maxB])] = True
-        print(f'Wrong dists: {d.mean()} +- {d.std()}')
-        d = (d - d.mean())/d.std()
+        logger.info(f'Wrong dists: {d.mean()} +- {d.std()}')
+        d = (d - d.mean()) / d.std()
         bools = bools & (d < -std_thrs)
         res_ids = torch.tensor(np.nonzero(bools)[:, 0])
-    
-    if stage=='token':
+
+    if stage == 'token':
         return res_ids
     else:
         return torch.tensor(d).unsqueeze(1), torch.tensor(bools)
-    
+
+
 def get_span_dists(args, model_wrapper, R_Qs, embeds, p=0, stage='token'):
     dists = []
     if stage == 'token':
         dists.append(check_if_in_span(R_Qs[0], embeds, args.dist_norm).T)
         sentences = torch.arange(embeds.shape[1]).unsqueeze(1).to(model_wrapper.args.device)
-        embs = model_wrapper.get_layer_inputs(sentences, layers=args.n_layers-1)
-        
+        embs = model_wrapper.get_layer_inputs(sentences, layers=args.n_layers - 1)
+
     else:
         embs = [e.to(model_wrapper.args.device) for e in embeds]
-        
-    if p==0:
-        for i in range(model_wrapper.args.n_layers-1):
-                dists.append(check_if_in_span(R_Qs[i+1], embs[i], args.dist_norm))
-    
-    print('dists', torch.cat(dists, axis=1).shape)
-    d = torch.log(torch.cat(dists, axis=1))-torch.log(1-torch.cat(dists, axis=1))
+
+    if p == 0:
+        for i in range(model_wrapper.args.n_layers - 1):
+            dists.append(check_if_in_span(R_Qs[i + 1], embs[i], args.dist_norm))
+
+    logger.info("dists %s", torch.cat(dists, axis=1).shape)
+    d = torch.log(torch.cat(dists, axis=1)) - torch.log(1 - torch.cat(dists, axis=1))
     d = d.mean(axis=1).cpu().detach()
-    
+
     return d

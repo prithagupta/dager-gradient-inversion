@@ -1,0 +1,37 @@
+name: lamp-macos
+channels:
+  - pytorch
+  - huggingface
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch=2.3.*
+  - torchvision
+  - torchaudio
+  - numpy=1.26.*
+  - scipy=1.13.*
+  - pandas=2.2.*
+  - scikit-learn=1.5.*
+  - nltk=3.8.*
+  - datasets=2.19.*
+  - evaluate
+  - pyarrow=14.0.*
+  - tqdm
+  - pyyaml
+  - pillow
+  - psutil
+  - filelock
+  - requests
+  - aiohttp
+  - future
+  - gitpython
+  - boto3
+  - neptune-client
+  - tokenizers=0.19.1
+  - transformers=4.40.1
+  - huggingface_hub=0.23.*
+  - ffmpeg
+  - pip:
+      - rouge-score==0.1.2
