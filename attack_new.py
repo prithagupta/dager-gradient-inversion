@@ -155,7 +155,7 @@ def filter(args, model_wrapper, R_Qs, l, token_type, res_ids, sentence_filter, a
         # Remove better versions of existing senteces
         for b_idx in range(B):
             already_predicted = (torch.tensor(predicted_sentences[b_idx]).to(args.device) == sentences).sum(1) >= (
-                        l + 1) * args.distinct_thresh
+                    l + 1) * args.distinct_thresh
             better_score = sizesq2 > predicted_sentences_scores[b_idx]
             sizesq2[torch.logical_and(already_predicted, better_score)] = torch.inf
 
@@ -532,7 +532,7 @@ def reconstruct(args, sample, metric, model_wrapper):
         total_true_token_count, total_true_token_count2 = 0, 0
         for i in range(orig_batch['input_ids'].shape[1]):
             total_true_token_count2 += args.batch_size - (
-                        orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
+                    orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
             uniques = torch.unique(orig_batch['input_ids'][:, i])
             total_true_token_count += uniques.numel()
             if model_wrapper.pad_token in uniques.tolist():
@@ -602,11 +602,11 @@ def reconstruct(args, sample, metric, model_wrapper):
                         continue
                     sentence_in = sentence_in and (token in res_ids[0])
                     sentence_in_max_B = sentence_in_max_B and (
-                                token in res_ids[0][:min(args.batch_size, len(res_ids[0]))])
+                            token in res_ids[0][:min(args.batch_size, len(res_ids[0]))])
                 else:
                     sentence_in = sentence_in and (token in res_ids[pos])
                     sentence_in_max_B = sentence_in_max_B and (
-                                token in res_ids[pos][:min(args.batch_size, len(res_ids[pos]))])
+                            token in res_ids[pos][:min(args.batch_size, len(res_ids[pos]))])
             if model_wrapper.is_bert():
                 sentence_in = sentence_in and (pos, orig_batch['token_type_ids'][s][pos]) in sentence_ends
                 sentence_in_max_B = sentence_in and (pos, orig_batch['token_type_ids'][s][pos]) in sentence_ends
@@ -785,7 +785,8 @@ def print_metrics(args, res, suffix):
 def main():
     device = torch.device(args.device)
     metric = evaluate.load('rouge', cache_dir=args.cache_dir)
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir)
+    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
+                          use_hf_split=args.use_hf_split)
 
     model_wrapper = ModelWrapper(args)
 

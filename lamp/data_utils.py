@@ -4,7 +4,7 @@ from datasets import load_dataset
 
 
 class TextDataset:
-    def __init__(self, device, dataset, split, n_inputs, batch_size):
+    def __init__(self, device, dataset, split, n_inputs, batch_size, use_hf_split=False):
 
         seq_keys = {
             'cola': 'sentence',
@@ -14,8 +14,11 @@ class TextDataset:
         }
         seq_key = seq_keys[dataset]
 
+        using_hf_source_split = use_hf_split and dataset in ['cola', 'sst2']
+
         if dataset in ['cola', 'sst2']:
-            full = load_dataset('glue', dataset)['train']
+            source_split = 'validation' if using_hf_source_split else 'train'
+            full = load_dataset('glue', dataset)[source_split]
         elif dataset == 'glnmario/ECHR':
             full = load_dataset('csv', data_files=['models_cache/datasets--glnmario--ECHR/ECHR_Dataset.csv'])['train']
         else:
@@ -23,12 +26,15 @@ class TextDataset:
 
         idxs = list(range(len(full)))
         np.random.shuffle(idxs)
-        if dataset == 'cola':
+        if dataset == 'cola' and not use_hf_split:
             assert idxs[0] == 2310  # with seed 101
 
         n_samples = n_inputs * batch_size
 
-        if split == 'test':
+        if using_hf_source_split:
+            assert n_samples <= len(full)
+            idxs = idxs[:n_samples]
+        elif split == 'test':
             assert n_samples <= 1000
             idxs = idxs[:n_samples]
         elif split == 'val':

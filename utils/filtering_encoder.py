@@ -92,7 +92,7 @@ def filter_encoder(args, model_wrapper, R_Q2, l, token_type, res_ids, sentence_f
         # Remove better versions of existing senteces
         for b_idx in range(B):
             already_predicted = (torch.tensor(predicted_sentences[b_idx]).to(args.device) == sentences).sum(1) >= (
-                        l + 1) * args.distinct_thresh
+                    l + 1) * args.distinct_thresh
             better_score = sizesq2 > predicted_sentences_scores[b_idx]
             sizesq2[torch.logical_and(already_predicted, better_score)] = torch.inf
 

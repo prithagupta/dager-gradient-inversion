@@ -59,28 +59,30 @@ def setup_experiment_logging(args, attack_name, level=logging.INFO):
     hash_value = get_hash_value_for_args(args)
     log_path = os.path.join(log_dir, f"{attack_name}_{hash_value}.log")
 
-    logger = logging.getLogger(attack_name)
-    logger.handlers.clear()
-    logger.setLevel(level)
-    logger.propagate = False
-
     formatter = logging.Formatter(
         "%(asctime)s %(name)s %(levelname)-8s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    file_handler = logging.FileHandler(log_path, mode="a")
+    file_handler = logging.FileHandler(log_path, mode="w")
     file_handler.setFormatter(formatter)
     file_handler.setLevel(level)
-    logger.addHandler(file_handler)
 
     root_logger = logging.getLogger()
-    root_logger.handlers.clear()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
     root_logger.setLevel(level)
     root_logger.addHandler(file_handler)
 
-    logging.getLogger("matplotlib").setLevel(logging.ERROR)
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+    logger = logging.getLogger(attack_name)
+    logger.handlers.clear()
+    logger.setLevel(level)
+    logger.propagate = True
+
+    for noisy_logger_name in ["matplotlib", "absl", "absl.logging", "urllib3.connectionpool"]:
+        noisy_logger = logging.getLogger(noisy_logger_name)
+        noisy_logger.setLevel(logging.ERROR)
+        noisy_logger.propagate = False
 
     logger.info("Log file path: %s", log_path)
     logger.info("Argument hash: %s", hash_value)

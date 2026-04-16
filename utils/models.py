@@ -1,9 +1,10 @@
-import os
 import logging
+import os
 
 import numpy as np
 import peft
 import torch
+import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForCausalLM
 
 from constants import config
@@ -12,29 +13,64 @@ from utils.partial_models import add_partial_forward_gpt2, add_partial_forward_b
 
 logger = logging.getLogger(__name__)
 
+GPT2_MODEL_PATHS = ['gpt2', 'openai-community/gpt2-large']
+LLAMA_MODEL_PATHS = [
+    'meta-llama/Llama-2-7b-hf',
+    'meta-llama/Llama-2-70b-hf',
+    'meta-llama/Llama-3.1-8B',
+    'meta-llama/Meta-Llama-3-8B',
+    'meta-llama/Meta-Llama-3.1-8B',
+    'meta-llama/Meta-Llama-3-70B',
+
+]
+GEMMA_MODEL_PATHS = [
+    'google/gemma-2b',
+    'google/gemma-7b',
+    'google/gemma-2-2b',
+    'google/gemma-2-9b',
+    'google/gemma-2-27b',
+    'google/gemma-2-2b-it',
+    'google/gemma-3-1b-it',
+    'google/gemma-3-4b-it',
+    'google/gemma-3-12b-it',
+    'google/gemma-3-27b-it',
+]
+
+
+def _is_gpt2_path(model_path):
+    return model_path in GPT2_MODEL_PATHS
+
+
+def _is_llama_path(model_path):
+    return model_path in LLAMA_MODEL_PATHS
+
+
+def _is_gemma_path(model_path):
+    return model_path in GEMMA_MODEL_PATHS or 'gemma' in model_path.lower()
+
+
+def _is_supported_model_path(model_path):
+    return model_path in ['bert-base-uncased'] or _is_gpt2_path(model_path) or _is_llama_path(
+        model_path) or _is_gemma_path(model_path)
+
 
 class ModelWrapper():
     def __init__(self, args):
-        assert (args.model_path in ['bert-base-uncased', 'gpt2', 'openai-community/gpt2-large',
-                                    'meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                    'meta-llama/Meta-Llama-3-8B', 'meta-llama/Meta-Llama-3.1-8B',
-                                    'meta-llama/Meta-Llama-3-70B']), \
+        assert _is_supported_model_path(args.model_path), \
             'Model is not yet supported - add it to assertion list and specify implementation details'
-        access_token = os.environ['HF_TOKEN']
+        access_token = os.environ.get('HF_TOKEN')
         self.args = args
         model_kwargs = {'cache_dir': args.cache_dir} if args.cache_dir is not None else {}
 
         model_kwargs[
             'pretrained_model_name_or_path'] = args.model_path if args.finetuned_path is None or args.train_method == 'lora' else args.finetuned_path
         model_kwargs['attn_implementation'] = args.attn_implementation
+        if access_token is not None:
+            model_kwargs['token'] = access_token
 
-        if args.hidden_act is not None and args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+        if args.hidden_act is not None and _is_gpt2_path(args.model_path):
             model_kwargs['activation_function'] = args.hidden_act
-        elif args.hidden_act is not None and args.model_path in ['meta-llama/Llama-2-7b-hf',
-                                                                 'meta-llama/Llama-2-70b-hf',
-                                                                 'meta-llama/Meta-Llama-3-8B',
-                                                                 'meta-llama/Meta-Llama-3.1-8B',
-                                                                 'meta-llama/Meta-Llama-3-70B']:
+        elif args.hidden_act is not None and (_is_llama_path(args.model_path) or _is_gemma_path(args.model_path)):
             model_kwargs['hidden_act'] = args.hidden_act
 
         if args.precision == '8bit':
@@ -52,14 +88,16 @@ class ModelWrapper():
         g_cpu = torch.Generator(device=self.model.device)
         g_cpu.manual_seed(0)
         self.model.eval()
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_path, use_fast=True, token=access_token,
-                                                       cache_dir=args.cache_dir)
+        tokenizer_kwargs = {'use_fast': True, 'cache_dir': args.cache_dir}
+        if access_token is not None:
+            tokenizer_kwargs['token'] = access_token
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_path, **tokenizer_kwargs)
         self.tokenizer.model_max_length = 512
 
         if args.pad == 'left':
             self.tokenizer.padding_side = "left"
 
-        if args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+        if _is_gpt2_path(args.model_path):
             self.start_token = None
             self.eos_token = self.model.config.eos_token_id
             self.layer_ids = list(range(4, 137, 12))
@@ -91,8 +129,7 @@ class ModelWrapper():
                 None, :, :, :]
             self.emb_size = self.model.config.hidden_size
             add_partial_forward_bert(self.model.bert)
-        elif args.model_path in ['meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf', 'meta-llama/Meta-Llama-3-8B',
-                                 'meta-llama/Meta-Llama-3.1-8B', 'meta-llama/Meta-Llama-3-70B']:
+        elif _is_llama_path(args.model_path):
 
             self.start_token = self.tokenizer.bos_token_id
             self.eos_token = self.tokenizer.eos_token_id
@@ -125,6 +162,29 @@ class ModelWrapper():
 
                 else:
                     self.layer_ids = list(range(1, 281, 9))
+
+            self.emb_size = self.model.config.hidden_size
+            self.embeddings_weight_nopos = self.model.model.embed_tokens.weight.unsqueeze(0)
+            add_partial_forward_llama(self.model.model)
+
+        elif _is_gemma_path(args.model_path):
+
+            self.start_token = self.tokenizer.bos_token_id
+            self.eos_token = self.tokenizer.eos_token_id
+            if self.tokenizer.pad_token_id is None:
+                self.tokenizer.add_special_tokens({'pad_token': self.tokenizer.eos_token})
+            self.pad_token = self.tokenizer.pad_token_id
+            self.model.config.pad_token_id = self.pad_token
+
+            if args.task == 'seq_class' and hasattr(self.model, 'score'):
+                self.model.score.weight.data.normal_(mean=0.0, std=1e-3, generator=g_cpu)
+
+            self.layer_ids = self._find_parameter_indices(['self_attn.q_proj.weight', 'q_proj.weight'])
+            if len(self.layer_ids) < args.n_layers:
+                raise RuntimeError(
+                    f'Found only {len(self.layer_ids)} Gemma q_proj gradient tensors, '
+                    f'but --n_layers={args.n_layers}. Check the model architecture/name.'
+                )
 
             self.emb_size = self.model.config.hidden_size
             self.embeddings_weight_nopos = self.model.model.embed_tokens.weight.unsqueeze(0)
@@ -224,16 +284,60 @@ class ModelWrapper():
         # raise ValueError
         return grad
 
+    def compute_grads_from_embeds(self, x_embeds, y_labels, attention_mask=None, create_graph=False):
+        if self.args.task != 'seq_class':
+            raise NotImplementedError('Hybrid continuous optimization currently supports seq_class only.')
+
+        if self.args.grad_mode == 'eval':
+            self.model.eval()
+        else:
+            self.model.train()
+
+        dev = y_labels.device
+        y_labels = y_labels.to(x_embeds.device)
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(x_embeds.device)
+
+        self.model.to(x_embeds.device)
+
+        if _is_gpt2_path(self.args.model_path):
+            transformer_outputs = self.model.transformer(inputs_embeds=x_embeds, attention_mask=attention_mask)
+            hidden_states = transformer_outputs[0]
+            logits = self.model.score(hidden_states).float()
+            if attention_mask is None:
+                sequence_lengths = torch.full(
+                    (x_embeds.shape[0],),
+                    x_embeds.shape[1] - 1,
+                    dtype=torch.long,
+                    device=x_embeds.device,
+                )
+            else:
+                flipped_mask = torch.flip(attention_mask.long(), dims=[1])
+                sequence_lengths = attention_mask.shape[1] - 1 - flipped_mask.argmax(dim=1)
+            pooled_logits = logits[torch.arange(x_embeds.shape[0], device=x_embeds.device), sequence_lengths]
+            loss = F.cross_entropy(pooled_logits, y_labels.view(-1))
+        else:
+            outs = self.model(inputs_embeds=x_embeds, attention_mask=attention_mask, labels=y_labels.view(-1))
+            loss = outs.loss
+
+        grad = torch.autograd.grad(loss, self.trainable_parameters(), create_graph=create_graph, allow_unused=True)
+        self.set_model_device(dev)
+        self.model.eval()
+        return grad
+
     def set_model_device(self, device):
         if self.args.precision == '8bit':
             return
-        if self.args.model_path in ['meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                    'meta-llama/Meta-Llama-3-8B', 'meta-llama/Meta-Llama-3.1-8B',
-                                    'meta-llama/Meta-Llama-3-70B'] and device != 'cpu':
+        if self.has_rope() and device != 'cpu':
             self.model.model.embed_tokens.to(device)
-            self.model.model.rotary_emb.to(device)
-            for i in range(self.args.n_layers):
+            if hasattr(self.model.model, 'rotary_emb'):
+                self.model.model.rotary_emb.to(device)
+            for i in range(min(self.args.n_layers, len(self.model.model.layers))):
                 self.model.model.layers[i].to(device)
+            if hasattr(self.model, 'score'):
+                self.model.score.to(device)
+            if hasattr(self.model, 'lm_head'):
+                self.model.lm_head.to(device)
         else:
             self.model.to(device)
 
@@ -242,12 +346,13 @@ class ModelWrapper():
             max_rank = 0
             for i in self.layer_ids[:10]:
                 grad = true_grads[i]
-                if self.args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+                if _is_gpt2_path(self.args.model_path):
                     grad = grad.T
+                grad_np = grad.detach().float().cpu().numpy()
                 if self.args.precision == 'half':
-                    B = np.linalg.matrix_rank(grad.float().cpu(), tol=tol)
+                    B = np.linalg.matrix_rank(grad_np, tol=tol)
                 else:
-                    B = np.linalg.matrix_rank(grad.cpu(), tol=tol)
+                    B = np.linalg.matrix_rank(grad_np, tol=tol)
                 if max_rank < B:
                     max_rank = B
             B = max_rank
@@ -259,7 +364,7 @@ class ModelWrapper():
 
         for i in range(self.args.n_layers):
             grad_Q = true_grads[self.layer_ids[i]]
-            if self.args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+            if _is_gpt2_path(self.args.model_path):
                 grad_Q = grad_Q.T
             _, R_Q = get_layer_decomp(grad_Q, B=B, tol=tol, upcast=(self.args.precision == 'half'))
             R_Q = R_Q.to(self.args.device)
@@ -274,15 +379,13 @@ class ModelWrapper():
             emb = self.model.bert.embeddings.LayerNorm(emb)
             return emb
 
-        elif self.args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+        elif _is_gpt2_path(self.args.model_path):
             gpt_embeddings_weight_position = self.model.transformer.wpe.weight.unsqueeze(0)
             emb = self.embeddings_weight_nopos.to(self.args.device) + gpt_embeddings_weight_position[0][
                 pos:pos + 1, None, :]
             emb = self.model.transformer.h[0].ln_1(emb)
             return emb
-        elif self.args.model_path in ['meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                      'meta-llama/Meta-Llama-3-8B', 'meta-llama/Meta-Llama-3.1-8B',
-                                      'meta-llama/Meta-Llama-3-70B']:
+        elif self.has_rope():
             emb = self.embeddings_weight_nopos.to(self.args.device)
             return self.model.model.layers[0].input_layernorm(emb)
 
@@ -299,13 +402,11 @@ class ModelWrapper():
             return self.model.bert.get_hidden_states(input_ids=sentences, token_type_ids=token_type_ids,
                                                      n_layers=layers)
 
-        elif self.args.model_path in ['gpt2', 'openai-community/gpt2-large']:
+        elif _is_gpt2_path(self.args.model_path):
             return self.model.transformer.get_hidden_states(input_ids=sentences, attention_mask=attention_mask,
                                                             n_layers=layers)
 
-        elif self.args.model_path in ['meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                      'meta-llama/Meta-Llama-3-8B', 'meta-llama/Meta-Llama-3.1-8B',
-                                      'meta-llama/Meta-Llama-3-70B']:
+        elif self.has_rope():
             position_ids = torch.arange(sentences.size(1)).unsqueeze(0).repeat(sentences.size(0), 1).to(
                 self.args.device)
             # if attention_mask is not None:
@@ -325,17 +426,24 @@ class ModelWrapper():
         return self.args.model_path in ['bert-base-uncased']
 
     def is_decoder(self):
-        return self.args.model_path in ['gpt2', 'meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                        'openai-community/gpt2-large', 'meta-llama/Meta-Llama-3-8B',
-                                        'meta-llama/Meta-Llama-3.1-8B', 'meta-llama/Meta-Llama-3-70B']
+        return _is_gpt2_path(self.args.model_path) or _is_llama_path(self.args.model_path) or _is_gemma_path(
+            self.args.model_path)
 
     def has_rope(self):
-        return self.args.model_path in ['meta-llama/Llama-2-7b-hf', 'meta-llama/Llama-2-70b-hf',
-                                        'meta-llama/Meta-Llama-3-8B', 'meta-llama/Meta-Llama-3.1-8B',
-                                        'meta-llama/Meta-Llama-3-70B']
+        return _is_llama_path(self.args.model_path) or _is_gemma_path(self.args.model_path)
 
     def has_bos(self):
         return self.start_token is not None
 
     def is_lower(self):
         return self.args.precision in ['8bit', 'half']
+
+    def get_input_embeddings_weight(self):
+        return self.model.get_input_embeddings().weight
+
+    def _find_parameter_indices(self, name_suffixes):
+        indices = []
+        for idx, (name, _) in enumerate(self.model.named_parameters()):
+            if any(name.endswith(suffix) or suffix in name for suffix in name_suffixes):
+                indices.append(idx)
+        return indices

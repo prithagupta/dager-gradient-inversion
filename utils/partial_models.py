@@ -95,9 +95,9 @@ def add_partial_forward_gpt2(model: GPT2Model) -> None:
             if encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
             if _use_sdpa:
-                encoder_attention_mask = _prepare_4d_attention_mask_for_sdpa(
-                    mask=encoder_attention_mask, dtype=inputs_embeds.dtype, tgt_len=input_shape[-1]
-                )
+                encoder_attention_mask = _prepare_4d_attention_mask_for_sdpa(mask=encoder_attention_mask,
+                                                                             dtype=inputs_embeds.dtype,
+                                                                             tgt_len=input_shape[-1])
             elif not self._attn_implementation == "flash_attention_2":
                 encoder_attention_mask = self.invert_attention_mask(encoder_attention_mask)
         else:
@@ -107,7 +107,10 @@ def add_partial_forward_gpt2(model: GPT2Model) -> None:
         # 1.0 in head_mask indicate we keep the head
         # attention_probs has shape bsz x n_heads x N x N
         # head_mask has shape n_layer x batch x n_heads x N x N
-        head_mask = self.get_head_mask(head_mask, self.config.n_layer)
+        if hasattr(self, "get_head_mask"):
+            head_mask = self.get_head_mask(head_mask, self.config.n_layer)
+        elif head_mask is None:
+            head_mask = [None] * self.config.n_layer
 
         if token_type_ids is not None:
             token_type_embeds = self.wte(token_type_ids)
@@ -122,7 +125,7 @@ def add_partial_forward_gpt2(model: GPT2Model) -> None:
         all_hidden_states = []
         for i, (block, layer_past) in enumerate(zip(self.h, past_key_values)):
             # Model parallel
-            if self.model_parallel:
+            if getattr(self, "model_parallel", False):
                 torch.cuda.set_device(hidden_states.device)
                 # Ensure layer_past is on same device as hidden_states (might not be correct)
                 if layer_past is not None:
@@ -162,12 +165,17 @@ def add_partial_forward_gpt2(model: GPT2Model) -> None:
                     output_attentions=None,
                 )
 
-            hidden_states = outputs[0]
-            if use_cache is True:
-                presents = presents + (outputs[1],)
+            if isinstance(outputs, torch.Tensor):
+                hidden_states = outputs
+                present = None
+            else:
+                hidden_states = outputs[0]
+                present = outputs[1] if len(outputs) > 1 else None
+            if use_cache is True and present is not None:
+                presents = presents + (present,)
 
             # Model Parallel: If it's the last layer for that device, put things on the next device
-            if self.model_parallel:
+            if getattr(self, "model_parallel", False):
                 for k, v in self.device_map.items():
                     if i == v[-1] and "cuda:" + str(k) != self.last_device:
                         hidden_states = hidden_states.to("cuda:" + str(k + 1))
@@ -194,8 +202,7 @@ def add_partial_forward_bert(model: BertModel) -> None:
             encoder_attention_mask: Optional[torch.FloatTensor] = None,
             past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
             output_attentions: Optional[bool] = False,
-            n_layers: Optional[int] = 2
-    ):
+            n_layers: Optional[int] = 2):
         all_hidden_states = []
 
         for i, layer_module in enumerate(self.layer):

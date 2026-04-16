@@ -117,7 +117,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
         total_true_token_count, total_true_token_count2 = 0, 0
         for i in range(orig_batch['input_ids'].shape[1]):
             total_true_token_count2 += args.batch_size - (
-                        orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
+                    orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
             uniques = torch.unique(orig_batch['input_ids'][:, i])
             total_true_token_count += uniques.numel()
             if model_wrapper.pad_token in uniques.tolist():
@@ -133,15 +133,13 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
 
         res_pos, res_ids, res_types, sentence_ends = filter_l1(args, model_wrapper, R_Qs)
 
-        logger.info(orig_batch)
-        logger.info(orig_batch['input_ids'].T)
         if len(res_ids) == 0:
             reference = []
             for i in range(orig_batch['input_ids'].shape[0]):
                 reference += [remove_padding(tokenizer, orig_batch['input_ids'][i], left=(args.pad == 'left'))]
             return ['' for _ in reference], reference
-        if len(res_ids[0]) < 100000:
-            logger.info("%s %s %s", res_pos, res_ids, res_types)
+        if len(res_ids[0]) < 500:
+            logger.info("L1 candidate counts: %s", [len(ids) for ids in res_ids])
 
         rec_l1, rec_l1_maxB, rec_l2 = [], [], []
 
@@ -178,11 +176,11 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                         continue
                     sentence_in = sentence_in and (token in res_ids[0])
                     sentence_in_max_B = sentence_in_max_B and (
-                                token in res_ids[0][:min(args.batch_size, len(res_ids[0]))])
+                            token in res_ids[0][:min(args.batch_size, len(res_ids[0]))])
                 else:
                     sentence_in = sentence_in and (token in res_ids[pos])
                     sentence_in_max_B = sentence_in_max_B and (
-                                token in res_ids[pos][:min(args.batch_size, len(res_ids[pos]))])
+                            token in res_ids[pos][:min(args.batch_size, len(res_ids[pos]))])
             if model_wrapper.is_bert():
                 sentence_in = sentence_in and (pos, orig_batch['token_type_ids'][s][pos]) in sentence_ends
                 sentence_in_max_B = sentence_in and (pos, orig_batch['token_type_ids'][s][pos]) in sentence_ends
@@ -327,8 +325,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
         for i in range(len(prediction)):
             for j in range(len(prediction)):
                 fm, _, _ = _rouge_triplet(
-                    metric.compute(predictions=[prediction[i]], references=[reference[j]])['rouge1']
-                )
+                    metric.compute(predictions=[prediction[i]], references=[reference[j]])['rouge1'])
                 cost[i, j] = 1.0 - fm
         row_ind, col_ind = linear_sum_assignment(cost)
 
@@ -363,7 +360,8 @@ def print_metrics(args, res, suffix):
 def main():
     device = torch.device(args.device)
     metric = evaluate.load('rouge', cache_dir=args.cache_dir)
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir)
+    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
+                          use_hf_split=args.use_hf_split)
 
     model_wrapper = ModelWrapper(args)
 

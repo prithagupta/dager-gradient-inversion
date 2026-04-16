@@ -298,7 +298,8 @@ def main():
 
     device = torch.device(args.device)
     metric = evaluate.load('rouge')
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size)
+    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size,
+                          use_hf_split=args.use_hf_split)
 
     if args.bert_path == 'gpt2':
         lm = AutoModelForCausalLM.from_pretrained('gpt2').to(device)

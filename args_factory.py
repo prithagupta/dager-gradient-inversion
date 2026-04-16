@@ -41,7 +41,10 @@ def _resolve_attn_implementation(requested_implementation, model_path, task):
     if requested_implementation == 'sdpa':
         return 'sdpa'
 
-    if model_path in ['gpt2', 'openai-community/gpt2-large'] and task == 'seq_class':
+    model_path_lower = model_path.lower()
+    if task == 'seq_class' and (
+            model_path in ['gpt2', 'openai-community/gpt2-large'] or 'gemma' in model_path_lower
+    ):
         return 'eager'
     return 'sdpa'
 
@@ -62,6 +65,9 @@ def get_args(argv=None):
     parser.add_argument('--task', choices=['seq_class', 'next_token_pred'], required=True)
     parser.add_argument('--pad', choices=['right', 'left'], default='right')
     parser.add_argument('--split', choices=['val', 'test'], required=True)
+    parser.add_argument('--use_hf_split', action='store_true',
+                        help='Use the official Hugging Face validation split for GLUE datasets. '
+                             'By default, DAGER keeps its original train-subset split protocol.')
     parser.add_argument('-b', '--batch_size', type=int, default=1)
     parser.add_argument('--n_inputs', type=int, required=True)  # val:10/20, test:100
     parser.add_argument('--start_input', type=int, default=0)
@@ -112,6 +118,22 @@ def get_args(argv=None):
     # Rebuttal experiments
     parser.add_argument('--hidden_act', type=str, default=None)
     parser.add_argument('--loss', type=str, default='ce', choices=['ce', 'mse'])
+
+    # Hybrid DAGER+LAMP attack
+    parser.add_argument('--n_steps', type=int, default=500)
+    parser.add_argument('--lr', type=float, default=0.01)
+    parser.add_argument('--lr_decay', type=float, default=0.89)
+    parser.add_argument('--coeff_perplexity', type=float, default=0.02)
+    parser.add_argument('--coeff_reg', type=float, default=1.0)
+    parser.add_argument('--init_size', type=float, default=3.98)
+    parser.add_argument('--grad_loss', type=str, default='cos', choices=['cos', 'dlg', 'tag'])
+    parser.add_argument('--tag_factor', type=float, default=0.01)
+    parser.add_argument('--hybrid_temperature', type=float, default=0.1)
+    parser.add_argument('--hybrid_init_noise', type=float, default=0.01)
+    parser.add_argument('--hybrid_project_every', type=int, default=0,
+                        help='If >0, snap continuous embeddings to DAGER candidates every N steps. '
+                             'Default 0 keeps optimization continuous and only projects for selection.')
+    parser.add_argument('--print_every', type=int, default=50)
 
     # LoRA
     parser.add_argument('--train_method', type=str, default='full', choices=['full', 'lora'])

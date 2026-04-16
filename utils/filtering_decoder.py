@@ -60,7 +60,7 @@ def filter_decoder(args, model_wrapper, R_Qs, res_ids, max_ids=-1):
         ds = []
         is_complete = args.defense_noise is None
         curr_sentence = 0
-        progress_bar = tqdm(total=batch.shape[0] * ends.shape[0])
+        progress_bar = tqdm(total=batch.shape[0] * ends.shape[0], disable=True)
 
         while True:
             els_b = []

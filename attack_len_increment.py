@@ -59,8 +59,8 @@ def main():
             total_correct = 0
             for i in range(args.batch_size):
                 total_correct += (
-                            tokenized_pred[i, :min(len(tokenized_pred[i]), len(tokenized_ref[i]))] == tokenized_ref[
-                        i, :min(len(tokenized_pred[i]), len(tokenized_ref[i]))]).int().sum()
+                        tokenized_pred[i, :min(len(tokenized_pred[i]), len(tokenized_ref[i]))] == tokenized_ref[
+                    i, :min(len(tokenized_pred[i]), len(tokenized_ref[i]))]).int().sum()
             logger.info(f'Sample accuracy: {(total_correct / tokenized_ref.numel() * 100).item():.2f}')
             if args.neptune:
                 args.neptune['logs/sample_acc'].log(total_correct / tokenized_ref.numel())

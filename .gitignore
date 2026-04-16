@@ -4,3 +4,13 @@
 **finetune**
 **dager_dp/**
 models/
+# macOS
+.DS_Store
+**/.DS_Store
+
+# MCP config
+.ai/mcp/mcp.json
+
+# Logs
+*.log
+logs/

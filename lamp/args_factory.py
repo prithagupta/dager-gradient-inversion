@@ -1,6 +1,5 @@
 import argparse
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +45,9 @@ def get_args():
     parser.add_argument('--baseline', action='store_true', help='use baseline defaults + disable all new improvements')
     parser.add_argument('--dataset', choices=['cola', 'sst2', 'rotten_tomatoes', 'glnmario/ECHR'], required=True)
     parser.add_argument('--split', choices=['val', 'test'], required=True)
+    parser.add_argument('--use_hf_split', action='store_true',
+                        help='Use the official Hugging Face validation split for GLUE datasets. '
+                             'By default, LAMP keeps its original train-subset split protocol.')
     parser.add_argument('--loss', choices=['cos', 'dlg', 'tag'], required=True)
     parser.add_argument('-b', '--batch_size', type=int, default=1)
     parser.add_argument('--n_inputs', type=int, required=True)  # val:10/20, test:100

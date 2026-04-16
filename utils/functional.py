@@ -59,7 +59,7 @@ def get_closest_tokens(inputs_embeds, unused_tokens, embeddings_weight, metric='
 
 
 def get_layer_decomp(grad, B=None, tol=None, upcast=False):
-    grad = grad.detach().cpu().numpy()
+    grad = grad.detach().float().cpu().numpy()
     if upcast:
         grad = grad.astype(np.float32)
     if B == None:
