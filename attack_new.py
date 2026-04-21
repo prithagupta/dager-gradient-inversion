@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import setup_experiment_logging
+from utils.experiment import cleanup_memory, setup_experiment_logging
 from utils.functional import remove_padding
 from utils.models import ModelWrapper
 
@@ -543,6 +543,8 @@ def reconstruct(args, sample, metric, model_wrapper):
             reference = []
             for i in range(orig_batch['input_ids'].shape[0]):
                 reference += [remove_padding(tokenizer, orig_batch['input_ids'][i], left=(args.pad == 'left'))]
+            del true_grads, orig_batch
+            cleanup_memory()
             return ['' for _ in range(len(reference))], reference
 
         R_Qs = [R_Q.to(args.device) for R_Q in R_Qs]
@@ -837,6 +839,8 @@ def main():
         input_time = str(datetime.timedelta(seconds=time.time() - t_input_start)).split(".")[0]
         total_time = str(datetime.timedelta(seconds=time.time() - t_start)).split(".")[0]
         logger.info(f'input #{i} time: {input_time} | total time: {total_time}')
+        del sample, prediction, reference, res
+        cleanup_memory()
         logger.info("")
         logger.info("")
 

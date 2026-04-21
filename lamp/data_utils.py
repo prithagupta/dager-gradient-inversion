@@ -4,7 +4,7 @@ from datasets import load_dataset
 
 
 class TextDataset:
-    def __init__(self, device, dataset, split, n_inputs, batch_size, use_hf_split=False):
+    def __init__(self, device, dataset, split, n_inputs, batch_size, cache_dir=None, use_hf_split=False):
 
         seq_keys = {
             'cola': 'sentence',
@@ -18,11 +18,15 @@ class TextDataset:
 
         if dataset in ['cola', 'sst2']:
             source_split = 'validation' if using_hf_source_split else 'train'
-            full = load_dataset('glue', dataset)[source_split]
+            full = load_dataset('glue', dataset, cache_dir=cache_dir)[source_split]
         elif dataset == 'glnmario/ECHR':
-            full = load_dataset('csv', data_files=['models_cache/datasets--glnmario--ECHR/ECHR_Dataset.csv'])['train']
+            full = load_dataset(
+                'csv',
+                data_files=['models_cache/datasets--glnmario--ECHR/ECHR_Dataset.csv'],
+                cache_dir=cache_dir,
+            )['train']
         else:
-            full = load_dataset(dataset)['train']
+            full = load_dataset(dataset, cache_dir=cache_dir)['train']
 
         idxs = list(range(len(full)))
         np.random.shuffle(idxs)

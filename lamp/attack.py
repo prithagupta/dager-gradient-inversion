@@ -1,10 +1,12 @@
 import datetime
+import json
 import os
 import sys
 import time
 
 import evaluate
 import numpy as np
+import pandas as pd
 import torch
 import torch.optim as optim
 from scipy.optimize import linear_sum_assignment
@@ -18,7 +20,14 @@ from utilities import compute_grads, get_closest_tokens, get_reconstruction_loss
     remove_padding
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.experiment import setup_experiment_logging
+from utils.experiment import _repo_root, cleanup_memory, setup_experiment_logging
+from utils.functional import (
+    _rouge_triplet,
+    evaluate_prediction,
+    print_single_metric_dict,
+    print_summary_table,
+    summarize_metrics,
+)
 
 from transformers.utils import logging
 
@@ -35,17 +44,28 @@ if args.neptune:
     neptune.create_experiment(args.neptune_label, params=vars(args))
 
 
-def _rouge_triplet(score):
-    if hasattr(score, 'mid'):
-        score = score.mid
-    if hasattr(score, 'fmeasure'):
-        return score.fmeasure, score.precision, score.recall
-    value = float(score)
-    return value, value, value
+def disable_extra_model_outputs(model):
+    if hasattr(model, "config"):
+        model.config.use_cache = False
+        model.config.output_hidden_states = False
+        model.config.output_attentions = False
+
+
+def load_hf_model_eager(model_cls, model_name, **kwargs):
+    try:
+        return model_cls.from_pretrained(model_name, attn_implementation="eager", **kwargs)
+    except TypeError:
+        return model_cls.from_pretrained(model_name, **kwargs)
 
 
 def get_loss(args, lm, model, ids, x_embeds, true_labels, true_grads, create_graph=False):
-    perplexity = lm(input_ids=ids, labels=ids).loss
+    perplexity = lm(
+        input_ids=ids,
+        labels=ids,
+        use_cache=False,
+        output_attentions=False,
+        output_hidden_states=False,
+    ).loss
     rec_loss = get_reconstruction_loss(model, x_embeds, true_labels, true_grads, args, create_graph=create_graph)
     return perplexity, rec_loss, rec_loss + args.coeff_perplexity * perplexity
 
@@ -99,6 +119,9 @@ def swap_tokens(args, x_embeds, max_len, cos_ids, lm, model, true_labels, true_g
                 best_tot_loss = new_tot_loss
                 if sample_idx != 0:
                     changed = sample_idx % 4
+            del new_ids, new_x_embeds, new_tot_loss
+            if sample_idx % 25 == 0:
+                cleanup_memory()
         if not (changed is None):
             change = ['Swapped tokens', 'Moved token', 'Moved sequence', 'Put prefix at the end'][changed]
             logger.info(change)
@@ -191,7 +214,7 @@ def reconstruct(args, device, sample, metric, tokenizer, lm, model):
             rec_loss = get_reconstruction_loss(model, x_embeds, true_labels, true_grads, args, create_graph=True)
             reg_loss = (x_embeds.norm(p=2, dim=2).mean() - args.init_size).square()
             tot_loss = rec_loss + args.coeff_reg * reg_loss
-            tot_loss.backward(retain_graph=True)
+            tot_loss.backward()
             with torch.no_grad():
                 if args.grad_clip is not None:
                     grad_norm = x_embeds.grad.norm()
@@ -232,6 +255,8 @@ def reconstruct(args, device, sample, metric, tokenizer, lm, model):
             logger.info('prediction: %s' % (tokenizer.batch_decode(cos_ids)))
 
             tokenizer.batch_decode(cos_ids)
+            del x_embeds_proj, tot_loss_proj, perplexity, rec_loss, tot_loss
+            cleanup_memory()
 
     # Swaps in the end for ablation
     if args.use_swaps_at_end:
@@ -273,52 +298,59 @@ def reconstruct(args, device, sample, metric, tokenizer, lm, model):
     for i in range(x_embeds.shape[0]):
         new_prediction += [prediction[ids[i]]]
     prediction = new_prediction
+    del true_grads, true_embeds, x_embeds, best_final_x, best_x_embeds_proj, x_embeds_proj
+    cleanup_memory()
 
     return prediction, reference
-
-
-def print_metrics(res, suffix, use_neptune):
-    for metric in ['rouge1', 'rouge2', 'rougeL', 'rougeLsum']:
-        fm, precision, recall = _rouge_triplet(res[metric])
-        logger.info(f'{metric:10} | fm: {fm * 100:.3f} | p: {precision * 100:.3f} | r: {recall * 100:.3f}')
-        if use_neptune:
-            neptune.log_metric(f'{metric}-fm_{suffix}', fm * 100)
-            neptune.log_metric(f'{metric}-p_{suffix}', precision * 100)
-            neptune.log_metric(f'{metric}-r_{suffix}', recall * 100)
-    rouge1_fm, _, _ = _rouge_triplet(res['rouge1'])
-    rouge2_fm, _, _ = _rouge_triplet(res['rouge2'])
-    sum_12_fm = rouge1_fm + rouge2_fm
-    if use_neptune:
-        neptune.log_metric(f'r1fm+r2fm_{suffix}', sum_12_fm * 100)
-    logger.info(f'r1fm+r2fm = {sum_12_fm * 100:.3f}\n')
 
 
 def main():
     logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
 
     device = torch.device(args.device)
-    metric = evaluate.load('rouge')
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size,
-                          use_hf_split=args.use_hf_split)
+    metric = evaluate.load('rouge', cache_dir=args.cache_dir)
+    dataset = TextDataset(
+        args.device,
+        args.dataset,
+        args.split,
+        args.n_inputs,
+        args.batch_size,
+        cache_dir=args.cache_dir,
+        use_hf_split=args.use_hf_split,
+    )
 
     if args.bert_path == 'gpt2':
-        lm = AutoModelForCausalLM.from_pretrained('gpt2').to(device)
+        lm = load_hf_model_eager(AutoModelForCausalLM, 'gpt2', cache_dir=args.cache_dir).to(device)
     else:
-        lm = load_gpt2_from_dict("transformer_wikitext-103.pth", device, output_hidden_states=True).to(device)
+        lm = load_gpt2_from_dict("transformer_wikitext-103.pth", device, output_hidden_states=False).to(device)
     lm.eval()
+    disable_extra_model_outputs(lm)
 
-    model = AutoModelForSequenceClassification.from_pretrained(args.bert_path).to(device)
+    model = load_hf_model_eager(
+        AutoModelForSequenceClassification,
+        args.bert_path,
+        cache_dir=args.cache_dir,
+    ).to(device)
     model.eval()
+    disable_extra_model_outputs(model)
     if args.bert_path == 'gpt2':
-        tokenizer = AutoTokenizer.from_pretrained('gpt2', use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained('gpt2', use_fast=True, cache_dir=args.cache_dir)
         tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
     else:
-        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', use_fast=True, cache_dir=args.cache_dir)
     tokenizer.model_max_length = 512
     lm.config.pad_token_id = tokenizer.pad_token_id
     model.config.pad_token_id = tokenizer.pad_token_id
     logger.info('\n\nAttacking..\n')
     predictions, references = [], []
+    final_results = []
+    final_per_input_results = []
+    input_times = []
+    sentence_rows = []
+    input_rows = []
+    attack_name = f"lamp_{args.loss}"
+    results_dir = os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
         t_input_start = time.time()
@@ -340,29 +372,85 @@ def main():
         references += reference
 
         logger.info(f'Done with input #{i} of {args.n_inputs}.')
-        logger.info('reference: ')
-        for seq in reference:
+        logger.info('reconstructed output:')
+        curr_metrics = []
+        for sent_idx, (ref, pred) in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(seq)
+            logger.info("Reference: %s", ref)
+            logger.info("Prediction: %s", pred)
+            metrics = evaluate_prediction(pred, ref, tokenizer, metric)
+            curr_metrics.append(metrics)
+            sentence_rows.append({
+                "run_id": job_hash,
+                "attack": attack_name,
+                "model": args.bert_path,
+                "dataset": args.dataset,
+                "input_index": i,
+                "sentence_index": sent_idx,
+                "reference": ref,
+                "prediction": pred,
+                **metrics,
+            })
         logger.info('========================')
-
-        logger.info('predicted: ')
-        for seq in prediction:
-            logger.info('========================')
-            logger.info(seq)
-        logger.info('========================')
+        final_results.extend(curr_metrics)
 
         logger.info('[Curr input metrics]:')
-        res = metric.compute(predictions=prediction, references=reference)
-        print_metrics(res, suffix='curr', use_neptune=args.neptune is not None)
+        logger.info("%s", print_summary_table(summarize_metrics(curr_metrics)))
 
         logger.info('[Aggregate metrics]:')
-        res = metric.compute(predictions=predictions, references=references)
-        print_metrics(res, suffix='agg', use_neptune=args.neptune is not None)
+        aggregated_results = evaluate_prediction(" ".join(prediction), " ".join(reference), tokenizer, metric)
+        final_per_input_results.append(aggregated_results)
+        logger.info("%s", print_single_metric_dict(aggregated_results))
 
-        input_time = str(datetime.timedelta(seconds=time.time() - t_input_start)).split(".")[0]
-        total_time = str(datetime.timedelta(seconds=time.time() - t_start)).split(".")[0]
+        input_time_sec = time.time() - t_input_start
+        total_time_sec = time.time() - t_start
+        input_time = str(datetime.timedelta(seconds=input_time_sec)).split(".")[0]
+        total_time = str(datetime.timedelta(seconds=total_time_sec)).split(".")[0]
         logger.info(f'input #{i} time: {input_time} | total time: {total_time}\n\n')
+        input_times.append(input_time_sec)
+        input_rows.append({
+            "run_id": job_hash,
+            "attack": attack_name,
+            "model": args.bert_path,
+            "dataset": args.dataset,
+            "input_index": i,
+            "num_sentences": len(reference),
+            "joined_reference": " ".join(reference),
+            "joined_prediction": " ".join(prediction),
+            "reconstruction_time_sec": input_time_sec,
+            **aggregated_results,
+        })
+        del sample, prediction, reference, curr_metrics, aggregated_results
+        cleanup_memory()
+
+    logger.info('[Aggregate metrics]:')
+    total_time = time.time() - t_start
+    aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), tokenizer, metric)
+    aggregated_results["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
+    aggregated_results["reconstruction_time_std"] = float(np.std(input_times)) if input_times else 0.0
+    summary = summarize_metrics(final_results) if final_results else {}
+    if summary:
+        summary["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
+        summary["reconstruction_time_std"] = float(np.std(input_times)) if input_times else 0.0
+    summary_per_input = summarize_metrics(final_per_input_results) if final_per_input_results else {}
+    if summary_per_input:
+        summary_per_input["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
+        summary_per_input["reconstruction_time_std"] = float(np.std(input_times)) if input_times else 0.0
+    logger.info("Overall %s", print_single_metric_dict(aggregated_results))
+    logger.info("Per Sentence %s", print_summary_table(summary) if summary else "{}")
+    logger.info("Per Input Results %s", print_summary_table(summary_per_input) if summary_per_input else "{}")
+    summary_results = {
+        "Overall Results": aggregated_results,
+        "Per Sentence Results": summary,
+        "Per Input Results": summary_per_input,
+        "Arguments": vars(args),
+    }
+    logger.info("Experiment time %s", total_time)
+    pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
+    pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
+    with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
+        json.dump(summary_results, f, indent=2)
+    logger.info("Results directory: %s", results_dir)
 
     logger.info('Done with all.')
     if args.neptune:

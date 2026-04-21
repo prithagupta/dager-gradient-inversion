@@ -133,6 +133,19 @@ def get_args(argv=None):
     parser.add_argument('--hybrid_project_every', type=int, default=0,
                         help='If >0, snap continuous embeddings to DAGER candidates every N steps. '
                              'Default 0 keeps optimization continuous and only projects for selection.')
+    parser.add_argument('--hybrid_init_mode', type=str, default='dager',
+                        choices=['dager', 'candidate_random'],
+                        help='Hybrid initialization mode. "dager" uses decoder-selected DAGER ids when available; '
+                             '"candidate_random" samples initial tokens from the per-position DAGER candidate sets.')
+    parser.add_argument('--hybrid_use_lm_prior', type=str, default='true', choices=['true', 'false'],
+                        help='Whether to use the hybrid LM prior when available. Defaults to true.')
+    parser.add_argument('--hybrid_projection_mode', type=str, default='candidate_final',
+                        choices=['candidate_final', 'candidate_periodic', 'none'],
+                        help='How to discretize hybrid embeddings. "candidate_final" matches the current default: '
+                             'continuous optimization with final projection to DAGER candidates only. '
+                             '"candidate_periodic" also snaps to DAGER candidates during optimization based on '
+                             '--hybrid_project_every. "none" disables DAGER-candidate projection and decodes by '
+                             'nearest full-vocab embeddings.')
     parser.add_argument('--print_every', type=int, default=50)
 
     # LoRA

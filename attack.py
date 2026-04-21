@@ -1,18 +1,25 @@
 import datetime
+import json
+import os
 import sys
 import time
 
 import evaluate
 import numpy as np
+import pandas as pd
 import torch
 from scipy.optimize import linear_sum_assignment
 
 from args_factory import get_args
 from utils.data import TextDataset
+from utils.experiment import _repo_root, cleanup_memory
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
-from utils.functional import get_top_B_in_span, check_if_in_span, remove_padding, filter_outliers, get_span_dists
+from utils.functional import (fallback_rope_l1_candidates, get_top_B_in_span, check_if_in_span, log_distances,
+                              remove_padding, filter_outliers, get_span_dists,
+                              evaluate_prediction, print_single_metric_dict, summarize_metrics, _rouge_triplet,
+                              print_summary_table)
 from utils.models import ModelWrapper
 
 # old seed: 100
@@ -26,14 +33,12 @@ total_tokens = 0
 total_correct_maxB_tokens = 0
 
 
-def _rouge_triplet(score):
-    if hasattr(score, 'mid'):
-        score = score.mid
-    if hasattr(score, 'fmeasure'):
-        return score.fmeasure, score.precision, score.recall
-    value = float(score)
-    return value, value, value
-
+def _all_token_positions(mask, start=0, stop=None):
+    if mask.ndim == 1:
+        return torch.all(mask[start:stop]).item()
+    if mask.ndim == 2:
+        return torch.all(mask[:, start:stop]).item()
+    raise ValueError(f'Expected 1D or 2D span mask, got shape {tuple(mask.shape)}')
 
 def filter_l1(args, model_wrapper, R_Qs):
     tokenizer = model_wrapper.tokenizer
@@ -46,6 +51,7 @@ def filter_l1(args, model_wrapper, R_Qs):
     while True:
         logger.info(f'L1 Position {p}')
         embeds = model_wrapper.get_embeddings(p)
+        distance_values = None
         if model_wrapper.is_bert():
             if args.defense_noise is None:
                 _, res_ids_new, res_types_new = get_top_B_in_span(R_Qs[0], embeds, args.batch_size, args.l1_span_thresh,
@@ -56,12 +62,16 @@ def filter_l1(args, model_wrapper, R_Qs):
             if args.defense_noise is None:
                 _, res_ids_new = get_top_B_in_span(R_Qs[0], embeds, args.batch_size, args.l1_span_thresh,
                                                    args.dist_norm)
+                if model_wrapper.has_rope() and len(res_ids_new) == 0:
+                    res_ids_new = fallback_rope_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
             else:
                 std_thrs = args.p1_std_thrs if p == 0 else None
-                d = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
-                res_ids_new = filter_outliers(d, std_thrs=std_thrs, maxB=max(50 * model_wrapper.args.batch_size,
-                                                                             int(0.05 * len(model_wrapper.tokenizer))))
+                distance_values = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
+                res_ids_new = filter_outliers(distance_values, std_thrs=std_thrs,
+                                             maxB=max(50 * model_wrapper.args.batch_size,
+                                                      int(0.05 * len(model_wrapper.tokenizer))))
             res_types_new = torch.zeros_like(res_ids_new)
+        log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
         res_pos_new = torch.ones_like(res_ids_new) * p
 
         del embeds
@@ -112,6 +122,8 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
             reference = []
             for i in range(orig_batch['input_ids'].shape[0]):
                 reference += [remove_padding(tokenizer, orig_batch['input_ids'][i], left=(args.pad == 'left'))]
+            del true_grads, orig_batch
+            cleanup_memory()
             return ['' for _ in range(len(reference))], reference
         R_Q, R_Q2 = R_Q.to(args.device), R_Q2.to(args.device)
         total_true_token_count, total_true_token_count2 = 0, 0
@@ -199,18 +211,25 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                 input_layer1 = model_wrapper.get_layer_inputs(orig_sentence, attention_mask=attention_mask)[0]
 
             sizesq2 = check_if_in_span(R_Q2, input_layer1, args.dist_norm)
-            boolsq2 = sizesq2 < args.l2_span_thresh
+            l2_span_thresh = model_wrapper.effective_l2_span_thresh(args.l2_span_thresh)
+            boolsq2 = sizesq2 < l2_span_thresh
+            if model_wrapper.has_rope():
+                special_tokens = torch.tensor(
+                    [model_wrapper.pad_token, model_wrapper.start_token],
+                    device=orig_sentence.device,
+                    dtype=orig_sentence.dtype,
+                )
+                boolsq2 = torch.logical_or(boolsq2, torch.isin(orig_sentence, special_tokens))
             logger.info(sizesq2)
 
             if args.task == 'next_token_pred':
-                rec_l2.append(torch.all(boolsq2[:-1]).item())
+                rec_l2.append(_all_token_positions(boolsq2, stop=-1))
             elif model_wrapper.has_rope():
-                rec_l2.append(torch.all(boolsq2[1:]).item())
+                rec_l2.append(_all_token_positions(boolsq2, start=1))
             else:
                 rec_l2.append(torch.all(boolsq2).item())
 
-        logger.info(
-            f'Rec L1: {rec_l1}, Rec L1 MaxB: {rec_l1_maxB}, Rec MaxB Token: {total_correct_maxB_tokens / total_tokens}, Rec Token: {total_correct_tokens / total_tokens}, Rec L2: {rec_l2}')
+        logger.info(f'Rec L1: {rec_l1}, Rec L1 MaxB: {rec_l1_maxB}, Rec MaxB Token: {total_correct_maxB_tokens / total_tokens}, Rec Token: {total_correct_tokens / total_tokens}, Rec L2: {rec_l2}')
 
         if args.neptune:
             args.neptune['logs/rec_l1'].log(np.array(rec_l1).sum())
@@ -244,7 +263,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                     approx_sentences = []
                     approx_scores = []
                     for sent, sc in zip(predicted_sentences, predicted_sentences_scores):
-                        if sc < args.l2_span_thresh:
+                        if sc < model_wrapper.effective_l2_span_thresh(args.l2_span_thresh):
                             correct_sentences.append(sent)
                         else:
                             approx_sentences.append(sent)
@@ -265,6 +284,17 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                 predicted_sentences += new_predicted_sentences
                 predicted_sentences_scores += new_predicted_scores
 
+    reference = []
+    for i in range(orig_batch['input_ids'].shape[0]):
+        reference += [remove_padding(tokenizer, orig_batch['input_ids'][i, :tokenizer.model_max_length],
+                                     left=(args.pad == 'left'))]
+
+    if len(predicted_sentences) == 0:
+        logger.info(
+            "Decoder produced no candidate reconstructions after L1/L2 filtering; returning empty predictions."
+        )
+        return ['' for _ in range(len(reference))], reference
+
     correct_sentences = []
     approx_sentences = []
     approx_sentences_ext = []
@@ -272,7 +302,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
     approx_scores = []
     max_len = max([len(s) for s in predicted_sentences])
     for sent, sc in zip(predicted_sentences, predicted_sentences_scores):
-        if sc < args.l2_span_thresh:
+        if sc < model_wrapper.effective_l2_span_thresh(args.l2_span_thresh):
             correct_sentences.append(sent)
         else:
             approx_sentences.append(sent)
@@ -302,10 +332,6 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
     if args.neptune:
         args.neptune['logs/num_pred'].log(len(correct_sentences))
 
-    reference = []
-    for i in range(orig_batch['input_ids'].shape[0]):
-        reference += [remove_padding(tokenizer, orig_batch['input_ids'][i, :tokenizer.model_max_length],
-                                     left=(args.pad == 'left'))]
     if len(prediction) > len(reference):
         prediction = prediction[:len(reference)]
 
@@ -360,15 +386,22 @@ def print_metrics(args, res, suffix):
 def main():
     device = torch.device(args.device)
     metric = evaluate.load('rouge', cache_dir=args.cache_dir)
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
+    dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
                           use_hf_split=args.use_hf_split)
-
     model_wrapper = ModelWrapper(args)
+    wrapper_tokenizer = model_wrapper.tokenizer
 
     logger.info('\n\nAttacking..\n')
     predictions, references = [], []
+    final_results = []
+    final_per_input_results = []
+    input_times = []
+    sentence_rows = []
+    input_rows = []
+    attack_name = f"dager_{args.loss}"
+    results_dir = os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
-
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
         t_input_start = time.time()
         sample = dataset[i]  # (seqs, labels)
@@ -389,32 +422,76 @@ def main():
         references += reference
 
         logger.info(f'Done with input #{i} of {args.n_inputs}.')
-        logger.info('reference: ')
-        for seq in reference:
+        curr_metrics = []
+        for sent_idx, (ref, pred)  in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(seq)
+            logger.info(f"Reference: {ref}" )
+            logger.info(f"Prediction: {pred}" )
+            metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
+            curr_metrics.append(metrics)
+            sentence_rows.append({
+                "run_id": job_hash,
+                "attack": attack_name,
+                "model": args.model_path,
+                "dataset": args.dataset,
+                "input_index": i,
+                "sentence_index": sent_idx,
+                "reference": ref,
+                "prediction": pred,
+                **metrics})
         logger.info('========================')
-
-        logger.info('predicted: ')
-        for seq in prediction:
-            logger.info('========================')
-            logger.info(seq)
-        logger.info('========================')
-
+        summary = summarize_metrics(curr_metrics)
+        final_results.extend(curr_metrics)
         logger.info('[Curr input metrics]:')
-        res = metric.compute(predictions=prediction, references=reference)
-        print_metrics(args, res, suffix='curr')
-
+        logger.info(f"{print_summary_table(summary)}")
         logger.info('[Aggregate metrics]:')
-        res = metric.compute(predictions=predictions, references=references)
-        print_metrics(args, res, suffix='agg')
+        aggregated_results = evaluate_prediction(" ".join(prediction), " ".join(reference), wrapper_tokenizer, metric)
 
-        input_time = str(datetime.timedelta(seconds=time.time() - t_input_start)).split(".")[0]
-        total_time = str(datetime.timedelta(seconds=time.time() - t_start)).split(".")[0]
+        final_per_input_results.append(aggregated_results)
+        logger.info(f"{print_single_metric_dict(aggregated_results)}")
+        input_time_sec = time.time() - t_input_start
+        total_time_sec = time.time() - t_start
+        input_time = str(datetime.timedelta(seconds=input_time_sec)).split(".")[0]
+        total_time = str(datetime.timedelta(seconds=total_time_sec)).split(".")[0]
+
         logger.info(f'input #{i} time: {input_time} | total time: {total_time}')
+        input_rows.append({
+            "run_id": job_hash,
+            "attack": attack_name,
+            "model": args.model_path,
+            "dataset": args.dataset,
+            "input_index": i,
+            "num_sentences": len(reference),
+            "joined_reference": " ".join(reference),
+            "joined_prediction": " ".join(prediction),
+            "reconstruction_time_sec": input_time_sec,
+            **aggregated_results})
+        input_times.append(input_time_sec)
+        del sample, prediction, reference, curr_metrics, aggregated_results
+        cleanup_memory()
         logger.info("")
         logger.info("")
-
+    logger.info('[Aggregate metrics]:')
+    total_time = time.time() - t_start
+    aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), wrapper_tokenizer, metric)
+    aggregated_results[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    aggregated_results[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Overall {print_single_metric_dict(aggregated_results)}")
+    summary = summarize_metrics(final_results)
+    summary[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    summary[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Per Sentence{print_summary_table(summary)}")
+    summary_per_input = summarize_metrics(final_per_input_results)
+    summary_per_input[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    summary_per_input[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Per Input Results {print_summary_table(summary_per_input)}")
+    summary_results = {"Overall Results": aggregated_results, "Per Sentence Results": summary,
+                       "Per Input Results": summary_per_input, "Arguments": vars(args)}
+    logger.info(f"Experiment time {total_time}")
+    pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
+    pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
+    with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
+        json.dump(summary_results, f, indent=2)
     logger.info('Done with all.')
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)

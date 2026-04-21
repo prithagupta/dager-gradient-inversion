@@ -5,7 +5,15 @@ from constants import BERT_CLS_TOKEN, BERT_SEP_TOKEN, BERT_PAD_TOKEN
 
 
 def compute_grads(model, x_embeds, y_labels, create_graph=False):
-    outs = model(inputs_embeds=x_embeds, labels=y_labels)
+    forward_kwargs = {
+        "inputs_embeds": x_embeds,
+        "labels": y_labels,
+        "output_attentions": False,
+        "output_hidden_states": False,
+    }
+    if getattr(model.config, "is_decoder", False) or getattr(model.config, "model_type", None) == "gpt2":
+        forward_kwargs["use_cache"] = False
+    outs = model(**forward_kwargs)
     return torch.autograd.grad(outs.loss, model.parameters(), create_graph=create_graph, allow_unused=True)
 
 
@@ -59,7 +67,12 @@ def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weigh
     gpt2_embeds = alpha.bmm(gpt2_embeddings_weight)
 
     # Pass through GPT-2 and get average perplexity
-    out_gpt2 = gpt2(inputs_embeds=gpt2_embeds)
+    out_gpt2 = gpt2(
+        inputs_embeds=gpt2_embeds,
+        use_cache=False,
+        output_attentions=False,
+        output_hidden_states=False,
+    )
     log_probs = out_gpt2.logits.log_softmax(dim=2)
     fuzzy_perplexity = -(log_probs[:, :-1, :] * alpha[:, 1:, :]).sum(dim=2).mean(dim=1).sum()
     return fuzzy_perplexity

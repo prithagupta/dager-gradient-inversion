@@ -31,7 +31,7 @@ def args_to_dict(args):
 
 def get_hash_value_for_args(args):
     hash_string = json.dumps(args_to_dict(args), sort_keys=True, default=str)
-    return hashlib.sha1(hash_string.encode()).hexdigest()
+    return hashlib.sha1(hash_string.encode()).hexdigest()[:12]
 
 
 def create_directory_safely(path, is_file_path=False):
@@ -50,6 +50,20 @@ def setup_random_seed(seed=1234, logger=None):
     if logger is not None:
         logger.info("Random seed set to %s", seed)
         logger.info("Torch threads: %s", torch.get_num_threads())
+
+
+def cleanup_memory():
+    """Release Python and accelerator-side cached memory between attack inputs."""
+    import gc
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+        try:
+            torch.mps.empty_cache()
+        except AttributeError:
+            pass
 
 
 def setup_experiment_logging(args, attack_name, level=logging.INFO):

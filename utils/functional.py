@@ -9,6 +9,73 @@ from constants import config
 logger = logging.getLogger(__name__)
 
 
+
+def _rouge_triplet(score):
+    if hasattr(score, 'mid'):
+        score = score.mid
+    if hasattr(score, 'fmeasure'):
+        return score.fmeasure, score.precision, score.recall
+    value = float(score)
+    return value, value, value
+
+def print_single_metric_dict(metrics):
+    output = "\n===== Single Evaluation =====\n"
+    output += f"{'Metric':<25} {'Value':>10}\n"
+    output += "-" * 40 + "\n"
+    for k, v in metrics.items():
+        output += f"{k:<25} {float(v):>10.4f}\n"
+    return output
+
+def print_summary_table(summary):
+    output = "\n===== Metrics Summary =====\n"
+    output += f"{'Metric':<25} {'Mean':>10} {'Std':>10}\n"
+    output += "-" * 50 + "\n"
+
+    # group mean/std pairs
+    metrics = sorted(set(k.replace("_mean", "").replace("_std", "") for k in summary))
+
+    for m in metrics:
+        mean = summary.get(f"{m}_mean", 0.0)
+        std = summary.get(f"{m}_std", 0.0)
+        output += f"{m:<25} {mean:>10.4f} {std:>10.4f}\n"
+
+    return output
+
+def summarize_metrics(metrics_list):
+    summary = {}
+    keys = metrics_list[0].keys()
+
+    for k in keys:
+        values = np.array([m[k] for m in metrics_list], dtype=float)
+        summary[f"{k}_mean"] = float(values.mean())
+        summary[f"{k}_std"] = float(values.std())
+    return summary
+
+def evaluate_prediction(pred, ref, tokenizer, rouge_metric):
+    rouge = rouge_metric.compute(predictions=[pred], references=[ref])
+
+    rouge1_fm, _, _ = _rouge_triplet(rouge["rouge1"])
+    rouge2_fm, _, _ = _rouge_triplet(rouge["rouge2"])
+    rougeL_fm, _, _ = _rouge_triplet(rouge["rougeL"])
+
+    exact_match = int(pred.strip() == ref.strip())
+
+    pred_ids = tokenizer(pred, add_special_tokens=False)["input_ids"]
+    ref_ids = tokenizer(ref, add_special_tokens=False)["input_ids"]
+
+    L = min(len(pred_ids), len(ref_ids))
+    token_acc = 0.0 if L == 0 else sum(int(pred_ids[i] == ref_ids[i]) for i in range(L)) / max(len(ref_ids), 1)
+
+    pad_id = tokenizer.pad_token_id
+    mask = [ref_ids[i] != pad_id for i in range(len(ref_ids))]
+    correct = sum(int(pred_ids[i] == ref_ids[i]) for i in range(L) if mask[i])
+    total = sum(mask)
+    padded_token_acc = 0.0 if total == 0 else correct / total
+    results_dict = {"rouge1_fm": rouge1_fm, "rouge2_fm": rouge2_fm, "rougeL_fm": rougeL_fm,
+                    "exact_match": exact_match, "token_acc": token_acc, "padded_token_acc": padded_token_acc,
+                    "pred_len": len(pred_ids), "ref_len": len(ref_ids)}
+    return results_dict
+
 def remove_padding(tokenizer, ids, left=False):
     if left:
         for i in range(ids.shape[0]):
@@ -59,6 +126,7 @@ def get_closest_tokens(inputs_embeds, unused_tokens, embeddings_weight, metric='
 
 
 def get_layer_decomp(grad, B=None, tol=None, upcast=False):
+    grad = torch.nan_to_num(grad, nan=0.0, posinf=1e5, neginf=-1e5)
     grad = grad.detach().float().cpu().numpy()
     if upcast:
         grad = grad.astype(np.float32)
@@ -122,6 +190,37 @@ def get_top_B_in_span(R_K_norm, v, B, thresh, norm):
     return which_new
 
 
+def log_distances(res_ids_new, R_Q, embeds, dist_norm, p, dists=None, log=None, label="L1"):
+    """Log distance statistics for selected token candidates."""
+    log = logger if log is None else log
+
+    n_candidates = len(res_ids_new)
+    if n_candidates == 0:
+        log.info("%s Position %s | candidates=0", label, p)
+        return
+
+    if dists is None:
+        dists = check_if_in_span(R_Q, embeds, dist_norm).reshape(-1)
+    else:
+        dists = torch.as_tensor(dists, device=embeds.device).reshape(-1)
+
+    candidate_ids = torch.as_tensor(res_ids_new, dtype=torch.long, device=dists.device).reshape(-1)
+    candidate_ids = candidate_ids[(candidate_ids >= 0) & (candidate_ids < dists.numel())]
+    if candidate_ids.numel() == 0:
+        log.info("%s Position %s | candidates=%s | no valid candidate ids", label, p, n_candidates)
+        return
+
+    selected_dists = dists[candidate_ids]
+    log.info(
+        "%s Position %s | candidates=%s | best_dist=%.6g | worst_dist=%.6g",
+        label,
+        p,
+        n_candidates,
+        selected_dists.min().item(),
+        selected_dists.max().item(),
+    )
+
+
 def filter_outliers(d, stage='token', std_thrs=None, maxB=None):
     if std_thrs is None:
         res_ids = torch.tensor(d.argsort()[:maxB])
@@ -165,3 +264,16 @@ def get_span_dists(args, model_wrapper, R_Qs, embeds, p=0, stage='token'):
     d = d.mean(axis=1).cpu().detach()
 
     return d
+
+def fallback_rope_l1_candidates(args, model_wrapper, R_Q, embeds):
+    dists = check_if_in_span(R_Q, embeds, args.dist_norm).reshape(-1)
+    blocked_tokens = [model_wrapper.pad_token, model_wrapper.eos_token, model_wrapper.start_token]
+    for token_id in blocked_tokens:
+        if token_id is not None and 0 <= token_id < dists.numel():
+            dists[token_id] = torch.inf
+
+    top_k = min(max(args.parallel, 200 * args.batch_size), dists.numel())
+    res_ids = torch.topk(dists, k=top_k, largest=False).indices
+    logger.info(f"Llama/RoPE strict L1 returned no candidates; using nearest {len(res_ids)} token candidates "
+                f"(best_dist={dists[res_ids[0]].item()}, worst_dist={dists[res_ids[-1]].item()}).")
+    return res_ids

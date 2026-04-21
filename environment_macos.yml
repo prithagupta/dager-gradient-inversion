@@ -8,15 +8,18 @@ dependencies:
   - python=3.11
   - pip
   - pytorch=2.3.*
-  - torchvision
-  - torchaudio
+  - torchvision=0.18.*
+  - torchaudio=2.3.*
   - numpy=1.26.*
   - scipy=1.13.*
   - pandas=2.2.*
   - scikit-learn=1.5.*
   - nltk=3.8.*
   - datasets=2.19.*
+  - dill=0.3.8
   - evaluate
+  - fsspec=2024.3.1
+  - multiprocess=0.70.16
   - pyarrow=14.0.*
   - tqdm
   - pyyaml
@@ -28,6 +31,7 @@ dependencies:
   - future
   - gitpython
   - boto3
+  - importlib_resources
   - neptune-client
   - tokenizers=0.19.1
   - transformers=4.40.1
@@ -35,7 +39,6 @@ dependencies:
   - safetensors
   - sentencepiece
   - ffmpeg
-  - evaluate
   - pip:
       - rouge-score==0.1.2
       - accelerate==0.34.2

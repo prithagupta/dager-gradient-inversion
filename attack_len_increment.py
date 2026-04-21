@@ -6,6 +6,7 @@ import torch
 
 from attack import reconstruct, args, logger
 from utils.data import TextDataset
+from utils.experiment import cleanup_memory
 from utils.models import ModelWrapper
 
 
@@ -65,6 +66,8 @@ def main():
             if args.neptune:
                 args.neptune['logs/sample_acc'].log(total_correct / tokenized_ref.numel())
             accuracy += total_correct / tokenized_ref.numel()
+            del new_sample, prediction, reference, tokenized_pred, tokenized_ref
+            cleanup_memory()
         logger.info("Sample set accuracy %s", (accuracy * 10).item())
         if args.neptune:
             args.neptune['logs/accuracy'].log(accuracy / 10)

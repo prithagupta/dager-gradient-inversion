@@ -1,10 +1,12 @@
 import logging
 import os
+from types import SimpleNamespace
 
 import numpy as np
 import peft
 import torch
 import torch.nn.functional as F
+from torch import nn
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForCausalLM
 
 from constants import config
@@ -14,6 +16,14 @@ from utils.partial_models import add_partial_forward_gpt2, add_partial_forward_b
 logger = logging.getLogger(__name__)
 
 GPT2_MODEL_PATHS = ['gpt2', 'openai-community/gpt2-large']
+MODEL_PATH_ALIASES = {
+    'gemma-2b': 'google/gemma-2b',
+    'gemma_2b': 'google/gemma-2b',
+    'gemma2b': 'google/gemma-2b',
+    'vault_gemma': 'google/vaultgemma-1b',
+    'vault-gemma': 'google/vaultgemma-1b',
+    'vaultgemma': 'google/vaultgemma-1b',
+}
 LLAMA_MODEL_PATHS = [
     'meta-llama/Llama-2-7b-hf',
     'meta-llama/Llama-2-70b-hf',
@@ -35,6 +45,13 @@ GEMMA_MODEL_PATHS = [
     'google/gemma-3-12b-it',
     'google/gemma-3-27b-it',
 ]
+VAULT_GEMMA_MODEL_PATHS = [
+    'google/vaultgemma-1b',
+]
+
+
+def _normalize_model_path(model_path):
+    return MODEL_PATH_ALIASES.get(model_path.lower(), model_path)
 
 
 def _is_gpt2_path(model_path):
@@ -46,24 +63,181 @@ def _is_llama_path(model_path):
 
 
 def _is_gemma_path(model_path):
+    model_path = _normalize_model_path(model_path)
     return model_path in GEMMA_MODEL_PATHS or 'gemma' in model_path.lower()
 
 
+def _is_vault_gemma_path(model_path):
+    model_path = _normalize_model_path(model_path)
+    return model_path in VAULT_GEMMA_MODEL_PATHS or 'vaultgemma' in model_path.lower()
+
+
 def _is_supported_model_path(model_path):
+    model_path = _normalize_model_path(model_path)
     return model_path in ['bert-base-uncased'] or _is_gpt2_path(model_path) or _is_llama_path(
         model_path) or _is_gemma_path(model_path)
 
 
+def _maybe_add_legacy_llama_rope_config(model_kwargs, model_path, attn_implementation):
+    """Patch Llama 3.1 configs for older Transformers releases.
+
+    Transformers versions before Llama-3.1 support reject the newer
+    ``{"rope_type": "llama3", ...}`` shape and only accept ``type``/``factor``.
+    For short attack sequences this legacy dynamic approximation is enough to
+    load the model without changing the rest of the DAGER code path.
+    """
+    if 'Llama-3.1' not in model_path:
+        return
+
+    try:
+        from transformers.models.llama.configuration_llama import LlamaConfig
+    except ImportError:
+        return
+
+    config_lookup_kwargs = {}
+    for key in ('cache_dir', 'token'):
+        if key in model_kwargs:
+            config_lookup_kwargs[key] = model_kwargs[key]
+
+    pretrained_name = model_kwargs['pretrained_model_name_or_path']
+    config_dict, _ = LlamaConfig.get_config_dict(pretrained_name, **config_lookup_kwargs)
+    try:
+        LlamaConfig.from_dict(dict(config_dict), attn_implementation=attn_implementation)
+        return
+    except ValueError as exc:
+        if 'rope_scaling' not in str(exc):
+            raise
+
+    rope_scaling = config_dict.get('rope_scaling')
+    if not isinstance(rope_scaling, dict) or rope_scaling.get('rope_type') != 'llama3':
+        raise
+
+    legacy_config = dict(config_dict)
+    legacy_config['rope_scaling'] = {
+        'type': 'dynamic',
+        'factor': float(rope_scaling.get('factor', 1.0)),
+    }
+    model_kwargs['config'] = LlamaConfig.from_dict(
+        legacy_config,
+        attn_implementation=attn_implementation,
+    )
+    logger.info(
+        "Patched Llama 3.1 rope_scaling for legacy Transformers: %s -> %s",
+        rope_scaling,
+        legacy_config['rope_scaling'],
+    )
+
+
+def _ensure_vault_gemma_available(model_path):
+    if not _is_vault_gemma_path(model_path):
+        return
+
+    try:
+        from transformers.models.auto.configuration_auto import CONFIG_MAPPING
+        CONFIG_MAPPING['vaultgemma']
+        return
+    except KeyError as exc:
+        import transformers
+        raise RuntimeError(
+            "VaultGemma cannot be loaded in this Python environment because Transformers "
+            f"{transformers.__version__} does not recognize model_type='vaultgemma'. "
+            "Upgrade the environment to a Transformers release with VaultGemma support, "
+            "or use google/gemma-2b/google/gemma-2-2b for the current seq_class attack. "
+            "The repository-side VaultGemma sequence-classification wrapper will be used "
+            "once the architecture is available in Transformers."
+        ) from exc
+
+
+class CausalLMSequenceClassifier(nn.Module):
+    """Small sequence-classification head for decoder-only causal-LM models."""
+
+    def __init__(self, causal_lm, num_labels=2):
+        super().__init__()
+        self.model = causal_lm.model
+        self.config = causal_lm.config
+        self.num_labels = getattr(self.config, 'num_labels', num_labels)
+        self.config.num_labels = self.num_labels
+        self.config.problem_type = getattr(self.config, 'problem_type', None)
+        self.score = nn.Linear(self.config.hidden_size, self.num_labels, bias=False)
+        first_param = next(self.model.parameters())
+        self.score.to(device=first_param.device, dtype=first_param.dtype)
+        if hasattr(causal_lm, 'lm_head'):
+            self.lm_head = causal_lm.lm_head
+
+    @property
+    def device(self):
+        return next(self.parameters()).device
+
+    def get_input_embeddings(self):
+        return self.model.embed_tokens
+
+    def set_input_embeddings(self, value):
+        self.model.embed_tokens = value
+
+    def forward(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            position_ids=None,
+            past_key_values=None,
+            inputs_embeds=None,
+            labels=None,
+            use_cache=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=True,
+            **kwargs,
+    ):
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            position_ids=position_ids,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            use_cache=False if use_cache is None else use_cache,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=True,
+            **kwargs,
+        )
+        hidden_states = outputs.last_hidden_state
+        logits = self.score(hidden_states).float()
+
+        if attention_mask is None:
+            sequence_lengths = torch.full(
+                (hidden_states.shape[0],),
+                hidden_states.shape[1] - 1,
+                dtype=torch.long,
+                device=hidden_states.device,
+            )
+        else:
+            flipped_mask = torch.flip(attention_mask.long(), dims=[1])
+            sequence_lengths = attention_mask.shape[1] - 1 - flipped_mask.argmax(dim=1)
+        pooled_logits = logits[torch.arange(hidden_states.shape[0], device=hidden_states.device), sequence_lengths]
+
+        loss = None
+        if labels is not None:
+            loss = F.cross_entropy(pooled_logits, labels.view(-1))
+
+        return SimpleNamespace(
+            loss=loss,
+            logits=pooled_logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+
 class ModelWrapper():
     def __init__(self, args):
+        args.model_path = _normalize_model_path(args.model_path)
         assert _is_supported_model_path(args.model_path), \
             'Model is not yet supported - add it to assertion list and specify implementation details'
         access_token = os.environ.get('HF_TOKEN')
         self.args = args
+        self._logged_llama_non_cuda_float32 = False
         model_kwargs = {'cache_dir': args.cache_dir} if args.cache_dir is not None else {}
 
-        model_kwargs[
-            'pretrained_model_name_or_path'] = args.model_path if args.finetuned_path is None or args.train_method == 'lora' else args.finetuned_path
+        model_kwargs['pretrained_model_name_or_path'] = args.model_path if args.finetuned_path is None or args.train_method == 'lora' else args.finetuned_path
         model_kwargs['attn_implementation'] = args.attn_implementation
         if access_token is not None:
             model_kwargs['token'] = access_token
@@ -79,7 +253,13 @@ class ModelWrapper():
             model_kwargs['torch_dtype'] = torch.float16
         if args.precision == 'double':
             model_kwargs['torch_dtype'] = torch.float64
-        if args.task == 'seq_class':
+        if _is_llama_path(args.model_path):
+            _maybe_add_legacy_llama_rope_config(model_kwargs, args.model_path, args.attn_implementation)
+        _ensure_vault_gemma_available(args.model_path)
+        if args.task == 'seq_class' and _is_vault_gemma_path(args.model_path):
+            causal_lm = AutoModelForCausalLM.from_pretrained(**model_kwargs)
+            self.model = CausalLMSequenceClassifier(causal_lm)
+        elif args.task == 'seq_class':
             self.model = AutoModelForSequenceClassification.from_pretrained(**model_kwargs)
         elif args.task == 'next_token_pred':
             self.model = AutoModelForCausalLM.from_pretrained(**model_kwargs)
@@ -88,6 +268,9 @@ class ModelWrapper():
         g_cpu = torch.Generator(device=self.model.device)
         g_cpu.manual_seed(0)
         self.model.eval()
+        self.model.config.use_cache = False
+        self.model.config.output_hidden_states = False
+        self.model.config.output_attentions = False
         tokenizer_kwargs = {'use_fast': True, 'cache_dir': args.cache_dir}
         if access_token is not None:
             tokenizer_kwargs['token'] = access_token
@@ -167,6 +350,9 @@ class ModelWrapper():
             self.embeddings_weight_nopos = self.model.model.embed_tokens.weight.unsqueeze(0)
             add_partial_forward_llama(self.model.model)
 
+            if self._force_llama_non_cuda_float32(args.device):
+                self._prepare_llama_non_cuda_float32()
+
         elif _is_gemma_path(args.model_path):
 
             self.start_token = self.tokenizer.bos_token_id
@@ -195,6 +381,31 @@ class ModelWrapper():
         config['EOS_TOKEN'] = self.eos_token
         config['PAD_TOKEN'] = self.pad_token
         self.set_model_device(args.device)
+
+    def _force_llama_non_cuda_float32(self, device=None):
+        device = self.args.device if device is None else device
+        return (
+            _is_llama_path(self.args.model_path)
+            and self.args.precision == 'half'
+            and not str(device).startswith('cuda')
+        )
+
+    def _log_llama_non_cuda_float32(self):
+        if self._logged_llama_non_cuda_float32:
+            return
+        logger.info(
+            "Requested --precision half for Llama on a non-CUDA device, but PyTorch does not reliably support "
+            "the required half-precision loss/backward path there. Using float32 for Llama gradient computations."
+        )
+        self._logged_llama_non_cuda_float32 = True
+
+    def _prepare_llama_non_cuda_float32(self):
+        self._log_llama_non_cuda_float32()
+        self.model.float()
+        if hasattr(self.model.config, "_attn_implementation"):
+            self.model.config._attn_implementation = "eager"
+        if hasattr(self.model, "model") and hasattr(self.model.model.config, "_attn_implementation"):
+            self.model.model.config._attn_implementation = "eager"
 
     def compute_grads_fed_avg(self, batch, labels, create_graph=False):
         og_weights = [param.data.clone() for param in self.model.parameters()]
@@ -251,7 +462,14 @@ class ModelWrapper():
 
             else:
 
-                outs = self.model(**batch, labels=labels, output_hidden_states=True)
+                forward_kwargs = {
+                    'labels': labels,
+                    'output_hidden_states': (self.args.loss == 'mse'),
+                    'output_attentions': False,
+                }
+                if self.is_decoder():
+                    forward_kwargs['use_cache'] = False
+                outs = self.model(**batch, **forward_kwargs)
 
                 if self.args.loss == 'mse':
                     loss = outs.hidden_states[-1].pow(2).mean()
@@ -299,9 +517,18 @@ class ModelWrapper():
             attention_mask = attention_mask.to(x_embeds.device)
 
         self.model.to(x_embeds.device)
+        if self._force_llama_non_cuda_float32(x_embeds.device):
+            self._prepare_llama_non_cuda_float32()
+            x_embeds = x_embeds.float()
 
         if _is_gpt2_path(self.args.model_path):
-            transformer_outputs = self.model.transformer(inputs_embeds=x_embeds, attention_mask=attention_mask)
+            transformer_outputs = self.model.transformer(
+                inputs_embeds=x_embeds,
+                attention_mask=attention_mask,
+                use_cache=False,
+                output_attentions=False,
+                output_hidden_states=False,
+            )
             hidden_states = transformer_outputs[0]
             logits = self.model.score(hidden_states).float()
             if attention_mask is None:
@@ -317,7 +544,16 @@ class ModelWrapper():
             pooled_logits = logits[torch.arange(x_embeds.shape[0], device=x_embeds.device), sequence_lengths]
             loss = F.cross_entropy(pooled_logits, y_labels.view(-1))
         else:
-            outs = self.model(inputs_embeds=x_embeds, attention_mask=attention_mask, labels=y_labels.view(-1))
+            forward_kwargs = {
+                'inputs_embeds': x_embeds,
+                'attention_mask': attention_mask,
+                'labels': y_labels.view(-1),
+                'output_attentions': False,
+                'output_hidden_states': False,
+            }
+            if self.is_decoder():
+                forward_kwargs['use_cache'] = False
+            outs = self.model(**forward_kwargs)
             loss = outs.loss
 
         grad = torch.autograd.grad(loss, self.trainable_parameters(), create_graph=create_graph, allow_unused=True)
@@ -432,10 +668,25 @@ class ModelWrapper():
     def has_rope(self):
         return _is_llama_path(self.args.model_path) or _is_gemma_path(self.args.model_path)
 
+    def is_gemma_family(self):
+        return _is_gemma_path(self.args.model_path)
+
+    def is_vault_gemma(self):
+        return _is_vault_gemma_path(self.args.model_path)
+
+    def effective_l2_span_thresh(self, requested_thresh):
+        if self.is_vault_gemma():
+            return max(requested_thresh, 5e-3)
+        if self.is_gemma_family():
+            return max(requested_thresh, 1e-5)
+        return requested_thresh
+
     def has_bos(self):
         return self.start_token is not None
 
     def is_lower(self):
+        if self._force_llama_non_cuda_float32():
+            return False
         return self.args.precision in ['8bit', 'half']
 
     def get_input_embeddings_weight(self):

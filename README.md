@@ -5,6 +5,18 @@
 
 > conda env create -f environment.yml -n dager
 
+For newer local setups we also keep lighter environment files:
+
+> conda env create -f environment_macos.yml
+
+> conda env create -f environment_macos_transformers55.yml
+
+For NVIDIA CUDA machines:
+
+> conda env create -f environment_cuda.yml
+
+> conda env create -f environment_cuda_transformers55.yml
+
 - Enable the created environment:<br>
 
 > conda activate dager

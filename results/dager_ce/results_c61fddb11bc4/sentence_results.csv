@@ -1,0 +1,5 @@
+run_id,attack,model,dataset,input_index,sentence_index,reference,prediction,rouge1_fm,rouge2_fm,rougeL_fm,exact_match,token_acc,padded_token_acc,pred_len,ref_len
+c61fddb11bc4,dager_ce,google/gemma-2b,sst2,0,0,"<bos>the film 's hackneyed message is not helped by the thin characterizations , nonexistent plot and pretentious visual style . ",<bos>the film,0.2727272727272727,0.19999999999999998,0.2727272727272727,0,0.11538461538461539,0.11538461538461539,3,26
+c61fddb11bc4,dager_ce,google/gemma-2b,sst2,0,1,"<bos>the vitality of the actors keeps the intensity of the film high , even as the strafings blend together . ",<bos>the vitality,0.2727272727272727,0.19999999999999998,0.2727272727272727,0,0.125,0.125,3,24
+c61fddb11bc4,dager_ce,google/gemma-2b,sst2,0,2,<bos>tries to add some spice to its quirky sentiments but the taste is all too familiar . ,<bos>the vitality,0.2,0.0,0.2,0,0.05263157894736842,0.05263157894736842,3,19
+c61fddb11bc4,dager_ce,google/gemma-2b,sst2,0,3,"<bos>a must-see for the david mamet enthusiast and for anyone who appreciates intelligent , stylish moviemaking . ",<bos>the vitality,0.2,0.0,0.2,0,0.043478260869565216,0.043478260869565216,3,23

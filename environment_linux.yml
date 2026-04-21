@@ -1,0 +1,65 @@
+# Linux/NVIDIA cluster environment for the main DAGER stack.
+# Use this on GPU nodes only; do not use the macOS environment on Linux clusters.
+#
+# Create with:
+#   conda env create -f environment_linux.yml
+# Activate with:
+#   conda activate dager-cuda
+#
+# Quick sanity checks after activation:
+#   python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
+#   nvidia-smi
+#
+# If your conda installation tends to mix CPU and CUDA packages, set strict
+# channel priority before creating the environment:
+#   conda config --set channel_priority strict
+
+name: dager-cuda
+channels:
+  - pytorch
+  - nvidia
+  - huggingface
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch::pytorch=2.3.*
+  - pytorch::torchvision=0.18.*
+  - pytorch::torchaudio=2.3.*
+  - pytorch::pytorch-cuda=11.8
+  - protobuf
+  - numpy=1.26.*
+  - scipy=1.13.*
+  - pandas=2.2.*
+  - scikit-learn=1.5.*
+  - nltk=3.8.*
+  - datasets=2.19.*
+  - dill=0.3.8
+  - evaluate
+  - fsspec=2024.3.1
+  - multiprocess=0.70.16
+  - pyarrow=14.0.*
+  - tqdm
+  - pyyaml
+  - pillow
+  - psutil
+  - filelock
+  - requests
+  - aiohttp
+  - future
+  - gitpython
+  - boto3
+  - importlib_resources
+  - neptune-client
+  - tokenizers=0.19.1
+  - transformers=4.40.1
+  - tiktoken
+  - huggingface_hub=0.23.*
+  - safetensors
+  - sentencepiece
+  - ffmpeg
+  - pip:
+      - rouge-score==0.1.2
+      - accelerate==0.34.2
+      - peft==0.13.0

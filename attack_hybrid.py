@@ -1,17 +1,23 @@
 import datetime
+import json
+import os
 import sys
 import time
-
+import numpy as np
 import evaluate
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM
 
 from args_factory import get_args
 from utils.data import TextDataset
+from utils.experiment import _repo_root, cleanup_memory
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
-from utils.functional import get_top_B_in_span, filter_outliers, get_span_dists, remove_padding
+from utils.functional import (fallback_rope_l1_candidates, get_top_B_in_span, log_distances, remove_padding,
+                              filter_outliers, get_span_dists,
+                              evaluate_prediction, print_single_metric_dict, summarize_metrics, print_summary_table)
 from utils.models import ModelWrapper
 
 args = get_args()
@@ -25,6 +31,8 @@ if torch.cuda.is_available():
     torch.backends.cuda.enable_math_sdp(True)
 
 
+
+
 def filter_l1(args, model_wrapper, R_Qs):
     tokenizer = model_wrapper.tokenizer
     res_pos, res_ids, res_types = [], [], []
@@ -34,6 +42,7 @@ def filter_l1(args, model_wrapper, R_Qs):
     while True:
         logger.info(f'L1 Position {p}')
         embeds = model_wrapper.get_embeddings(p)
+        distance_values = None
         if model_wrapper.is_bert():
             if args.defense_noise is None:
                 _, res_ids_new, res_types_new = get_top_B_in_span(
@@ -46,16 +55,20 @@ def filter_l1(args, model_wrapper, R_Qs):
                 _, res_ids_new = get_top_B_in_span(
                     R_Qs[0], embeds, args.batch_size, args.l1_span_thresh, args.dist_norm
                 )
+                if model_wrapper.has_rope() and len(res_ids_new) == 0:
+                    res_ids_new = fallback_rope_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
             else:
                 std_thrs = args.p1_std_thrs if p == 0 else None
-                d = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
+                distance_values = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
                 res_ids_new = filter_outliers(
-                    d,
+                    distance_values,
                     std_thrs=std_thrs,
                     maxB=max(50 * model_wrapper.args.batch_size, int(0.05 * len(model_wrapper.tokenizer))),
                 )
+
             res_types_new = torch.zeros_like(res_ids_new)
 
+        log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
         res_pos_new = torch.ones_like(res_ids_new) * p
         del embeds
 
@@ -118,6 +131,18 @@ def build_candidate_mask(res_ids, seq_len, vocab_size, pad_token, device):
     return candidate_mask
 
 
+def _hybrid_uses_candidate_projection(args):
+    return args.hybrid_projection_mode in ['candidate_final', 'candidate_periodic']
+
+
+def _hybrid_uses_periodic_projection(args):
+    return args.hybrid_projection_mode == 'candidate_periodic' and args.hybrid_project_every > 0
+
+
+def _hybrid_uses_lm_prior(args):
+    return args.hybrid_use_lm_prior == 'true' and args.coeff_perplexity > 0
+
+
 def init_embeddings(args, model_wrapper, res_ids, input_ids, attention_mask, init_ids=None):
     emb_matrix = model_wrapper.get_input_embeddings_weight().detach()
     batch_size, seq_len = input_ids.shape
@@ -144,9 +169,25 @@ def init_embeddings(args, model_wrapper, res_ids, input_ids, attention_mask, ini
     return x_embeds.detach().requires_grad_(True)
 
 
-def project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask, pad_token):
+def project_to_vocab(x_embeds, emb_matrix, pad_mask, pad_token, emb_norm=None):
     batch_size, seq_len, _ = x_embeds.shape
-    emb_norm = F.normalize(emb_matrix, dim=-1)
+    if emb_norm is None:
+        emb_norm = F.normalize(emb_matrix, dim=-1)
+    x_norm = F.normalize(x_embeds.detach(), dim=-1)
+    ids = torch.full((batch_size, seq_len), pad_token, dtype=torch.long, device=x_embeds.device)
+
+    for pos in range(seq_len):
+        sims = x_norm[:, pos] @ emb_norm.T
+        ids[:, pos] = sims.argmax(dim=-1)
+
+    ids[pad_mask] = pad_token
+    return ids
+
+
+def project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask, pad_token, emb_norm=None):
+    batch_size, seq_len, _ = x_embeds.shape
+    if emb_norm is None:
+        emb_norm = F.normalize(emb_matrix, dim=-1)
     x_norm = F.normalize(x_embeds.detach(), dim=-1)
     ids = torch.full((batch_size, seq_len), pad_token, dtype=torch.long, device=x_embeds.device)
 
@@ -160,21 +201,48 @@ def project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask, pad_to
     return ids
 
 
-def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_matrix, attention_mask, temperature):
+def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_norm, lm_emb_matrix, candidate_mask, attention_mask, temperature):
     if lm is None:
         return x_embeds.sum() * 0.0
 
-    emb_norm = F.normalize(emb_matrix, dim=-1)
+    # Keep the fuzzy LM prior inside DAGER's candidate set. The previous version
+    # built [batch, seq_len, vocab] soft distributions and LM logits every step,
+    # which is the main hybrid memory spike on GPT-2.
     x_norm = F.normalize(x_embeds, dim=-1)
-    logits_to_vocab = torch.einsum('bld,vd->blv', x_norm, emb_norm)
-    alpha = F.softmax(logits_to_vocab / temperature, dim=-1)
+    batch_size, seq_len, _ = x_embeds.shape
+    lm_embeds = x_embeds.new_zeros(batch_size, seq_len, lm_emb_matrix.shape[-1])
+    candidate_ids_by_pos = []
+    alpha_by_pos = []
 
-    lm_emb_matrix = lm.get_input_embeddings().weight
-    lm_embeds = alpha @ lm_emb_matrix
-    lm_out = lm(inputs_embeds=lm_embeds, attention_mask=attention_mask)
-    log_probs = lm_out.logits.log_softmax(dim=-1)
+    for pos in range(seq_len):
+        candidate_ids = torch.where(candidate_mask[pos])[0]
+        candidate_ids_by_pos.append(candidate_ids)
+        candidate_embs = emb_norm.index_select(0, candidate_ids)
+        logits_to_candidates = x_norm[:, pos] @ candidate_embs.T
+        alpha = F.softmax(logits_to_candidates / temperature, dim=-1)
+        alpha_by_pos.append(alpha)
+        lm_candidate_embs = lm_emb_matrix.index_select(0, candidate_ids)
+        lm_embeds[:, pos] = alpha @ lm_candidate_embs
 
-    token_loss = -(log_probs[:, :-1, :] * alpha[:, 1:, :]).sum(dim=-1)
+    transformer = lm.transformer if hasattr(lm, 'transformer') else lm.base_model
+    lm_out = transformer(
+        inputs_embeds=lm_embeds,
+        attention_mask=attention_mask,
+        use_cache=False,
+        output_attentions=False,
+        output_hidden_states=False,
+    )
+    hidden_states = lm_out[0]
+
+    token_losses = []
+    for pos in range(seq_len - 1):
+        target_ids = candidate_ids_by_pos[pos + 1]
+        target_embs = lm_emb_matrix.index_select(0, target_ids)
+        logits_to_targets = hidden_states[:, pos] @ target_embs.T
+        log_probs = logits_to_targets.log_softmax(dim=-1)
+        token_losses.append(-(log_probs * alpha_by_pos[pos + 1]).sum(dim=-1))
+
+    token_loss = torch.stack(token_losses, dim=1)
     if attention_mask is not None:
         mask = attention_mask[:, 1:].float()
         return (token_loss * mask).sum() / mask.sum().clamp_min(1.0)
@@ -182,7 +250,7 @@ def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_matrix, attention_mask, temperature):
 
 
 def load_lm_prior(args):
-    if args.coeff_perplexity <= 0:
+    if not _hybrid_uses_lm_prior(args):
         return None
     if args.model_path not in ['gpt2', 'openai-community/gpt2-large']:
         logger.info('Hybrid LM prior disabled: fuzzy LM prior is currently implemented for GPT-2 vocabularies only.')
@@ -193,6 +261,9 @@ def load_lm_prior(args):
         lm_kwargs['cache_dir'] = args.cache_dir
     lm = AutoModelForCausalLM.from_pretrained(**lm_kwargs).to(args.device)
     lm.config.pad_token_id = lm.config.eos_token_id
+    lm.config.use_cache = False
+    lm.config.output_hidden_states = False
+    lm.config.output_attentions = False
     lm.eval()
     for param in lm.parameters():
         param.requires_grad_(False)
@@ -208,7 +279,9 @@ def compute_rec_loss_from_ids(args, model_wrapper, true_grads, ids, attention_ma
         attention_mask=attention_mask,
         create_graph=False,
     )
-    return grad_match_loss(dummy_grads, true_grads, args).detach()
+    loss = grad_match_loss(dummy_grads, true_grads, args).detach()
+    del x_embeds, dummy_grads
+    return loss
 
 
 def select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch):
@@ -239,7 +312,7 @@ def select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch):
     approx_scores = []
     max_len = max(len(sentence) for sentence in predicted_sentences)
     for sentence, score in zip(predicted_sentences, predicted_scores):
-        if score < args.l2_span_thresh:
+        if score < model_wrapper.effective_l2_span_thresh(args.l2_span_thresh):
             correct_sentences.append(sentence)
         else:
             approx_sentences.append(sentence)
@@ -327,6 +400,8 @@ def reorder_decoder_predictions(args, tokenizer, prediction, reference):
 
 def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, true_labels, init_ids=None):
     emb_matrix = model_wrapper.get_input_embeddings_weight().detach().to(args.device)
+    emb_norm = F.normalize(emb_matrix, dim=-1)
+    lm_emb_matrix = lm.get_input_embeddings().weight.detach() if lm is not None else None
     input_ids = orig_batch['input_ids'].to(args.device)
     attention_mask = orig_batch['attention_mask'].to(args.device)
     pad_mask = attention_mask == 0
@@ -341,7 +416,7 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
     best_projected_loss, best_projected_ids = None, None
     pad_embed = emb_matrix[model_wrapper.pad_token]
 
-    if init_ids is not None:
+    if init_ids is not None and _hybrid_uses_candidate_projection(args):
         best_loss = compute_rec_loss_from_ids(
             args,
             model_wrapper,
@@ -359,7 +434,15 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
                                                               create_graph=True, )
         rec_loss = grad_match_loss(dummy_grads, true_grads, args)
         reg_loss = (x_embeds.norm(p=2, dim=2).mean() - args.init_size).square()
-        lm_loss = fuzzy_gpt2_lm_loss(lm, x_embeds, emb_matrix, attention_mask, args.hybrid_temperature)
+        lm_loss = fuzzy_gpt2_lm_loss(
+            lm,
+            x_embeds,
+            emb_norm,
+            lm_emb_matrix,
+            candidate_mask,
+            attention_mask,
+            args.hybrid_temperature,
+        )
         total_loss = rec_loss + args.coeff_reg * reg_loss + args.coeff_perplexity * lm_loss
 
         optimizer.zero_grad()
@@ -372,9 +455,9 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
         with torch.no_grad():
             if pad_mask.any():
                 x_embeds[pad_mask] = pad_embed
-            if args.hybrid_project_every > 0 and (step + 1) % args.hybrid_project_every == 0:
+            if _hybrid_uses_periodic_projection(args) and (step + 1) % args.hybrid_project_every == 0:
                 projected_ids = project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask,
-                                                      model_wrapper.pad_token)
+                                                      model_wrapper.pad_token, emb_norm=emb_norm)
                 x_embeds.copy_(emb_matrix[projected_ids])
                 if pad_mask.any():
                     x_embeds[pad_mask] = pad_embed
@@ -385,20 +468,21 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
 
         projected_rec_loss = None
         if should_log or (step + 1) == args.n_steps:
-            with torch.no_grad():
-                projected_ids = project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask,
-                                                      model_wrapper.pad_token)
-            projected_rec_loss = compute_rec_loss_from_ids(
-                args,
-                model_wrapper,
-                true_grads,
-                projected_ids,
-                attention_mask,
-                true_labels,
-            ).item()
-            if best_projected_loss is None or projected_rec_loss < best_projected_loss:
-                best_projected_loss = projected_rec_loss
-                best_projected_ids = projected_ids.detach().clone()
+            if _hybrid_uses_candidate_projection(args):
+                with torch.no_grad():
+                    projected_ids = project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask,
+                                                          model_wrapper.pad_token, emb_norm=emb_norm)
+                projected_rec_loss = compute_rec_loss_from_ids(
+                    args,
+                    model_wrapper,
+                    true_grads,
+                    projected_ids,
+                    attention_mask,
+                    true_labels,
+                ).item()
+                if best_projected_loss is None or projected_rec_loss < best_projected_loss:
+                    best_projected_loss = projected_rec_loss
+                    best_projected_ids = projected_ids.detach().clone()
 
         if should_log:
             logger.info(
@@ -411,10 +495,16 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
                 lm_loss.item(),
                 total_loss.item(),
             )
+        del dummy_grads, rec_loss, reg_loss, lm_loss, total_loss
+        if should_log:
+            cleanup_memory()
 
     if best_projected_ids is not None:
         return best_projected_ids
-    return project_to_candidates(best_x, emb_matrix, candidate_mask, pad_mask, model_wrapper.pad_token)
+    if _hybrid_uses_candidate_projection(args):
+        return project_to_candidates(best_x, emb_matrix, candidate_mask, pad_mask, model_wrapper.pad_token,
+                                     emb_norm=emb_norm)
+    return project_to_vocab(best_x, emb_matrix, pad_mask, model_wrapper.pad_token, emb_norm=emb_norm)
 
 
 def reconstruct(args, sample, metric, model_wrapper, lm):
@@ -451,7 +541,9 @@ def reconstruct(args, sample, metric, model_wrapper, lm):
         remove_padding(tokenizer, orig_batch['input_ids'][i], left=(args.pad == 'left'))
         for i in range(orig_batch['input_ids'].shape[0])
     ]
-    init_ids = select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch)
+    init_ids = None
+    if args.hybrid_init_mode == 'dager':
+        init_ids = select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch)
     final_ids = hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, true_labels,
                                 init_ids=init_ids)
     prediction = [
@@ -463,70 +555,121 @@ def reconstruct(args, sample, metric, model_wrapper, lm):
     return prediction[:len(reference)], reference
 
 
-def _rouge_triplet(score):
-    if hasattr(score, 'mid'):
-        score = score.mid
-    if hasattr(score, 'fmeasure'):
-        return score.fmeasure, score.precision, score.recall
-    value = float(score)
-    return value, value, value
-
-
-def print_metrics(args, res, suffix):
-    for metric in ['rouge1', 'rouge2', 'rougeL', 'rougeLsum']:
-        fm, precision, recall = _rouge_triplet(res[metric])
-        logger.info(f'{metric:10} | fm: {fm * 100:.3f} | p: {precision * 100:.3f} | r: {recall * 100:.3f}')
-        if args.neptune:
-            args.neptune[f'logs/{metric}-fm_{suffix}'].log(fm * 100)
-            args.neptune[f'logs/{metric}-p_{suffix}'].log(precision * 100)
-            args.neptune[f'logs/{metric}-r_{suffix}'].log(recall * 100)
-
 
 def main():
     if args.task != 'seq_class':
         raise NotImplementedError('Hybrid attack currently supports --task seq_class.')
-
+    device = torch.device(args.device)
     metric = evaluate.load('rouge', cache_dir=args.cache_dir)
-    dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
+    dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
                           use_hf_split=args.use_hf_split)
     model_wrapper = ModelWrapper(args)
+    wrapper_tokenizer = model_wrapper.tokenizer
     lm = load_lm_prior(args)
 
     logger.info('\n\nAttacking with hybrid optimization..\n')
     predictions, references = [], []
+    final_results = []
+    final_per_input_results = []
+    input_times = []
+    sentence_rows = []
+    input_rows = []
+    attack_name = f"hybrid_{args.loss}"
+    results_dir = os.path.join(_repo_root(), "results", attack_name ,f"results_{job_hash}")
+    os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
-
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
         t_input_start = time.time()
-        sample = dataset[i]
+        sample = dataset[i]  # (seqs, labels)
+
         logger.info(f'Running input #{i} of {args.n_inputs}.')
         if args.neptune:
             args.neptune['logs/curr_input'].log(i)
+
+        logger.info('reference: ')
+        for seq in sample[0]:
+            logger.info('========================')
+            logger.info(seq)
+
+        logger.info('========================')
 
         prediction, reference = reconstruct(args, sample, metric, model_wrapper, lm)
         predictions += prediction
         references += reference
 
-        logger.info('reference:')
-        for seq in reference:
+        logger.info(f'Done with input #{i} of {args.n_inputs}.')
+        logger.info('reference: ')
+        curr_metrics = []
+        for sent_idx, (ref, pred) in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(seq)
-        logger.info('predicted:')
-        for seq in prediction:
-            logger.info('========================')
-            logger.info(seq)
-
+            logger.info(f"Reference: {ref}")
+            logger.info(f"Prediction: {pred}")
+            metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
+            curr_metrics.append(metrics)
+            sentence_rows.append({
+                "run_id": job_hash,
+                "attack": attack_name,
+                "model": args.model_path,
+                "dataset": args.dataset,
+                "input_index": i,
+                "sentence_index": sent_idx,
+                "reference": ref,
+                "prediction": pred,
+                **metrics})
+        logger.info('========================')
+        summary = summarize_metrics(curr_metrics)
+        final_results.extend(curr_metrics)
         logger.info('[Curr input metrics]:')
-        print_metrics(args, metric.compute(predictions=prediction, references=reference), suffix='curr')
-
+        logger.info(f"{print_summary_table(summary)}")
         logger.info('[Aggregate metrics]:')
-        print_metrics(args, metric.compute(predictions=predictions, references=references), suffix='agg')
+        aggregated_results = evaluate_prediction(" ".join(prediction), " ".join(reference), wrapper_tokenizer,
+                                                 metric)
 
-        input_time = str(datetime.timedelta(seconds=time.time() - t_input_start)).split(".")[0]
-        total_time = str(datetime.timedelta(seconds=time.time() - t_start)).split(".")[0]
+        final_per_input_results.append(aggregated_results)
+        logger.info(f"{print_single_metric_dict(aggregated_results)}")
+        input_time_sec = time.time() - t_input_start
+        total_time_sec = time.time() - t_start
+        input_time = str(datetime.timedelta(seconds=input_time_sec)).split(".")[0]
+        total_time = str(datetime.timedelta(seconds=total_time_sec)).split(".")[0]
         logger.info(f'input #{i} time: {input_time} | total time: {total_time}')
+        input_rows.append({
+            "run_id": job_hash,
+            "attack": attack_name,
+            "model": args.model_path,
+            "dataset": args.dataset,
+            "input_index": i,
+            "num_sentences": len(reference),
+            "joined_reference": " ".join(reference),
+            "joined_prediction": " ".join(prediction),
+            "reconstruction_time_sec": input_time_sec,
+            **aggregated_results})
+        input_times.append(input_time_sec)
+        del sample, prediction, reference, curr_metrics, aggregated_results
+        cleanup_memory()
         logger.info("")
+        logger.info("")
+    logger.info('[Aggregate metrics]:')
+    total_time = time.time() - t_start
+    aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), wrapper_tokenizer, metric)
+    aggregated_results[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    aggregated_results[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Overall {print_single_metric_dict(aggregated_results)}")
+    summary = summarize_metrics(final_results)
+    summary[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    summary[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Per Sentence{print_summary_table(summary)}")
+    summary_per_input = summarize_metrics(final_per_input_results)
+    summary_per_input[f"reconstruction_time_mean"] = float(np.mean(input_times))
+    summary_per_input[f"reconstruction_time_std"] = float(np.std(input_times))
+    logger.info(f"Per Input Results {print_summary_table(summary_per_input)}")
 
+    summary_results = {"Overall Results": aggregated_results, "Per Sentence Results": summary,
+                       "Per Input Results": summary_per_input, "Arguments": vars(args)}
+    logger.info(f"Experiment time {total_time}")
+    pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
+    pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
+    with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
+        json.dump(summary_results, f, indent=2)
     logger.info('Done with all.')
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)

@@ -1,4 +1,6 @@
 import types
+import importlib
+import inspect
 from typing import Optional, Tuple, List, Union
 
 import torch
@@ -6,6 +8,8 @@ from transformers import GPT2Model, BertModel, LlamaModel
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.modeling_attn_mask_utils import _prepare_4d_attention_mask_for_sdpa, \
     _prepare_4d_causal_attention_mask_for_sdpa
+from .functional import check_if_in_span
+
 
 
 def add_partial_forward_gpt2(model: GPT2Model) -> None:
@@ -365,6 +369,43 @@ def add_partial_forward_bert(model: BertModel) -> None:
 
 
 def add_partial_forward_llama(model: LlamaModel) -> None:
+    def _get_past_seen_tokens(past_key_values):
+        if past_key_values is None:
+            return 0
+        if hasattr(past_key_values, "get_seq_length"):
+            return past_key_values.get_seq_length()
+        if len(past_key_values) == 0 or past_key_values[0] is None:
+            return 0
+        return past_key_values[0][0].shape[-2]
+
+    def _update_llama_causal_mask(self, attention_mask, inputs_embeds, cache_position, past_key_values,
+                                  output_attentions, position_ids=None):
+        update_causal_mask = getattr(self, "_update_causal_mask", None)
+        if update_causal_mask is None:
+            model_module = importlib.import_module(self.__class__.__module__)
+            create_causal_mask = getattr(model_module, "create_causal_mask", None)
+            create_sliding_window_causal_mask = getattr(model_module, "create_sliding_window_causal_mask", None)
+            if create_causal_mask is not None and create_sliding_window_causal_mask is not None:
+                mask_kwargs = {
+                    "config": self.config,
+                    "inputs_embeds": inputs_embeds,
+                    "attention_mask": attention_mask,
+                    "past_key_values": past_key_values,
+                    "position_ids": position_ids,
+                }
+                return {
+                    "full_attention": create_causal_mask(**mask_kwargs),
+                    "sliding_attention": create_sliding_window_causal_mask(**mask_kwargs),
+                }
+            return attention_mask
+
+        signature = inspect.signature(update_causal_mask)
+        if "past_seen_tokens" in signature.parameters:
+            past_seen_tokens = _get_past_seen_tokens(past_key_values)
+            return update_causal_mask(attention_mask, inputs_embeds, cache_position, past_seen_tokens)
+
+        return update_causal_mask(attention_mask, inputs_embeds, cache_position, past_key_values, output_attentions)
+
     def get_hidden_states(
             self,
             input_ids: torch.LongTensor = None,
@@ -408,14 +449,28 @@ def add_partial_forward_llama(model: LlamaModel) -> None:
         if position_ids is None:
             position_ids = cache_position.unsqueeze(0)
 
-        causal_mask = self._update_causal_mask(
-            attention_mask, inputs_embeds, cache_position, past_key_values, output_attentions
-        )
+        causal_mask = _update_llama_causal_mask(self, attention_mask, inputs_embeds, cache_position, past_key_values,
+                                                output_attentions, position_ids=position_ids)
         hidden_states = inputs_embeds
+        if getattr(self.config, "model_type", None) in {
+            "gemma",
+            "gemma2",
+            "gemma3",
+            "gemma3_text",
+            "vaultgemma",
+        }:
+            normalizer = torch.tensor(
+                self.config.hidden_size ** 0.5,
+                dtype=hidden_states.dtype,
+                device=hidden_states.device,
+            )
+            hidden_states = hidden_states * normalizer
 
         # create position embeddings to be shared across the decoder layers
 
-        position_embeddings = self.rotary_emb(hidden_states, position_ids)
+        position_embeddings = None
+        if hasattr(self, "rotary_emb"):
+            position_embeddings = self.rotary_emb(hidden_states, position_ids)
 
         # decoder layers
         all_hidden_states = []
@@ -428,7 +483,7 @@ def add_partial_forward_llama(model: LlamaModel) -> None:
                 return all_hidden_states[1:]
 
             if self.gradient_checkpointing and self.training:
-                layer_outputs = self._gradient_checkpointing_func(
+                checkpoint_args = [
                     decoder_layer.__call__,
                     hidden_states,
                     causal_mask,
@@ -437,27 +492,36 @@ def add_partial_forward_llama(model: LlamaModel) -> None:
                     output_attentions,
                     use_cache,
                     cache_position,
-                    position_embeddings,
-                )
+                ]
+                if position_embeddings is not None:
+                    checkpoint_args.append(position_embeddings)
+                layer_outputs = self._gradient_checkpointing_func(*checkpoint_args)
             else:
-                layer_outputs = decoder_layer(
-                    hidden_states,
-                    attention_mask=causal_mask,
-                    position_ids=position_ids,
-                    past_key_value=past_key_values,
-                    output_attentions=output_attentions,
-                    use_cache=use_cache,
-                    cache_position=cache_position,
-                    position_embeddings=position_embeddings,
-                )
+                layer_attention_mask = causal_mask
+                if isinstance(causal_mask, dict):
+                    layer_types = getattr(self.config, "layer_types", None)
+                    layer_attention_mask = causal_mask[layer_types[i] if layer_types is not None else "full_attention"]
 
-            hidden_states = layer_outputs[0]
+                decoder_kwargs = {
+                    "attention_mask": layer_attention_mask,
+                    "position_ids": position_ids,
+                    "output_attentions": output_attentions,
+                    "use_cache": use_cache,
+                    "cache_position": cache_position,
+                }
+                if "past_key_values" in inspect.signature(decoder_layer.forward).parameters:
+                    decoder_kwargs["past_key_values"] = past_key_values
+                else:
+                    decoder_kwargs["past_key_value"] = past_key_values
+                if position_embeddings is not None:
+                    decoder_kwargs["position_embeddings"] = position_embeddings
 
-            if use_cache:
+                layer_outputs = decoder_layer(hidden_states, **decoder_kwargs)
+
+            hidden_states = layer_outputs[0] if isinstance(layer_outputs, (tuple, list)) else layer_outputs
+
+            if use_cache and isinstance(layer_outputs, (tuple, list)):
                 next_decoder_cache = layer_outputs[2 if output_attentions else 1]
-
-            if output_attentions:
-                all_self_attns += (layer_outputs[1],)
 
         hidden_states = self.norm(hidden_states)
 
