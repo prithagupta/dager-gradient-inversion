@@ -66,6 +66,91 @@ def cleanup_memory():
             pass
 
 
+def load_rouge_metric(cache_dir=None, logger=None):
+    import evaluate
+    from datasets import DownloadConfig
+    from pathlib import Path
+
+    if cache_dir is None:
+        cache_dir = os.path.join(_repo_root(), "models_cache")
+    cache_dir = os.path.abspath(str(cache_dir))
+
+    modules_cache = os.environ.get("HF_MODULES_CACHE")
+    if modules_cache is None:
+        cache_modules_dir = os.path.join(cache_dir, ".hf_modules")
+        if os.path.isdir(cache_modules_dir):
+            modules_cache = cache_modules_dir
+        else:
+            hf_home = os.environ.get("HF_HOME")
+            if hf_home:
+                modules_cache = os.path.join(hf_home, "gia_exp_cache", ".hf_modules")
+            else:
+                modules_cache = os.path.expanduser("~/.cache/huggingface/modules")
+
+    offline_requested = any(
+        str(os.environ.get(flag, "")).lower() in {"1", "true", "yes"}
+        for flag in ["HF_HUB_OFFLINE", "HF_DATASETS_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_EVALUATE_OFFLINE"]
+    )
+
+    rouge_script_candidates = []
+    modules_path = Path(modules_cache)
+    if modules_path.exists():
+        rouge_script_candidates.extend(
+            sorted(modules_path.glob("evaluate_modules/metrics/evaluate-metric--rouge/*/rouge.py"))
+        )
+        rouge_script_candidates.extend(
+            sorted(modules_path.glob("datasets_modules/metrics/rouge/*/rouge.py"))
+        )
+
+    local_download_config = DownloadConfig(local_files_only=True)
+
+    previous_eval_offline = os.environ.get("HF_EVALUATE_OFFLINE")
+    previous_update_counts = os.environ.get("HF_UPDATE_DOWNLOAD_COUNTS")
+    os.environ["HF_EVALUATE_OFFLINE"] = "1"
+    os.environ["HF_UPDATE_DOWNLOAD_COUNTS"] = "0"
+    try:
+        for rouge_script in rouge_script_candidates:
+            try:
+                metric = evaluate.load(
+                    str(rouge_script),
+                    cache_dir=cache_dir,
+                    download_config=local_download_config,
+                )
+                if logger is not None:
+                    logger.info("Loaded ROUGE metric from local script: %s", rouge_script)
+                return metric
+            except Exception as local_script_exc:
+                if logger is not None:
+                    logger.warning("Failed loading local ROUGE script %s: %r", rouge_script, local_script_exc)
+
+        try:
+            metric = evaluate.load("rouge", cache_dir=cache_dir, download_config=local_download_config)
+            if logger is not None:
+                logger.info("Loaded ROUGE metric from local cache: %s", cache_dir)
+            return metric
+        except Exception as local_exc:
+            if logger is not None:
+                logger.warning("Local ROUGE metric cache not available at %s: %r", cache_dir, local_exc)
+            if offline_requested:
+                raise RuntimeError(
+                    f"ROUGE metric is not available in local cache under {cache_dir} / {modules_cache}, "
+                    f"and offline mode is enabled. Run download_hfs.sh in an online environment first."
+                ) from local_exc
+    finally:
+        if previous_eval_offline is None:
+            os.environ.pop("HF_EVALUATE_OFFLINE", None)
+        else:
+            os.environ["HF_EVALUATE_OFFLINE"] = previous_eval_offline
+        if previous_update_counts is None:
+            os.environ.pop("HF_UPDATE_DOWNLOAD_COUNTS", None)
+        else:
+            os.environ["HF_UPDATE_DOWNLOAD_COUNTS"] = previous_update_counts
+
+    if logger is not None:
+        logger.info("Falling back to online ROUGE metric download.")
+    return evaluate.load("rouge", cache_dir=cache_dir)
+
+
 def setup_experiment_logging(args, attack_name, level=logging.INFO):
     log_dir = os.path.join(_repo_root(), "logs")
     create_directory_safely(log_dir)

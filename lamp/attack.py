@@ -4,7 +4,6 @@ import os
 import sys
 import time
 
-import evaluate
 import numpy as np
 import pandas as pd
 import torch
@@ -20,7 +19,7 @@ from utilities import compute_grads, get_closest_tokens, get_reconstruction_loss
     remove_padding
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.experiment import _repo_root, cleanup_memory, setup_experiment_logging
+from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric, setup_experiment_logging
 from utils.functional import (
     _rouge_triplet,
     evaluate_prediction,
@@ -308,7 +307,7 @@ def main():
     logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
 
     device = torch.device(args.device)
-    metric = evaluate.load('rouge', cache_dir=args.cache_dir)
+    metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(
         args.device,
         args.dataset,

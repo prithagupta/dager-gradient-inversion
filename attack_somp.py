@@ -5,14 +5,13 @@ import os
 import sys
 import time
 
-import evaluate
 import numpy as np
 import pandas as pd
 import torch
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import _repo_root, cleanup_memory
+from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.functional import evaluate_prediction
 from utils.functional import print_single_metric_dict
@@ -69,7 +68,7 @@ logger.info("\n\n\nCommand: %s\n\n\n", " ".join(sys.argv))
 
 
 def main():
-    metric = evaluate.load("rouge", cache_dir=args.cache_dir)
+    metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(
         args.device,
         args.dataset,

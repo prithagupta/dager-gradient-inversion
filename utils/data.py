@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 import os
 
 class TextDataset:
@@ -18,6 +18,17 @@ class TextDataset:
             'swj0419/WikiMIA': 'input',
         }
         seq_key = seq_keys[dataset]
+
+        def _safe_name(name: str) -> str:
+            return name.replace("/", "__")
+
+        def _load_saved_dataset(save_dir: str):
+            if not os.path.isdir(save_dir):
+                return None
+            try:
+                return load_from_disk(save_dir)
+            except Exception:
+                return None
 
         def _load_local_snapshot_dataset(snapshot_dir: str):
             parquet_files = []
@@ -48,7 +59,23 @@ class TextDataset:
             raise FileNotFoundError(f"No parquet/json/jsonl/csv files found in {snapshot_dir}")
 
         def _load_dataset_anywhere(name: str):
-            # 1) Preferred: regular HF datasets loading
+            # 1) Preferred: already-materialized save_to_disk datasets under cache_dir.
+            saved_dataset_map = {
+                'cola': os.path.join(cache_dir, 'glue__cola'),
+                'sst2': os.path.join(cache_dir, 'glue__sst2'),
+                'rte': os.path.join(cache_dir, 'glue__rte'),
+                'rotten_tomatoes': os.path.join(cache_dir, 'rotten_tomatoes'),
+                'glnmario/ECHR': os.path.join(cache_dir, 'glnmario__ECHR'),
+                'stanfordnlp/imdb': os.path.join(cache_dir, 'stanfordnlp__imdb'),
+                'swj0419/WikiMIA': os.path.join(cache_dir, 'swj0419__WikiMIA'),
+            }
+
+            saved_dir = saved_dataset_map.get(name, os.path.join(cache_dir, _safe_name(name)))
+            ds = _load_saved_dataset(saved_dir)
+            if ds is not None:
+                return ds
+
+            # 2) Regular HF datasets loading
             try:
                 if name in ['cola', 'sst2', 'rte']:
                     return load_dataset("glue", name, cache_dir=cache_dir)
@@ -56,7 +83,7 @@ class TextDataset:
             except Exception:
                 pass
 
-            # 2) Fallback: raw local snapshot folders under cache_dir
+            # 3) Fallback: raw local snapshot folders under cache_dir
             snapshot_map = {
                 'rotten_tomatoes': os.path.join(cache_dir, 'rotten_tomatoes_snapshot'),
                 'glnmario/ECHR': os.path.join(cache_dir, 'glnmario__ECHR_snapshot'),
@@ -68,7 +95,8 @@ class TextDataset:
                 return _load_local_snapshot_dataset(snapshot_map[name])
 
             raise RuntimeError(
-                f"Could not load dataset '{name}' from Hugging Face cache/Hub or from local snapshot files in {cache_dir}"
+                f"Could not load dataset '{name}' from saved dataset directories, Hugging Face cache/Hub, "
+                f"or local snapshot files in {cache_dir}"
             )
 
         ds = _load_dataset_anywhere(dataset)
@@ -95,11 +123,28 @@ class TextDataset:
 
         n_samples = n_inputs * batch_size
 
+        def _raise_insufficient_samples(selected_split_name: str):
+            max_inputs = len(full) // batch_size
+            raise ValueError(
+                f"Requested n_inputs={n_inputs} with batch_size={batch_size} "
+                f"({n_samples} total samples), but split '{selected_split_name}' for dataset '{dataset}' "
+                f"contains only {len(full)} samples. "
+                f"Use a smaller --n_inputs (max {max_inputs} for this batch size), "
+                f"a smaller --batch_size, or disable --use_hf_split if you want the larger "
+                f"train-derived DAGER validation protocol for GLUE datasets."
+            )
+
         if using_hf_source_split:
-            assert n_samples <= len(full)
+            if n_samples > len(full):
+                _raise_insufficient_samples(source_split)
             idxs = idxs[:n_samples]
         elif split == 'test':
-            assert n_samples <= 1000
+            if n_samples > 1000:
+                raise ValueError(
+                    f"Requested n_inputs={n_inputs} with batch_size={batch_size} "
+                    f"({n_samples} total samples), but DAGER split='test' reserves only 1000 samples. "
+                    f"Use max n_inputs={1000 // batch_size} for this batch size."
+                )
             idxs = idxs[:n_samples]
         elif split == 'val':
             idxs = idxs[1000:]  # first 1000 saved for testing

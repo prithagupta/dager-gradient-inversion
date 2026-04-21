@@ -4,7 +4,6 @@ import itertools
 import sys
 import time
 
-import evaluate
 import numpy as np
 import torch
 from scipy.optimize import linear_sum_assignment
@@ -12,7 +11,7 @@ from tqdm import tqdm
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import cleanup_memory, setup_experiment_logging
+from utils.experiment import cleanup_memory, load_rouge_metric, setup_experiment_logging
 from utils.functional import remove_padding
 from utils.models import ModelWrapper
 
@@ -786,7 +785,7 @@ def print_metrics(args, res, suffix):
 
 def main():
     device = torch.device(args.device)
-    metric = evaluate.load('rouge', cache_dir=args.cache_dir)
+    metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(args.device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
                           use_hf_split=args.use_hf_split)
 

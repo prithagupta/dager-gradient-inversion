@@ -1,19 +1,18 @@
 import sys
 import time
 
-import evaluate
 import torch
 
 from attack import reconstruct, args, logger
 from utils.data import TextDataset
-from utils.experiment import cleanup_memory
+from utils.experiment import cleanup_memory, load_rouge_metric
 from utils.models import ModelWrapper
 
 
 def main():
     logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
     device = torch.device(args.device)
-    metric = evaluate.load('rouge', cache_dir='./models_cache')
+    metric = load_rouge_metric(cache_dir='./models_cache', logger=logger)
     dataset = TextDataset(args.device, "glnmario/ECHR", "val", 100, args.batch_size, './models_cache')
 
     model_wrapper = ModelWrapper(args)

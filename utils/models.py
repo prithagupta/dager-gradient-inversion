@@ -15,7 +15,7 @@ from utils.partial_models import add_partial_forward_gpt2, add_partial_forward_b
 
 logger = logging.getLogger(__name__)
 
-GPT2_MODEL_PATHS = ['gpt2', 'openai-community/gpt2-large']
+GPT2_MODEL_PATHS = ['gpt2', 'openai-community/gpt2', 'openai-community/gpt2-large']
 MODEL_PATH_ALIASES = {
     'gemma-2b': 'google/gemma-2b',
     'gemma_2b': 'google/gemma-2b',
@@ -48,10 +48,63 @@ GEMMA_MODEL_PATHS = [
 VAULT_GEMMA_MODEL_PATHS = [
     'google/vaultgemma-1b',
 ]
+LOCAL_MODEL_DIR_ALIASES = {
+    'gpt2': ['openai-community__gpt2', 'gpt2'],
+    'openai-community/gpt2': ['openai-community__gpt2', 'gpt2'],
+    'openai-community/gpt2-large': ['openai-community__gpt2-large'],
+    'meta-llama/Meta-Llama-3.1-8B': ['meta-llama__Meta-Llama-3.1-8B'],
+    'meta-llama/Meta-Llama-3-8B': ['meta-llama__Meta-Llama-3-8B'],
+    'meta-llama/Llama-2-7b-hf': ['meta-llama__Llama-2-7b-hf'],
+    'meta-llama/Llama-2-70b-hf': ['meta-llama__Llama-2-70b-hf'],
+    'google/gemma-2b': ['google__gemma-2b'],
+    'google/gemma-2-2b': ['google__gemma-2-2b'],
+    'google/vaultgemma-1b': ['google__vaultgemma-1b'],
+}
 
 
 def _normalize_model_path(model_path):
     return MODEL_PATH_ALIASES.get(model_path.lower(), model_path)
+
+
+def _is_offline_mode():
+    return any(
+        str(os.environ.get(flag, "")).lower() in {"1", "true", "yes"}
+        for flag in ["HF_HUB_OFFLINE", "HF_DATASETS_OFFLINE", "TRANSFORMERS_OFFLINE"]
+    )
+
+
+def _sanitize_model_dir_name(model_path):
+    return model_path.replace("/", "__")
+
+
+def _resolve_local_model_path(model_path, cache_dir):
+    if not model_path:
+        return model_path
+
+    if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "config.json")):
+        return model_path
+
+    if cache_dir is None:
+        return model_path
+
+    candidate_dir_names = []
+    normalized = _normalize_model_path(model_path)
+    for key in {model_path, normalized}:
+        candidate_dir_names.extend(LOCAL_MODEL_DIR_ALIASES.get(key, []))
+        candidate_dir_names.append(_sanitize_model_dir_name(key))
+        candidate_dir_names.append(key)
+
+    seen = set()
+    for dir_name in candidate_dir_names:
+        if dir_name in seen:
+            continue
+        seen.add(dir_name)
+        candidate_path = os.path.join(cache_dir, dir_name)
+        if os.path.isdir(candidate_path) and os.path.exists(os.path.join(candidate_path, "config.json")):
+            logger.info("Resolved model path %s -> local cache directory %s", model_path, candidate_path)
+            return candidate_path
+
+    return model_path
 
 
 def _is_gpt2_path(model_path):
@@ -95,7 +148,7 @@ def _maybe_add_legacy_llama_rope_config(model_kwargs, model_path, attn_implement
         return
 
     config_lookup_kwargs = {}
-    for key in ('cache_dir', 'token'):
+    for key in ('cache_dir', 'token', 'local_files_only'):
         if key in model_kwargs:
             config_lookup_kwargs[key] = model_kwargs[key]
 
@@ -235,12 +288,16 @@ class ModelWrapper():
         access_token = os.environ.get('HF_TOKEN')
         self.args = args
         self._logged_llama_non_cuda_float32 = False
+        self.resolved_model_path = _resolve_local_model_path(args.model_path, args.cache_dir)
         model_kwargs = {'cache_dir': args.cache_dir} if args.cache_dir is not None else {}
 
-        model_kwargs['pretrained_model_name_or_path'] = args.model_path if args.finetuned_path is None or args.train_method == 'lora' else args.finetuned_path
+        model_source = self.resolved_model_path if args.finetuned_path is None or args.train_method == 'lora' else args.finetuned_path
+        model_kwargs['pretrained_model_name_or_path'] = model_source
         model_kwargs['attn_implementation'] = args.attn_implementation
         if access_token is not None:
             model_kwargs['token'] = access_token
+        if _is_offline_mode():
+            model_kwargs['local_files_only'] = True
 
         if args.hidden_act is not None and _is_gpt2_path(args.model_path):
             model_kwargs['activation_function'] = args.hidden_act
@@ -253,6 +310,11 @@ class ModelWrapper():
             model_kwargs['torch_dtype'] = torch.float16
         if args.precision == 'double':
             model_kwargs['torch_dtype'] = torch.float64
+        if _is_llama_path(args.model_path) or _is_gemma_path(args.model_path) or _is_vault_gemma_path(args.model_path):
+            # Large decoder checkpoints can briefly exceed node RAM during shard loading unless we ask
+            # Transformers to stream weights in a low-memory path.
+            model_kwargs.setdefault('low_cpu_mem_usage', True)
+            model_kwargs.setdefault('use_safetensors', True)
         if _is_llama_path(args.model_path):
             _maybe_add_legacy_llama_rope_config(model_kwargs, args.model_path, args.attn_implementation)
         _ensure_vault_gemma_available(args.model_path)
@@ -274,7 +336,9 @@ class ModelWrapper():
         tokenizer_kwargs = {'use_fast': True, 'cache_dir': args.cache_dir}
         if access_token is not None:
             tokenizer_kwargs['token'] = access_token
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_path, **tokenizer_kwargs)
+        if _is_offline_mode():
+            tokenizer_kwargs['local_files_only'] = True
+        self.tokenizer = AutoTokenizer.from_pretrained(self.resolved_model_path, **tokenizer_kwargs)
         self.tokenizer.model_max_length = 512
 
         if args.pad == 'left':

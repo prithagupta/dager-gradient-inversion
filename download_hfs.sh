@@ -16,8 +16,11 @@ export HF_HUB_CACHE="${CACHE_DIR}/.hf_hub"
 export HUGGINGFACE_HUB_CACHE="${HF_HUB_CACHE}"
 export HF_DATASETS_CACHE="${CACHE_DIR}/.hf_datasets"
 export TRANSFORMERS_CACHE="${CACHE_DIR}/.transformers"
+export HF_MODULES_CACHE="${CACHE_DIR}/.hf_modules"
+export HF_EVALUATE_CACHE="${CACHE_DIR}/.hf_evaluate"
+export HF_METRICS_CACHE="${CACHE_DIR}/.hf_metrics"
 
-mkdir -p "${HF_HUB_CACHE}" "${HF_DATASETS_CACHE}" "${TRANSFORMERS_CACHE}"
+mkdir -p "${HF_HUB_CACHE}" "${HF_DATASETS_CACHE}" "${TRANSFORMERS_CACHE}" "${HF_MODULES_CACHE}" "${HF_EVALUATE_CACHE}" "${HF_METRICS_CACHE}"
 
 # Defaults internal to the script.
 SKIP_EXISTING="1"
@@ -28,6 +31,9 @@ echo "CACHE_DIR=${CACHE_DIR}"
 echo "HF_HUB_CACHE=${HF_HUB_CACHE}"
 echo "HF_DATASETS_CACHE=${HF_DATASETS_CACHE}"
 echo "TRANSFORMERS_CACHE=${TRANSFORMERS_CACHE}"
+echo "HF_MODULES_CACHE=${HF_MODULES_CACHE}"
+echo "HF_EVALUATE_CACHE=${HF_EVALUATE_CACHE}"
+echo "HF_METRICS_CACHE=${HF_METRICS_CACHE}"
 echo "SKIP_EXISTING=${SKIP_EXISTING}"
 echo "TRY_ONLINE_GLUE=${TRY_ONLINE_GLUE}"
 
@@ -40,15 +46,19 @@ echo "=============================="
 unset HF_HUB_OFFLINE || true
 unset HF_DATASETS_OFFLINE || true
 unset TRANSFORMERS_OFFLINE || true
+unset HF_EVALUATE_OFFLINE || true
 
 # Explicitly force online behavior for this part of the script.
 export HF_HUB_OFFLINE=0
 export HF_DATASETS_OFFLINE=0
 export TRANSFORMERS_OFFLINE=0
+export HF_EVALUATE_OFFLINE=0
+export HF_UPDATE_DOWNLOAD_COUNTS=0
 
 echo "HF_HUB_OFFLINE=${HF_HUB_OFFLINE}"
 echo "HF_DATASETS_OFFLINE=${HF_DATASETS_OFFLINE}"
 echo "TRANSFORMERS_OFFLINE=${TRANSFORMERS_OFFLINE}"
+echo "HF_EVALUATE_OFFLINE=${HF_EVALUATE_OFFLINE}"
 
 download_repo() {
   local repo_id="$1"
@@ -106,7 +116,7 @@ import os
 from pathlib import Path
 from datasets import load_dataset, load_from_disk
 
-cache_dir = Path(os.environ["HF_HOME"]) / "gia_exp_cache"
+cache_dir = Path(os.environ["CACHE_DIR"])
 datasets_cache = Path(os.environ["HF_DATASETS_CACHE"])
 try_online_glue = os.environ.get("TRY_ONLINE_GLUE", "1") == "1"
 
@@ -227,7 +237,26 @@ PY
 
 echo
 echo "=============================="
-echo "4) Test local model loading (OFFLINE)"
+echo "4) Download evaluation metric cache"
+echo "=============================="
+
+HF_HUB_OFFLINE=0 HF_DATASETS_OFFLINE=0 TRANSFORMERS_OFFLINE=0 HF_EVALUATE_OFFLINE=0 HF_UPDATE_DOWNLOAD_COUNTS=0 python - <<'PY'
+import os
+import evaluate
+
+cache_dir = os.environ["CACHE_DIR"]
+print(f"[metric] cache_dir={cache_dir}")
+metric = evaluate.load("rouge", cache_dir=cache_dir)
+print("[ok] loaded rouge metric:", metric)
+
+# Run a tiny compute call so the metric module is fully materialized.
+result = metric.compute(predictions=["a test sentence"], references=["a test sentence"])
+print("[ok] rouge compute keys:", sorted(result.keys()))
+PY
+
+echo
+echo "=============================="
+echo "5) Test local model loading (OFFLINE)"
 echo "=============================="
 
 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python - <<'PY'
@@ -235,7 +264,7 @@ from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 
-cache_dir = Path(os.environ["HF_HOME"]) / "gia_exp_cache"
+cache_dir = Path(os.environ["CACHE_DIR"])
 
 models = [
     "openai-community__gpt2",
@@ -277,7 +306,7 @@ PY
 
 echo
 echo "=============================="
-echo "5) Test offline loading of saved datasets"
+echo "6) Test offline loading of saved datasets"
 echo "=============================="
 
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python - <<'PY'
@@ -285,7 +314,7 @@ import os
 from pathlib import Path
 from datasets import load_from_disk
 
-cache_dir = Path(os.environ["HF_HOME"]) / "gia_exp_cache"
+cache_dir = Path(os.environ["CACHE_DIR"])
 
 dataset_paths = {
     "cola": ("glue__cola", "sentence"),
@@ -320,6 +349,25 @@ for ds_name, (dir_name, text_key) in dataset_paths.items():
             print(f"[warn] expected text key '{text_key}' not found")
     except Exception as e:
         print("[fail]", repr(e))
+PY
+
+echo
+echo "=============================="
+echo "7) Test offline loading of evaluation metric"
+echo "=============================="
+
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_EVALUATE_OFFLINE=1 HF_UPDATE_DOWNLOAD_COUNTS=0 python - <<'PY'
+import os
+import evaluate
+
+cache_dir = os.environ["CACHE_DIR"]
+try:
+    metric = evaluate.load("rouge", cache_dir=str(cache_dir))
+    print("[ok] offline rouge metric load succeeded")
+    result = metric.compute(predictions=["offline test"], references=["offline test"])
+    print("[ok] offline rouge compute keys:", sorted(result.keys()))
+except Exception as e:
+    print("[fail] offline rouge metric:", repr(e))
 PY
 
 echo

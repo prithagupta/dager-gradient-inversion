@@ -5,42 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d65cac68-3e53-4517-9e74-c619be21d3c3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dager-gradient-inversion.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/run_test.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/dager_llama_3.1.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/slurm_scripts/batch_ablation.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/slurm_scripts/hybrid_ablation_gpt2.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/args_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/args_factory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attack.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attack_hybrid.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack_hybrid.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attack_len_increment.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack_len_increment.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attack_new.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack_new.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/environment_macos.yml" beforeDir="false" afterPath="$PROJECT_DIR$/environment_macos.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attack_somp.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack_somp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/download_hfs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/download_hfs.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lamp/attack.py" beforeDir="false" afterPath="$PROJECT_DIR$/lamp/attack.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lamp/data_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/lamp/data_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lamp/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/lamp/utilities.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/models.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/bert.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/bert.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/dager_dp.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/dager_dp.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/dec_feasibility.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/dec_feasibility.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/enc_feasibility.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/enc_feasibility.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/enc_feasibility_no_heuristics.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/enc_feasibility_no_heuristics.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/fa.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/fa.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/fed_avg.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/fed_avg.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/gpt2-ft.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/gpt2-ft.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/gpt2-large.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dager_gpt2-large.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/gpt2.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dager_gpt2.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/gpt2_dp.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/old_unusedscripts/gpt2_dp.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/dager_gpt2-large.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dager_gpt2-large.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/dager_gpt2.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dager_gpt2.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/dager_llama_3.1.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dager_llama_3.1.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/hybrid_gpt2-large.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/hybrid_gpt2-large.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/hybrid_gpt2.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/hybrid_gpt2.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/llama.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/llama.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/llama_3.1.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/lora.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/lora.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/hybrid_llama_3.1.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/hybrid_llama_3.1.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/slurm_scripts/experiment1_main_benchmark.sh" beforeDir="false" afterPath="$PROJECT_DIR$/slurm_scripts/main_benchmark.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/slurm_scripts/experiment2_batch_ablation.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/slurm_scripts/experiment3_hybrid_ablation_gpt2.sh" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/data.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/experiment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/filtering_decoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/filtering_decoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/functional.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/functional.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/partial_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/partial_models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +34,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="115" />
+    <option name="cachedIndexableFilesCount" value="108" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -86,36 +72,38 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.attack_hybrid.executor": "Debug",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "SHELLCHECK.PATH": "/Users/prithagupta/Library/Application Support/JetBrains/PyCharm2026.1/plugins/Shell Script/shellcheck",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_directory_selection": "/Users/prithagupta/projects/dager-gradient-inversion/utils",
-    "last_opened_file_path": "/Users/prithagupta/projects/dager-gradient-inversion",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.attack_hybrid.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/prithagupta/Library/Application Support/JetBrains/PyCharm2026.1/plugins/Shell Script/shellcheck&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_directory_selection&quot;: &quot;/Users/prithagupta/projects/dager-gradient-inversion/utils&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/prithagupta/projects/dager-gradient-inversion&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/scripts/old_unusedscripts" />
+      <recent name="$PROJECT_DIR$/slurm_scripts" />
       <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/scripts" />
+      <recent name="$PROJECT_DIR$/scripts/old_unusedscripts" />
       <recent name="$PROJECT_DIR$/dager" />
     </key>
   </component>
@@ -183,7 +171,8 @@
       <workItem from="1776620456056" duration="21544000" />
       <workItem from="1776698305773" duration="5807000" />
       <workItem from="1776707257934" duration="2509000" />
-      <workItem from="1776756761617" duration="15331000" />
+      <workItem from="1776756761617" duration="30468000" />
+      <workItem from="1776793001013" duration="1813000" />
     </task>
     <servers />
   </component>

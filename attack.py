@@ -12,7 +12,7 @@ from scipy.optimize import linear_sum_assignment
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import _repo_root, cleanup_memory
+from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
@@ -385,7 +385,7 @@ def print_metrics(args, res, suffix):
 
 def main():
     device = torch.device(args.device)
-    metric = evaluate.load('rouge', cache_dir=args.cache_dir)
+    metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
                           use_hf_split=args.use_hf_split)
     model_wrapper = ModelWrapper(args)

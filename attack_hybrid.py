@@ -4,7 +4,6 @@ import os
 import sys
 import time
 import numpy as np
-import evaluate
 import pandas as pd
 import torch
 import torch.nn.functional as F
@@ -12,7 +11,7 @@ from transformers import AutoModelForCausalLM
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import _repo_root, cleanup_memory
+from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
 from utils.functional import (fallback_rope_l1_candidates, get_top_B_in_span, log_distances, remove_padding,
@@ -560,7 +559,7 @@ def main():
     if args.task != 'seq_class':
         raise NotImplementedError('Hybrid attack currently supports --task seq_class.')
     device = torch.device(args.device)
-    metric = evaluate.load('rouge', cache_dir=args.cache_dir)
+    metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
                           use_hf_split=args.use_hf_split)
     model_wrapper = ModelWrapper(args)
