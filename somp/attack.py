@@ -1,19 +1,18 @@
 import datetime
+import os
+import sys
+import time
+
 import numpy as np
 import torch
-import torch.nn.functional as F
 from evaluate import load as load_metric
-from utils.models import ModelWrapper
-from utils.data import TextDataset
-from utils.filtering_encoder import filter_encoder
-from utils.filtering_decoder import filter_decoder
-from utils.functional import get_top_B_in_span, check_if_in_span, remove_padding, filter_outliers, get_span_dists
-from args_factory import get_args
-import time
 from tqdm import tqdm
-from scipy.optimize import linear_sum_assignment
 
-import sys, os
+from args_factory import get_args
+from utils.data import TextDataset
+from utils.functional import get_top_B_in_span, check_if_in_span, remove_padding, filter_outliers, get_span_dists
+from utils.models import ModelWrapper
+
 os.environ["PYTHONIOENCODING"] = "utf-8"
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
@@ -26,7 +25,7 @@ total_correct_tokens = 0
 total_tokens = 0
 total_correct_maxB_tokens = 0
 
-import os, psutil, torch, gc
+import torch
 
 
 @torch.no_grad()
@@ -67,6 +66,7 @@ def _fit_alpha_stream(mix_grads, comp_grads, cos_abs_th: float = 0.0, clamp=(-1.
     alpha *= float(shrink)
     return alpha
 
+
 @torch.no_grad()
 def _block_view(grads, model_wrapper, blocks):
     out = [None if g is None else torch.zeros_like(g) for g in grads]
@@ -81,16 +81,21 @@ def _block_view(grads, model_wrapper, blocks):
                 out[wid].copy_(grads[wid])
     return out
 
+
 @torch.no_grad()
 def _dot_norm_cos(a_grads, b_grads):
-    dot = 0.0; na2 = 0.0; nb2 = 0.0
+    dot = 0.0;
+    na2 = 0.0;
+    nb2 = 0.0
     for a, b in zip(a_grads, b_grads):
         if a is None or b is None: continue
-        dot += float((a*b).sum().item())
-        na2 += float((a*a).sum().item())
-        nb2 += float((b*b).sum().item())
-    na = (na2 + 1e-12)**0.5; nb = (nb2 + 1e-12)**0.5
-    return dot, na, nb, dot/(na*nb + 1e-12), dot/(nb2 + 1e-12)  # 返回 dot, ||a||, ||b||, cos, phi
+        dot += float((a * b).sum().item())
+        na2 += float((a * a).sum().item())
+        nb2 += float((b * b).sum().item())
+    na = (na2 + 1e-12) ** 0.5;
+    nb = (nb2 + 1e-12) ** 0.5
+    return dot, na, nb, dot / (na * nb + 1e-12), dot / (nb2 + 1e-12)  # 返回 dot, ||a||, ||b||, cos, phi
+
 
 @torch.no_grad()
 def verify_deflation(residual_grads, pred_grads, model_wrapper,
@@ -102,7 +107,7 @@ def verify_deflation(residual_grads, pred_grads, model_wrapper,
     blocks = [('l1q', l1_id, 0, d_model)]
 
     r_blk = _block_view(residual_grads, model_wrapper, blocks)
-    g_blk = _block_view(pred_grads,     model_wrapper, blocks)
+    g_blk = _block_view(pred_grads, model_wrapper, blocks)
     dot_b, nr_b, ng_b, cos_b, phi_b = _dot_norm_cos(r_blk, g_blk)
 
     alpha_star = _fit_alpha_stream(residual_grads, pred_grads,
@@ -112,8 +117,8 @@ def verify_deflation(residual_grads, pred_grads, model_wrapper,
     if prev_residual_norm is not None and prev_residual_norm > 0:
         delta = (prev_residual_norm - nr) / prev_residual_norm
 
-    ok = (abs(phi)   <= tol_phi   and abs(cos)   <= tol_cos and
-          abs(phi_b) <= tol_phi   and abs(cos_b) <= tol_cos and
+    ok = (abs(phi) <= tol_phi and abs(cos) <= tol_cos and
+          abs(phi_b) <= tol_phi and abs(cos_b) <= tol_cos and
           abs(alpha_star) < tol_phi)
 
     report = {
@@ -125,21 +130,27 @@ def verify_deflation(residual_grads, pred_grads, model_wrapper,
 
     return ok, report
 
+
 def _project_on_blocks(residual, comp, spec):
     for tag, a, *rest in spec:
         if tag == 'l1q':
             lid, start, end = a, rest[0], rest[1]
-            r = residual[lid][:, start:end]; c = comp[lid][:, start:end]
-            num = float((r*c).sum().item()); den = float((c*c).sum().item()) + 1e-12
+            r = residual[lid][:, start:end];
+            c = comp[lid][:, start:end]
+            num = float((r * c).sum().item());
+            den = float((c * c).sum().item()) + 1e-12
             a_coeff = num / den
             r.data.add_(c, alpha=-a_coeff)
         elif tag == 'wte':
             wid = getattr(model_wrapper, "wte_grad_id", None)
             if wid is not None and residual[wid] is not None and comp[wid] is not None:
-                r = residual[wid]; c = comp[wid]
-                num = float((r*c).sum().item()); den = float((c*c).sum().item()) + 1e-12
+                r = residual[wid];
+                c = comp[wid]
+                num = float((r * c).sum().item());
+                den = float((c * c).sum().item()) + 1e-12
                 a_coeff = num / den
                 r.data.add_(c, alpha=-a_coeff)
+
 
 @torch.no_grad()
 def _dot_over_norm2(res_grads, cand_grads):
@@ -153,6 +164,7 @@ def _dot_over_norm2(res_grads, cand_grads):
     if den <= 1e-12:
         return float("-inf")
     return num / den
+
 
 def _pred_labels_like(orig_batch, s, target_len, device):
     model = getattr(_pred_labels_like, "_model", None)
@@ -177,7 +189,10 @@ def _pred_labels_like(orig_batch, s, target_len, device):
         lbl_s = new_lbl
     return lbl_s
 
+
 import os, psutil, torch, gc
+
+
 @torch.no_grad()
 def _project_out_component(residual_grads, comp_grads, tol=1e-10, max_iter=2):
     for _ in range(max_iter):
@@ -224,37 +239,44 @@ def cuda_ok():
     except Exception:
         return False
 
+
 def reset_peak_memory():
     if cuda_ok():
-        try: torch.cuda.reset_peak_memory_stats()
-        except Exception: pass
+        try:
+            torch.cuda.reset_peak_memory_stats()
+        except Exception:
+            pass
+
 
 def mem_snap(tag=""):
     if cuda_ok():
         try:
             torch.cuda.synchronize()
-            alloc = torch.cuda.memory_allocated() / 1024**2
-            reserv = torch.cuda.memory_reserved() / 1024**2
-            peak = torch.cuda.max_memory_allocated() / 1024**2
+            alloc = torch.cuda.memory_allocated() / 1024 ** 2
+            reserv = torch.cuda.memory_reserved() / 1024 ** 2
+            peak = torch.cuda.max_memory_allocated() / 1024 ** 2
             print(f"[GPU]{tag} alloc={alloc:.1f}MB | reserved={reserv:.1f}MB | peak={peak:.1f}MB")
         except Exception as e:
             print(f"[GPU]{tag} <na>: {e}")
-    rss = psutil.Process(os.getpid()).memory_info().rss / 1024**2
+    rss = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
     print(f"[CPU]{tag} rss={rss:.1f}MB")
+
 
 def hard_cleanup_locals(locals_dict):
     kill = [
-        "R_Q","R_Q2","R_Qs_original","head_R_Qs_split",
-        "grad_l1","grad_l1_query","grad_slices_per_head",
-        "per_samples","res_ids_s","seqs_s","scores_s",
-        "full_emb_pos","candidate_pos_embeds",
-        "pred_batch","pred_labels","pred_grads","t","attn",
-        "candidate_pool_indices","fuse_min",
+        "R_Q", "R_Q2", "R_Qs_original", "head_R_Qs_split",
+        "grad_l1", "grad_l1_query", "grad_slices_per_head",
+        "per_samples", "res_ids_s", "seqs_s", "scores_s",
+        "full_emb_pos", "candidate_pos_embeds",
+        "pred_batch", "pred_labels", "pred_grads", "t", "attn",
+        "candidate_pool_indices", "fuse_min",
     ]
     for k in kill:
         if k in locals_dict:
-            try: del locals_dict[k]
-            except: pass
+            try:
+                del locals_dict[k]
+            except:
+                pass
     gc.collect()
     if cuda_ok():
         try:
@@ -262,6 +284,7 @@ def hard_cleanup_locals(locals_dict):
             torch.cuda.empty_cache()
         except Exception:
             pass
+
 
 def _to_cpu_grads(gs):
     return [None if g is None else g.detach().to('cpu', copy=True).float() for g in gs]
@@ -451,23 +474,21 @@ def _recall_report(ref_ids, pool_ids, res_ids):
 
 
 import torch
-import torch.nn.functional as F
-import numpy as np
 
 
 @torch.no_grad()
 def beam_search_decoder(
-    args, model_wrapper, R_Qs, res_ids,
-    forced_start_token=None,
-    beam_width=12,
-    beam_groups=4,
-    diversity_lambda=0.35,
-    length_norm="avg",
-    forced_start_tokens_per_group=None,
-    ngram_diversity=2,
-    ngram_lambda=0.25,
-    G_lm=None,
-    beta_glm=0.33,
+        args, model_wrapper, R_Qs, res_ids,
+        forced_start_token=None,
+        beam_width=12,
+        beam_groups=4,
+        diversity_lambda=0.35,
+        length_norm="avg",
+        forced_start_tokens_per_group=None,
+        ngram_diversity=2,
+        ngram_lambda=0.25,
+        G_lm=None,
+        beta_glm=0.33,
 ):
     R_Q2 = R_Qs[1]
     device = model_wrapper.device
@@ -495,7 +516,7 @@ def beam_search_decoder(
         if any(len(bg) == 0 for bg in beams_groups): break
         if len(pos_candidates) == 0: break
 
-        per_group_first_tokens = [None]*G
+        per_group_first_tokens = [None] * G
         if pos_idx == 0:
             if forced_start_tokens_per_group is not None:
                 for gi in range(min(G, len(forced_start_tokens_per_group))):
@@ -503,7 +524,7 @@ def beam_search_decoder(
                     if tok is not None:
                         per_group_first_tokens[gi] = tok
             elif forced_start_token is not None:
-                per_group_first_tokens = [forced_start_token]*G
+                per_group_first_tokens = [forced_start_token] * G
 
         taken_tokens_this_step = set()
         taken_ngrams_this_step = set()
@@ -542,17 +563,16 @@ def beam_search_decoder(
                 else:
                     G_lm_dev = G_lm
 
-                v_tok = G_lm_dev.index_select(0, tok_ids)      # [B*K, d_model]
-                lm_score = (last * v_tok).sum(dim=1)          # [B*K]
+                v_tok = G_lm_dev.index_select(0, tok_ids)  # [B*K, d_model]
+                lm_score = (last * v_tok).sum(dim=1)  # [B*K]
 
                 lm_score = (lm_score - lm_score.mean()) / (lm_score.std() + 1e-6)
 
                 dist = dist - float(beta_glm) * lm_score
 
-
             prev_sum = torch.tensor([b[1] for b in beams], device=device).repeat_interleave(K)
-            sum_now  = prev_sum + dist
-            score_now = sum_now/float(pos_idx+1) if length_norm=="avg" else sum_now
+            sum_now = prev_sum + dist
+            score_now = sum_now / float(pos_idx + 1) if length_norm == "avg" else sum_now
 
             cand_tokens = cand_rep.view(-1)
             if len(taken_tokens_this_step) > 0:
@@ -565,10 +585,10 @@ def beam_search_decoder(
                     ngr_cand = cand_tokens
                     mask_ng = torch.isin(ngr_cand, torch.tensor([ng[-1] for ng in taken_ngrams_this_step if ng],
                                                                 device=device, dtype=torch.long)) \
-                              if taken_ngrams_this_step else torch.zeros_like(score_now, dtype=torch.bool)
+                        if taken_ngrams_this_step else torch.zeros_like(score_now, dtype=torch.bool)
                     score_now = score_now + (ngram_lambda * mask_ng.float())
                 else:
-                    if (pos_idx) >= (ngram_diversity-1) and len(taken_ngrams_this_step)>0:
+                    if (pos_idx) >= (ngram_diversity - 1) and len(taken_ngrams_this_step) > 0:
                         mask_ng = torch.zeros_like(score_now, dtype=torch.bool)
                         for i in range(new_tensor.size(0)):
                             ng = tuple(new_tensor[i].tolist()[-ngram_diversity:])
@@ -595,7 +615,8 @@ def beam_search_decoder(
             all_eos = True
             for g in range(G):
                 if len(beams_groups[g]) == 0 or beams_groups[g][0][0][-1] != eos_id:
-                    all_eos = False; break
+                    all_eos = False;
+                    break
             if all_eos:
                 pbar.update(1)
                 pbar.set_postfix_str(f"pos={pos_idx} | all groups EOS stop")
@@ -611,12 +632,12 @@ def beam_search_decoder(
     for g in range(G):
         all_beams += beams_groups[g]
     if length_norm == "avg":
-        scored = [ (seq, (s / max(1, len(seq)))) for (seq, s) in all_beams ]
+        scored = [(seq, (s / max(1, len(seq)))) for (seq, s) in all_beams]
     else:
-        scored = [ (seq, s) for (seq, s) in all_beams ]
+        scored = [(seq, s) for (seq, s) in all_beams]
     scored.sort(key=lambda x: x[1])
     final_sentences = [seq for (seq, s) in scored[:W]]
-    final_scores    = [s   for (seq, s) in scored[:W]]
+    final_scores = [s for (seq, s) in scored[:W]]
     return final_sentences, final_scores
 
 
@@ -630,7 +651,7 @@ def build_global_candidate_pool(args, model_wrapper, residual_grads,
     h = model_wrapper.model.config.num_attention_heads
     d_head = d_model // h
     grad_l1_query = grad_l1[:, :d_model].to(args.device).float()
-    grad_slices_per_head = [grad_l1_query[:, i*d_head:(i+1)*d_head] for i in range(h)]
+    grad_slices_per_head = [grad_l1_query[:, i * d_head:(i + 1) * d_head] for i in range(h)]
 
     eff_len = int(eff_len_each.max().item())
 
@@ -742,7 +763,7 @@ def build_global_candidate_pool(args, model_wrapper, residual_grads,
 
     boost_ids = set()
     for p in pos_list:
-        full_emb_pos = model_wrapper.get_embeddings(p)[0]          # [V, d]
+        full_emb_pos = model_wrapper.get_embeddings(p)[0]  # [V, d]
         dists_p = check_if_in_span(R_Qs_original[0], full_emb_pos, args.dist_norm)
         m_each = getattr(args, "booster_topm", 800)
         topm = torch.topk(dists_p, k=min(m_each, dists_p.numel()), largest=False).indices
@@ -775,6 +796,7 @@ def build_global_candidate_pool(args, model_wrapper, residual_grads,
 
     return candidate_pool_indices  # LongTensor
 
+
 @torch.no_grad()
 def position_filter_per_sample(args, model_wrapper, R_Qs_original,
                                candidate_pool_indices, input_batch_single, recall_ref_ids=None):
@@ -800,7 +822,7 @@ def position_filter_per_sample(args, model_wrapper, R_Qs_original,
             print("[Stage2] Candidate pool empty, stop.")
             break
 
-        full_emb_pos = model_wrapper.get_embeddings(p)[0]                         # [V, d]
+        full_emb_pos = model_wrapper.get_embeddings(p)[0]  # [V, d]
         candidate_pos_embeds = full_emb_pos.index_select(0, candidate_pool_indices)  # [V_pool, d]
         del full_emb_pos
 
@@ -816,7 +838,7 @@ def position_filter_per_sample(args, model_wrapper, R_Qs_original,
             types_in_pool = torch.zeros_like(top_idx_in_pool)
 
         final_token_ids_for_p = candidate_pool_indices[top_idx_in_pool]
-        ids_p   = final_token_ids_for_p.tolist()
+        ids_p = final_token_ids_for_p.tolist()
         types_p = types_in_pool.tolist()
 
         # EOS
@@ -824,11 +846,11 @@ def position_filter_per_sample(args, model_wrapper, R_Qs_original,
             end_token_ind = ids_p.index(eos_id)
             sentence_token_type = types_p[end_token_ind]
             sentence_ends_i.append((p, sentence_token_type))
-            ids_p   = ids_p[:end_token_ind]
+            ids_p = ids_p[:end_token_ind]
             types_p = types_p[:end_token_ind]
 
         if args.max_ids > 0:
-            ids_p   = ids_p[:args.max_ids]
+            ids_p = ids_p[:args.max_ids]
             types_p = types_p[:args.max_ids]
 
         if len(ids_p) == 0:
@@ -1003,7 +1025,6 @@ def create_correct_labels(model_wrapper, true_labels, sample_idx, input_tensor):
         return lbl_s
 
 
-
 @torch.no_grad()
 def _deflate(mix_grads, comp_grads, alpha):
     if alpha == 0.0:
@@ -1132,7 +1153,6 @@ def reconstruct_with_omp(args, device, sample, metric, model_wrapper: ModelWrapp
         text = model_wrapper.tokenizer.decode(seq_ids, skip_special_tokens=True)
         print(f"[Cluster-REP #{i}] {text}")
 
-
     candidate_pool = representative_pool
 
     print("\n--- Stage 2: Orthogonal Matching Pursuit to select the best combination ---")
@@ -1182,6 +1202,7 @@ def reconstruct_with_omp(args, device, sample, metric, model_wrapper: ModelWrapp
 
     return prediction, reference
 
+
 def print_metrics(args, res, suffix):
     for metric in ['rouge1', 'rouge2', 'rougeL', 'rougeLsum']:
         fm = res[metric] * 100
@@ -1195,7 +1216,6 @@ def print_metrics(args, res, suffix):
 
 
 def main():
-
     device = torch.device(args.device)
     metric = load_metric('rouge', cache_dir=args.cache_dir)
     print("Creating TextDataset with:", args.dataset, args.split)
@@ -1206,7 +1226,6 @@ def main():
     print('\n\nAttacking..\n', flush=True)
     predictions, references = [], []
     t_start = time.time()
-
 
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
         t_input_start = time.time()

@@ -449,9 +449,9 @@ class ModelWrapper():
     def _force_llama_non_cuda_float32(self, device=None):
         device = self.args.device if device is None else device
         return (
-            _is_llama_path(self.args.model_path)
-            and self.args.precision == 'half'
-            and not str(device).startswith('cuda')
+                _is_llama_path(self.args.model_path)
+                and self.args.precision == 'half'
+                and not str(device).startswith('cuda')
         )
 
     def _log_llama_non_cuda_float32(self):

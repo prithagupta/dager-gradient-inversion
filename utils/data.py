@@ -1,7 +1,9 @@
+import os
+
 import numpy as np
 import torch
 from datasets import load_dataset, load_from_disk
-import os
+
 
 class TextDataset:
     def __init__(self, device, dataset, split, n_inputs, batch_size, cache_dir=None, use_hf_split=False):

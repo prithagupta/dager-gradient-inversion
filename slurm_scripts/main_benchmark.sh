@@ -5,29 +5,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$REPO_ROOT/scripts/common_attack_args.sh"
 cd "$REPO_ROOT"
 
 extra_args=( "$@" )
+seeds=( 40 41 42 )
 
 datasets=(  "sst2" "cola" "rotten_tomatoes")
-models=(
-  "gpt2"
-  "gpt2-large"
-)
-methods=( "dager" "hybrid" )
-
-has_rank_tol_arg() {
-  local arg
-  if [ "${#extra_args[@]}" -eq 0 ]; then
-    return 1
-  fi
-  for arg in "${extra_args[@]}"; do
-    if [ "$arg" = "--rank_tol" ] || [[ "$arg" == --rank_tol=* ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
+models=("gpt2" "gpt2-large")
+methods=("dager" "hybrid")
 
 has_split_arg() {
   local arg
@@ -55,17 +41,6 @@ has_use_hf_split_arg() {
   return 1
 }
 
-default_rank_tol_for_batch() {
-  local batch="$1"
-  if [ "$batch" -le 2 ]; then
-    echo "1e-7"
-  elif [ "$batch" -le 16 ]; then
-    echo "1e-8"
-  else
-    echo "1e-9"
-  fi
-}
-
 default_batch_size() {
   echo "8"
 }
@@ -74,6 +49,7 @@ run_wrapper() {
   local method="$1"
   local model="$2"
   local dataset="$3"
+  local seed="$4"
   local batch
   local run_args=()
   batch="$(default_batch_size "$dataset" "$model")"
@@ -83,9 +59,25 @@ run_wrapper() {
   fi
 
   local script="${REPO_ROOT}/scripts/${method}_${model}.sh"
-  if ! has_rank_tol_arg; then
-    run_args+=( --rank_tol "$(default_rank_tol_for_batch "$batch")" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_rank_tol_arg "$batch" "${run_args[@]}"
+  else
+    set_default_rank_tol_arg "$batch"
   fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_max_ids_arg "$batch" "${run_args[@]}"
+  else
+    set_default_max_ids_arg "$batch"
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_rng_seed_arg 42 "${run_args[@]}"
+  else
+    set_default_rng_seed_arg 42
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  run_args+=( --rng_seed "$seed" )
   if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
     if ! has_use_hf_split_arg; then
       run_args+=( --use_hf_split )
@@ -93,16 +85,19 @@ run_wrapper() {
   fi
   echo ""
   echo "=================================================="
-  echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch}"
+  echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch} | rng_seed=${seed}"
   echo "Command: ${script} ${dataset} ${batch} ${run_args[*]}"
   echo "=================================================="
   bash "$script" "$dataset" "$batch" "${run_args[@]}"
 }
 
-for dataset in "${datasets[@]}"; do
-  for model in "${models[@]}"; do
-    for method in "${methods[@]}"; do
-      run_wrapper "$method" "$model" "$dataset"
+
+for model in "${models[@]}"; do
+  for dataset in "${datasets[@]}"; do
+    for seed in "${seeds[@]}"; do
+      for method in "${methods[@]}"; do
+        run_wrapper "$method" "$model" "$dataset" "$seed"
+      done
     done
   done
 done

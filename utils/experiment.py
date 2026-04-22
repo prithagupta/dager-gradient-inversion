@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import random
+import re
 
 import numpy as np
 import torch
 
 logger = logging.getLogger(__name__)
+
 
 def _repo_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +42,25 @@ def create_directory_safely(path, is_file_path=False):
         path = os.path.dirname(path)
     if path:
         os.makedirs(path, exist_ok=True)
+
+
+def _log_file_completed(log_path):
+    if not os.path.exists(log_path) or os.path.getsize(log_path) == 0:
+        return False
+
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            nonempty_lines = [line.strip() for line in f if line.strip()]
+    except OSError:
+        return False
+
+    if len(nonempty_lines) < 2:
+        return False
+
+    return (
+            nonempty_lines[-1].endswith("Done with all.")
+            and re.search(r"\bExperiment time\b", nonempty_lines[-2]) is not None
+    )
 
 
 def get_results_dir(attack_name, job_hash):
@@ -181,13 +202,12 @@ def setup_experiment_logging(args, attack_name, level=logging.INFO):
 
     hash_value = get_hash_value_for_args(args)
     log_path = os.path.join(log_dir, f"{attack_name}_{hash_value}.log")
+    append_to_completed_log = _log_file_completed(log_path)
 
-    formatter = logging.Formatter(
-        "%(asctime)s %(name)s %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)-8s %(message)s",
+                                  datefmt="%Y-%m-%d %H:%M:%S", )
 
-    file_handler = logging.FileHandler(log_path, mode="w")
+    file_handler = logging.FileHandler(log_path, mode="a" if append_to_completed_log else "w")
     file_handler.setFormatter(formatter)
     file_handler.setLevel(level)
 
@@ -207,7 +227,10 @@ def setup_experiment_logging(args, attack_name, level=logging.INFO):
         noisy_logger.setLevel(logging.ERROR)
         noisy_logger.propagate = False
 
-    logger.info("Log file path: %s", log_path)
+    if append_to_completed_log:
+        logger.info("=" * 80)
+        logger.info(f"Appending to existing log for repeated run of the same argument hash {hash_value}")
+    logger.info(f"Log file path: {log_path}")
     logger.info("Argument hash: %s", hash_value)
     logger.info("Arguments:\n%s", json.dumps(args_to_dict(args), indent=2, sort_keys=True, default=str))
     setup_random_seed(getattr(args, "rng_seed", 1234), logger=logger)

@@ -4,27 +4,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$REPO_ROOT/scripts/common_attack_args.sh"
 cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 
 models=( "gpt2" "gpt2-large" )
-batches=( 128 64 32 16 8 4 2 1)
+batches=( 128 64 32 16 4 2 1)
 methods=( "dager" "hybrid" )
 datasets=( "sst2" "cola" )
-
-has_rank_tol_arg() {
-  local arg
-  if [ "${#extra_args[@]}" -eq 0 ]; then
-    return 1
-  fi
-  for arg in "${extra_args[@]}"; do
-    if [ "$arg" = "--rank_tol" ] || [[ "$arg" == --rank_tol=* ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
 
 has_n_inputs_arg() {
   local arg
@@ -65,17 +53,6 @@ has_split_arg() {
   return 1
 }
 
-default_rank_tol_for_batch() {
-  local batch="$1"
-  if [ "$batch" -le 2 ]; then
-    echo "1e-7"
-  elif [ "$batch" -le 16 ]; then
-    echo "1e-8"
-  else
-    echo "1e-9"
-  fi
-}
-
 run_wrapper() {
   local method="$1"
   local model="$2"
@@ -90,9 +67,41 @@ run_wrapper() {
   fi
 
   local script="${REPO_ROOT}/scripts/${method}_${model}.sh"
-  if ! has_rank_tol_arg; then
-    run_args+=( --rank_tol "$(default_rank_tol_for_batch "$batch")" )
+  if [ "$batch" -gt 64 ]; then
+    if ! has_cli_arg "--max_ids" "${run_args[@]}"; then
+      run_args+=( --max_ids 96 )
+    fi
+    if ! has_cli_arg "--rank_tol" "${run_args[@]}"; then
+      run_args+=( --rank_tol 1e-8 )
+    fi
+    if ! has_cli_arg "--l1_span_thresh" "${run_args[@]}"; then
+      run_args+=( --l1_span_thresh 5e-5 )
+    fi
+    if ! has_cli_arg "--l2_span_thresh" "${run_args[@]}"; then
+      run_args+=( --l2_span_thresh 2e-3 )
+    fi
+    if ! has_cli_arg "--distinct_thresh" "${run_args[@]}"; then
+      run_args+=( --distinct_thresh 0.6 )
+    fi
   fi
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_rank_tol_arg "$batch" "${run_args[@]}"
+  else
+    set_default_rank_tol_arg "$batch"
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_max_ids_arg "$batch" "${run_args[@]}"
+  else
+    set_default_max_ids_arg "$batch"
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_rng_seed_arg 42 "${run_args[@]}"
+  else
+    set_default_rng_seed_arg 42
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
     if ! has_use_hf_split_arg; then
       run_args+=( --use_hf_split )

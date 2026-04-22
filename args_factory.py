@@ -82,7 +82,7 @@ def get_args(argv=None):
     parser.add_argument('--attn_implementation', type=str, default='auto', choices=['auto', 'sdpa', 'eager'])
 
     parser.add_argument('--precision', type=str, default='full', choices=['8bit', 'half', 'full', 'double'])
-    parser.add_argument('--parallel', type=int, default=1000)
+    parser.add_argument('--parallel', type=int, default=100)
     parser.add_argument('--grad_b', type=int, default=None)
     parser.add_argument('--n_layers', type=int, default=2)
     parser.add_argument('--rank_tol', type=float, default=None)

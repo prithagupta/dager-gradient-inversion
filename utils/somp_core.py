@@ -1,7 +1,6 @@
 import logging
 from collections import Counter
 
-import numpy as np
 import torch
 from transformers.tokenization_utils_base import BatchEncoding
 
@@ -212,9 +211,9 @@ def build_global_candidate_pool(args, model_wrapper, residual_grads, R_Qs, head_
     consistency_score = score_by_head[active_heads].std(dim=0)
     sparse_score = sparse_by_head[active_heads].mean(dim=0)
     fused_score = (
-        float(args.lambda_sub) * subspace_score
-        + float(args.lambda_cons) * consistency_score
-        - float(args.lambda_sparse) * sparse_score
+            float(args.lambda_sub) * subspace_score
+            + float(args.lambda_cons) * consistency_score
+            - float(args.lambda_sparse) * sparse_score
     )
 
     k = min(int(args.k_per_head_max), fused_score.numel())
@@ -327,7 +326,8 @@ def beam_search_decoder(args, model_wrapper, R_Qs, res_ids):
                 continue
             base = torch.tensor([beam[0] for beam in beams], dtype=torch.long, device=device)
             if pos == 0:
-                group_candidates = candidate_tensor[group_idx:group_idx + 1] if group_idx < candidate_tensor.numel() else candidate_tensor[:1]
+                group_candidates = candidate_tensor[
+                    group_idx:group_idx + 1] if group_idx < candidate_tensor.numel() else candidate_tensor[:1]
             else:
                 group_candidates = candidate_tensor
             base_rep = base.repeat_interleave(group_candidates.numel(), dim=0)
@@ -343,7 +343,8 @@ def beam_search_decoder(args, model_wrapper, R_Qs, res_ids):
             lm_score = (lm_score - lm_score.mean()) / (lm_score.std(unbiased=False) + 1e-6)
             scores = scores - float(args.beta_glm) * lm_score
 
-            prev_scores = torch.tensor([beam[1] for beam in beams], device=device).repeat_interleave(group_candidates.numel())
+            prev_scores = torch.tensor([beam[1] for beam in beams], device=device).repeat_interleave(
+                group_candidates.numel())
             scores = scores + prev_scores
             if used_tokens:
                 used_tensor = torch.tensor(sorted(used_tokens), dtype=torch.long, device=device)

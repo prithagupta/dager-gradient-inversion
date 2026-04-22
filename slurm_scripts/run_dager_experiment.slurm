@@ -1,12 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=dager-exp
+#SBATCH --job-name=dager
 #SBATCH -N 1
 #SBATCH --account=haberi2x_0000
 #SBATCH --partition=fat_gpu
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem=128G
-#SBATCH --time=1:00:00
+#SBATCH --time=20:00:00
+#SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err
 #SBATCH --open-mode=append
@@ -14,20 +15,24 @@
 
 set -euo pipefail
 
+#hybrid_ablation_gpt2.sh, main_benchmark.sh
 # Project & script
 PROJECT_DIR="/lustre/$USER/projects/dager-gradient-inversion"
-RUN_SCRIPT="${RUN_SCRIPT:-experiment1_main_benchmark.sh}"
+RUN_SCRIPT="${RUN_SCRIPT:-main_benchmark.sh}"
 SCRIPT_PATH="$PROJECT_DIR/slurm_scripts/$RUN_SCRIPT"
-
+#export MKL_INTERFACE_LAYER=LP64
 # Optional extra args to pass through to the experiment script.
 SCRIPT_ARGS="${SCRIPT_ARGS:-}"
 
 # Env
 source ~/.bashrc || true
-source activate dager-cuda
+export MKL_INTERFACE_LAYER=LP64
+set +u
+conda activate dager-cuda
+set -u
 
 # HuggingFace cache: keep everything under $HF_HOME/gia_exp_cache
-export HF_HOME="${HF_HOME:-/lustre/$USER/hf_home}"
+export HF_HOME="${HF_HOME:-${DATA_FOLDER}/.cache/huggingface}"
 export CACHE_DIR="${HF_HOME}/gia_exp_cache"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-${CACHE_DIR}/.hf_hub}"
 export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HUB_CACHE}"

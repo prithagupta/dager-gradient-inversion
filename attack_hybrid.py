@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import time
+
 import numpy as np
 import pandas as pd
 import torch
@@ -14,10 +15,11 @@ from utils.data import TextDataset
 from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
-from utils.functional import (fallback_rope_l1_candidates, get_top_B_in_span, log_distances, remove_padding,
+from utils.functional import (fallback_gpt2_l1_candidates, fallback_rope_l1_candidates, get_top_B_in_span,
+                              log_distances, remove_padding,
                               filter_outliers, get_span_dists,
                               evaluate_prediction, print_single_metric_dict, summarize_metrics, print_summary_table)
-from utils.models import ModelWrapper
+from utils.models import ModelWrapper, _resolve_local_model_path
 
 args = get_args()
 logger, log_path, job_hash = setup_experiment_logging(args, "hybrid_attack")
@@ -28,8 +30,6 @@ if torch.cuda.is_available():
     torch.backends.cuda.enable_flash_sdp(False)
     torch.backends.cuda.enable_mem_efficient_sdp(False)
     torch.backends.cuda.enable_math_sdp(True)
-
-
 
 
 def filter_l1(args, model_wrapper, R_Qs):
@@ -56,6 +56,8 @@ def filter_l1(args, model_wrapper, R_Qs):
                 )
                 if model_wrapper.has_rope() and len(res_ids_new) == 0:
                     res_ids_new = fallback_rope_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
+                elif model_wrapper.is_decoder() and len(res_ids_new) == 0:
+                    res_ids_new = fallback_gpt2_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
             else:
                 std_thrs = args.p1_std_thrs if p == 0 else None
                 distance_values = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
@@ -140,6 +142,14 @@ def _hybrid_uses_periodic_projection(args):
 
 def _hybrid_uses_lm_prior(args):
     return args.hybrid_use_lm_prior == 'true' and args.coeff_perplexity > 0
+
+
+def _hybrid_lm_dtype(args):
+    if args.precision == 'half':
+        return torch.float16
+    if args.precision == 'double':
+        return torch.float64
+    return None
 
 
 def init_embeddings(args, model_wrapper, res_ids, input_ids, attention_mask, init_ids=None):
@@ -255,10 +265,21 @@ def load_lm_prior(args):
         logger.info('Hybrid LM prior disabled: fuzzy LM prior is currently implemented for GPT-2 vocabularies only.')
         return None
 
-    lm_kwargs = {'pretrained_model_name_or_path': args.model_path, 'attn_implementation': args.attn_implementation}
-    if args.cache_dir is not None:
+    lm_source = _resolve_local_model_path(args.model_path, args.cache_dir)
+    logger.info(f"Loading hybrid LM prior from {lm_source}")
+    lm_kwargs = {'pretrained_model_name_or_path': lm_source, 'attn_implementation': args.attn_implementation}
+    if args.cache_dir is not None and not os.path.isdir(lm_source):
         lm_kwargs['cache_dir'] = args.cache_dir
-    lm = AutoModelForCausalLM.from_pretrained(**lm_kwargs).to(args.device)
+    lm_dtype = _hybrid_lm_dtype(args)
+    if lm_dtype is not None:
+        lm_kwargs['torch_dtype'] = lm_dtype
+    lm_kwargs['low_cpu_mem_usage'] = True
+    if os.path.isdir(lm_source) or any(
+            str(os.environ.get(flag, "")).lower() in {"1", "true", "yes"}
+            for flag in ["HF_HUB_OFFLINE", "HF_DATASETS_OFFLINE", "TRANSFORMERS_OFFLINE"]
+    ):
+        lm_kwargs['local_files_only'] = True
+    lm = AutoModelForCausalLM.from_pretrained(**lm_kwargs)
     lm.config.pad_token_id = lm.config.eos_token_id
     lm.config.use_cache = False
     lm.config.output_hidden_states = False
@@ -266,6 +287,7 @@ def load_lm_prior(args):
     lm.eval()
     for param in lm.parameters():
         param.requires_grad_(False)
+    lm.to('cpu')
     return lm
 
 
@@ -398,6 +420,14 @@ def reorder_decoder_predictions(args, tokenizer, prediction, reference):
 
 
 def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, true_labels, init_ids=None):
+    original_lm_device = None
+    if lm is not None:
+        original_lm_device = next(lm.parameters()).device
+        if str(original_lm_device) != str(args.device):
+            logger.info('Moving hybrid LM prior from %s to %s', original_lm_device, args.device)
+            lm.to(args.device)
+            cleanup_memory()
+
     emb_matrix = model_wrapper.get_input_embeddings_weight().detach().to(args.device)
     emb_norm = F.normalize(emb_matrix, dim=-1)
     lm_emb_matrix = lm.get_input_embeddings().weight.detach() if lm is not None else None
@@ -499,11 +529,18 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
             cleanup_memory()
 
     if best_projected_ids is not None:
-        return best_projected_ids
-    if _hybrid_uses_candidate_projection(args):
-        return project_to_candidates(best_x, emb_matrix, candidate_mask, pad_mask, model_wrapper.pad_token,
-                                     emb_norm=emb_norm)
-    return project_to_vocab(best_x, emb_matrix, pad_mask, model_wrapper.pad_token, emb_norm=emb_norm)
+        final_ids = best_projected_ids
+    elif _hybrid_uses_candidate_projection(args):
+        final_ids = project_to_candidates(best_x, emb_matrix, candidate_mask, pad_mask, model_wrapper.pad_token,
+                                          emb_norm=emb_norm)
+    else:
+        final_ids = project_to_vocab(best_x, emb_matrix, pad_mask, model_wrapper.pad_token, emb_norm=emb_norm)
+
+    if lm is not None and original_lm_device is not None and str(original_lm_device) != str(args.device):
+        lm.to(original_lm_device)
+        cleanup_memory()
+
+    return final_ids
 
 
 def reconstruct(args, sample, metric, model_wrapper, lm):
@@ -542,7 +579,10 @@ def reconstruct(args, sample, metric, model_wrapper, lm):
     ]
     init_ids = None
     if args.hybrid_init_mode == 'dager':
-        init_ids = select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch)
+        with torch.no_grad():
+            init_ids = select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch)
+    del R_Qs
+    cleanup_memory()
     final_ids = hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, true_labels,
                                 init_ids=init_ids)
     prediction = [
@@ -554,7 +594,6 @@ def reconstruct(args, sample, metric, model_wrapper, lm):
     return prediction[:len(reference)], reference
 
 
-
 def main():
     if args.task != 'seq_class':
         raise NotImplementedError('Hybrid attack currently supports --task seq_class.')
@@ -564,6 +603,7 @@ def main():
     if is_complete:
         logger.info("Results already exist for this config at %s; skipping attack.", results_dir)
         logger.info('Done with all.')
+        print(f"Hash Value {job_hash} is already done")
         return
 
     device = torch.device(args.device)
@@ -655,10 +695,10 @@ def main():
         logger.info("")
         logger.info("")
     logger.info('[Aggregate metrics]:')
-    total_time = time.time() - t_start
+    total_time_sec = time.time() - t_start
     aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), wrapper_tokenizer, metric)
-    aggregated_results[f"reconstruction_time_mean"] = float(np.mean(input_times))
-    aggregated_results[f"reconstruction_time_std"] = float(np.std(input_times))
+    aggregated_results[f"experiment_time_mean"] = float(total_time_sec)
+    aggregated_results[f"experiment_time_std"] = float(0)
     logger.info(f"Overall {print_single_metric_dict(aggregated_results)}")
     summary = summarize_metrics(final_results)
     summary[f"reconstruction_time_mean"] = float(np.mean(input_times))
@@ -671,7 +711,7 @@ def main():
 
     summary_results = {"Overall Results": aggregated_results, "Per Sentence Results": summary,
                        "Per Input Results": summary_per_input, "Arguments": vars(args)}
-    logger.info(f"Experiment time {total_time}")
+    logger.info(f"Experiment time {total_time_sec}")
     pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
     pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
     with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
@@ -679,6 +719,7 @@ def main():
     logger.info('Done with all.')
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)
+    print(f"Hash Value {job_hash} Done")
 
 
 if __name__ == '__main__':

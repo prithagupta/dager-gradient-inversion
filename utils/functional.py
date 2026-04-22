@@ -9,7 +9,6 @@ from constants import config
 logger = logging.getLogger(__name__)
 
 
-
 def _rouge_triplet(score):
     if hasattr(score, 'mid'):
         score = score.mid
@@ -18,6 +17,7 @@ def _rouge_triplet(score):
     value = float(score)
     return value, value, value
 
+
 def print_single_metric_dict(metrics):
     output = "\n===== Single Evaluation =====\n"
     output += f"{'Metric':<25} {'Value':>10}\n"
@@ -25,6 +25,7 @@ def print_single_metric_dict(metrics):
     for k, v in metrics.items():
         output += f"{k:<25} {float(v):>10.4f}\n"
     return output
+
 
 def print_summary_table(summary):
     output = "\n===== Metrics Summary =====\n"
@@ -41,6 +42,7 @@ def print_summary_table(summary):
 
     return output
 
+
 def summarize_metrics(metrics_list):
     summary = {}
     keys = metrics_list[0].keys()
@@ -50,6 +52,7 @@ def summarize_metrics(metrics_list):
         summary[f"{k}_mean"] = float(values.mean())
         summary[f"{k}_std"] = float(values.std())
     return summary
+
 
 def evaluate_prediction(pred, ref, tokenizer, rouge_metric):
     rouge = rouge_metric.compute(predictions=[pred], references=[ref])
@@ -75,6 +78,7 @@ def evaluate_prediction(pred, ref, tokenizer, rouge_metric):
                     "exact_match": exact_match, "token_acc": token_acc, "padded_token_acc": padded_token_acc,
                     "pred_len": len(pred_ids), "ref_len": len(ref_ids)}
     return results_dict
+
 
 def remove_padding(tokenizer, ids, left=False):
     if left:
@@ -265,15 +269,49 @@ def get_span_dists(args, model_wrapper, R_Qs, embeds, p=0, stage='token'):
 
     return d
 
-def fallback_rope_l1_candidates(args, model_wrapper, R_Q, embeds):
+
+def fallback_decoder_l1_candidates(args, model_wrapper, R_Q, embeds, top_k, reason):
     dists = check_if_in_span(R_Q, embeds, args.dist_norm).reshape(-1)
     blocked_tokens = [model_wrapper.pad_token, model_wrapper.eos_token, model_wrapper.start_token]
     for token_id in blocked_tokens:
         if token_id is not None and 0 <= token_id < dists.numel():
             dists[token_id] = torch.inf
 
-    top_k = min(max(args.parallel, 200 * args.batch_size), dists.numel())
+    if args.max_ids > 0:
+        top_k = min(top_k, args.max_ids)
+    top_k = min(top_k, dists.numel())
     res_ids = torch.topk(dists, k=top_k, largest=False).indices
-    logger.info(f"Llama/RoPE strict L1 returned no candidates; using nearest {len(res_ids)} token candidates "
-                f"(best_dist={dists[res_ids[0]].item()}, worst_dist={dists[res_ids[-1]].item()}).")
+    logger.info(
+        "%s strict L1 returned no candidates; using nearest %s token candidates "
+        "(best_dist=%s, worst_dist=%s).",
+        reason,
+        len(res_ids),
+        dists[res_ids[0]].item(),
+        dists[res_ids[-1]].item(),
+    )
     return res_ids
+
+
+def fallback_rope_l1_candidates(args, model_wrapper, R_Q, embeds):
+    return fallback_decoder_l1_candidates(
+        args,
+        model_wrapper,
+        R_Q,
+        embeds,
+        top_k=max(args.parallel, 200 * args.batch_size),
+        reason="Llama/RoPE",
+    )
+
+
+def fallback_gpt2_l1_candidates(args, model_wrapper, R_Q, embeds):
+    # GPT-2 decoding expands over many positions, so keep the fallback bounded.
+    bounded_top_k = max(2 * args.batch_size, 64)
+    bounded_top_k = min(bounded_top_k, 256)
+    return fallback_decoder_l1_candidates(
+        args,
+        model_wrapper,
+        R_Q,
+        embeds,
+        top_k=bounded_top_k,
+        reason="GPT-2",
+    )

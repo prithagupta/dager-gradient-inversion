@@ -5,9 +5,7 @@ import os
 import sys
 import time
 
-import numpy as np
 import pandas as pd
-import torch
 
 from args_factory import get_args
 from utils.data import TextDataset
@@ -64,6 +62,7 @@ def get_somp_args():
 
 args = get_somp_args()
 logger, log_path, job_hash = setup_experiment_logging(args, "somp_attack")
+logger.info(f"Arguments {args}")
 logger.info("\n\n\nCommand: %s\n\n\n", " ".join(sys.argv))
 
 
@@ -73,6 +72,7 @@ def main():
     if is_complete:
         logger.info("Results already exist for this config at %s; skipping attack.", results_dir)
         logger.info("Done with all.")
+        print(f"Hash Value {job_hash} is already done")
         return
 
     metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
@@ -175,9 +175,10 @@ def main():
         del sample, prediction, reference, curr_metrics, joined_metrics
         cleanup_memory()
 
+    total_time_sec = time.time() - t_start
     overall = evaluate_prediction(" ".join(predictions), " ".join(references), model_wrapper.tokenizer, metric)
-    overall["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
-    overall["reconstruction_time_std"] = float(np.std(input_times)) if input_times else 0.0
+    overall["experiment_time_mean"] = float(total_time_sec)
+    overall["experiment_time_std"] = float(0)
     sentence_summary = summarize_metrics(final_sentence_results) if final_sentence_results else {}
     input_summary = summarize_metrics(final_input_results) if final_input_results else {}
 
@@ -193,12 +194,15 @@ def main():
                 "Overall Results": overall,
                 "Per Sentence Results": sentence_summary,
                 "Per Input Results": input_summary,
+                "Arguments": vars(args),
             },
             f,
             indent=2,
         )
+    logger.info("Experiment time %s", total_time_sec)
     logger.info("Results directory: %s", results_dir)
     logger.info("Done with all.")
+    print(f"Hash Value {job_hash} Done")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ import os
 import sys
 import time
 
-import evaluate
 import numpy as np
 import pandas as pd
 import torch
@@ -16,7 +15,8 @@ from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
-from utils.functional import (fallback_rope_l1_candidates, get_top_B_in_span, check_if_in_span, log_distances,
+from utils.functional import (fallback_gpt2_l1_candidates, fallback_rope_l1_candidates, get_top_B_in_span,
+                              check_if_in_span, log_distances,
                               remove_padding, filter_outliers, get_span_dists,
                               evaluate_prediction, print_single_metric_dict, summarize_metrics, _rouge_triplet,
                               print_summary_table)
@@ -39,6 +39,7 @@ def _all_token_positions(mask, start=0, stop=None):
     if mask.ndim == 2:
         return torch.all(mask[:, start:stop]).item()
     raise ValueError(f'Expected 1D or 2D span mask, got shape {tuple(mask.shape)}')
+
 
 def filter_l1(args, model_wrapper, R_Qs):
     tokenizer = model_wrapper.tokenizer
@@ -64,12 +65,14 @@ def filter_l1(args, model_wrapper, R_Qs):
                                                    args.dist_norm)
                 if model_wrapper.has_rope() and len(res_ids_new) == 0:
                     res_ids_new = fallback_rope_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
+                elif model_wrapper.is_decoder() and len(res_ids_new) == 0:
+                    res_ids_new = fallback_gpt2_l1_candidates(args, model_wrapper, R_Qs[0], embeds)
             else:
                 std_thrs = args.p1_std_thrs if p == 0 else None
                 distance_values = get_span_dists(args, model_wrapper, R_Qs, embeds, p)
                 res_ids_new = filter_outliers(distance_values, std_thrs=std_thrs,
-                                             maxB=max(50 * model_wrapper.args.batch_size,
-                                                      int(0.05 * len(model_wrapper.tokenizer))))
+                                              maxB=max(50 * model_wrapper.args.batch_size,
+                                                       int(0.05 * len(model_wrapper.tokenizer))))
             res_types_new = torch.zeros_like(res_ids_new)
         log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
         res_pos_new = torch.ones_like(res_ids_new) * p
@@ -229,7 +232,8 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
             else:
                 rec_l2.append(torch.all(boolsq2).item())
 
-        logger.info(f'Rec L1: {rec_l1}, Rec L1 MaxB: {rec_l1_maxB}, Rec MaxB Token: {total_correct_maxB_tokens / total_tokens}, Rec Token: {total_correct_tokens / total_tokens}, Rec L2: {rec_l2}')
+        logger.info(
+            f'Rec L1: {rec_l1}, Rec L1 MaxB: {rec_l1_maxB}, Rec MaxB Token: {total_correct_maxB_tokens / total_tokens}, Rec Token: {total_correct_tokens / total_tokens}, Rec L2: {rec_l2}')
 
         if args.neptune:
             args.neptune['logs/rec_l1'].log(np.array(rec_l1).sum())
@@ -389,6 +393,7 @@ def main():
     if is_complete:
         logger.info(f"Results already exist for this config at {results_dir}; skipping attack.")
         logger.info('Done with all.')
+        print(f"Hash Value {job_hash} is already done")
         return
 
     device = torch.device(args.device)
@@ -429,10 +434,10 @@ def main():
 
         logger.info(f'Done with input #{i} of {args.n_inputs}.')
         curr_metrics = []
-        for sent_idx, (ref, pred)  in enumerate(zip(reference, prediction)):
+        for sent_idx, (ref, pred) in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(f"Reference: {ref}" )
-            logger.info(f"Prediction: {pred}" )
+            logger.info(f"Reference: {ref}")
+            logger.info(f"Prediction: {pred}")
             metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
             curr_metrics.append(metrics)
             sentence_rows.append({
@@ -478,10 +483,10 @@ def main():
         logger.info("")
         logger.info("")
     logger.info('[Aggregate metrics]:')
-    total_time = time.time() - t_start
+    total_time_sec = time.time() - t_start
     aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), wrapper_tokenizer, metric)
-    aggregated_results[f"reconstruction_time_mean"] = float(np.mean(input_times))
-    aggregated_results[f"reconstruction_time_std"] = float(np.std(input_times))
+    aggregated_results[f"experiment_time_mean"] = float(total_time_sec)
+    aggregated_results[f"experiment_time_std"] = float(0)
     logger.info(f"Overall {print_single_metric_dict(aggregated_results)}")
     summary = summarize_metrics(final_results)
     summary[f"reconstruction_time_mean"] = float(np.mean(input_times))
@@ -493,12 +498,13 @@ def main():
     logger.info(f"Per Input Results {print_summary_table(summary_per_input)}")
     summary_results = {"Overall Results": aggregated_results, "Per Sentence Results": summary,
                        "Per Input Results": summary_per_input, "Arguments": vars(args)}
-    logger.info(f"Experiment time {total_time}")
+    logger.info(f"Experiment time {total_time_sec}")
     pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
     pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
     with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
         json.dump(summary_results, f, indent=2)
     logger.info('Done with all.')
+    print(f"Hash Value {job_hash} Done")
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)
 

@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-import torch
 
 from utils.functional import get_layer_decomp
 from utils.models import ModelWrapper

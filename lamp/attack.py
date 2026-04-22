@@ -19,7 +19,8 @@ from utilities import compute_grads, get_closest_tokens, get_reconstruction_loss
     remove_padding
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric, setup_experiment_logging
+from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric, \
+    setup_experiment_logging
 from utils.functional import (
     _rouge_triplet,
     evaluate_prediction,
@@ -305,6 +306,13 @@ def reconstruct(args, device, sample, metric, tokenizer, lm, model):
 
 def main():
     logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
+    attack_name = f"lamp_{args.loss}"
+    is_complete, results_dir = is_attack_complete(attack_name, job_hash)
+    if is_complete:
+        logger.info("Results already exist for this config at %s; skipping attack.", results_dir)
+        logger.info('Done with all.')
+        print(f"Hash Value {job_hash} is already done")
+        return
 
     device = torch.device(args.device)
     metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
@@ -347,8 +355,7 @@ def main():
     input_times = []
     sentence_rows = []
     input_rows = []
-    attack_name = f"lamp_{args.loss}"
-    results_dir = os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    results_dir = get_results_dir(attack_name, job_hash)
     os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
@@ -425,8 +432,8 @@ def main():
     logger.info('[Aggregate metrics]:')
     total_time = time.time() - t_start
     aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), tokenizer, metric)
-    aggregated_results["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
-    aggregated_results["reconstruction_time_std"] = float(np.std(input_times)) if input_times else 0.0
+    aggregated_results["experiment_time_mean"] = float(total_time)
+    aggregated_results["experiment_time_std"] = float(0)
     summary = summarize_metrics(final_results) if final_results else {}
     if summary:
         summary["reconstruction_time_mean"] = float(np.mean(input_times)) if input_times else 0.0
@@ -452,6 +459,7 @@ def main():
     logger.info("Results directory: %s", results_dir)
 
     logger.info('Done with all.')
+    print(f"Hash Value {job_hash} Done")
     if args.neptune:
         neptune.log_metric('curr_input', args.n_inputs)
 
