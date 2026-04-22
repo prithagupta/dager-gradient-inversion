@@ -12,7 +12,7 @@ from scipy.optimize import linear_sum_assignment
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric
+from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
@@ -384,6 +384,13 @@ def print_metrics(args, res, suffix):
 
 
 def main():
+    attack_name = f"dager_{args.loss}"
+    is_complete, results_dir = is_attack_complete(attack_name, job_hash)
+    if is_complete:
+        logger.info(f"Results already exist for this config at {results_dir}; skipping attack.")
+        logger.info('Done with all.')
+        return
+
     device = torch.device(args.device)
     metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
@@ -398,8 +405,7 @@ def main():
     input_times = []
     sentence_rows = []
     input_rows = []
-    attack_name = f"dager_{args.loss}"
-    results_dir = os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    results_dir = get_results_dir(attack_name, job_hash)
     os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):

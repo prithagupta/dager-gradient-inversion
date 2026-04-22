@@ -11,7 +11,7 @@ import torch
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import _repo_root, cleanup_memory, load_rouge_metric
+from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric
 from utils.experiment import setup_experiment_logging
 from utils.functional import evaluate_prediction
 from utils.functional import print_single_metric_dict
@@ -68,6 +68,13 @@ logger.info("\n\n\nCommand: %s\n\n\n", " ".join(sys.argv))
 
 
 def main():
+    attack_name = "somp"
+    is_complete, results_dir = is_attack_complete(attack_name, job_hash)
+    if is_complete:
+        logger.info("Results already exist for this config at %s; skipping attack.", results_dir)
+        logger.info("Done with all.")
+        return
+
     metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(
         args.device,
@@ -88,8 +95,7 @@ def main():
     input_times = []
     sentence_rows = []
     input_rows = []
-    attack_name = "somp"
-    results_dir = os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    results_dir = get_results_dir(attack_name, job_hash)
     os.makedirs(results_dir, exist_ok=True)
     t_start = time.time()
 

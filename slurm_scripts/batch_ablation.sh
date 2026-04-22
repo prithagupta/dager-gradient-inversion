@@ -9,7 +9,7 @@ cd "$REPO_ROOT"
 extra_args=( "$@" )
 
 models=( "gpt2" "gpt2-large" )
-batches=( 1 2 4 8 16 32 64 128)
+batches=( 128 64 32 16 8 4 2 1)
 methods=( "dager" "hybrid" )
 datasets=( "sst2" "cola" )
 

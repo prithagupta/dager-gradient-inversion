@@ -9,7 +9,7 @@ cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 
-datasets=( "rotten_tomatoes" "sst2" "cola" )
+datasets=(  "sst2" "cola" "rotten_tomatoes")
 models=(
   "gpt2"
   "gpt2-large"

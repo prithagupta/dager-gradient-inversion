@@ -7,6 +7,7 @@ import random
 import numpy as np
 import torch
 
+logger = logging.getLogger(__name__)
 
 def _repo_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,6 +40,29 @@ def create_directory_safely(path, is_file_path=False):
         path = os.path.dirname(path)
     if path:
         os.makedirs(path, exist_ok=True)
+
+
+def get_results_dir(attack_name, job_hash):
+    return os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+
+
+def is_attack_complete(attack_name, job_hash, required_files=None):
+    if required_files is None:
+        required_files = ("sentence_results.csv", "input_results.csv", "run_summary.json")
+
+    results_dir = get_results_dir(attack_name, job_hash)
+    if not os.path.isdir(results_dir):
+        return False, results_dir
+
+    for filename in required_files:
+        file_path = os.path.join(results_dir, filename)
+        if not os.path.isfile(file_path):
+            return False, results_dir
+        if os.path.getsize(file_path) == 0:
+            return False, results_dir
+        logger.info(f"Results already exist at {file_path}")
+
+    return True, results_dir
 
 
 def setup_random_seed(seed=1234, logger=None):
