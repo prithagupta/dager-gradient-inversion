@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=dager
+#SBATCH --job-name=dager-cpu
 #SBATCH -N 1
 #SBATCH --account=haberi2x_0000
-#SBATCH --partition=fat_gpu
-#SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=4
-#SBATCH --mem=128G
-#SBATCH --time=20:00:00
+#SBATCH --partition=cpu
+#SBATCH --gpus=0
+#SBATCH --mem=256G
+#SBATCH --time=24:00:00
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err
@@ -15,10 +14,18 @@
 
 set -euo pipefail
 
-#hybrid_ablation_gpt2.sh, main_benchmark.sh
 # Project & script
 PROJECT_DIR="/lustre/$USER/projects/dager-gradient-inversion"
-RUN_SCRIPT="${RUN_SCRIPT:-main_benchmark.sh}"
+DEFAULT_RUN_SCRIPT="batch_ablation.sh"
+RUN_SCRIPT="${RUN_SCRIPT:-}"
+
+if [ -z "$RUN_SCRIPT" ]; then
+  RUN_SCRIPT="$DEFAULT_RUN_SCRIPT"
+  echo "[INFO] RUN_SCRIPT not provided; defaulting to $RUN_SCRIPT"
+else
+  echo "[INFO] Using RUN_SCRIPT from environment: $RUN_SCRIPT"
+fi
+
 SCRIPT_PATH="$PROJECT_DIR/slurm_scripts/$RUN_SCRIPT"
 #export MKL_INTERFACE_LAYER=LP64
 # Optional extra args to pass through to the experiment script.

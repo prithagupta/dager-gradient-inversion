@@ -390,6 +390,7 @@ def print_metrics(args, res, suffix):
 def main():
     attack_name = f"dager_{args.loss}"
     is_complete, results_dir = is_attack_complete(attack_name, job_hash)
+    print(f"Hash Value {job_hash} Started")
     if is_complete:
         logger.info(f"Results already exist for this config at {results_dir}; skipping attack.")
         logger.info('Done with all.')

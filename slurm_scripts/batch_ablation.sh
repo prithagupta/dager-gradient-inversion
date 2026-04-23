@@ -96,12 +96,6 @@ run_wrapper() {
     set_default_max_ids_arg "$batch"
   fi
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
-  if [ "${#run_args[@]}" -gt 0 ]; then
-    set_default_rng_seed_arg 42 "${run_args[@]}"
-  else
-    set_default_rng_seed_arg 42
-  fi
-  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
     if ! has_use_hf_split_arg; then
       run_args+=( --use_hf_split )
