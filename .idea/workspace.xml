@@ -5,20 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d65cac68-3e53-4517-9e74-c619be21d3c3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/args_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/args_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attack_hybrid.py" beforeDir="false" afterPath="$PROJECT_DIR$/attack_hybrid.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/copy_to_cluster.sh" beforeDir="false" afterPath="$PROJECT_DIR$/copy_to_cluster.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/dager_ce/results_470f4cfa6fbd_n_inputs_full/input_results.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/dager_ce/results_470f4cfa6fbd_n_inputs_full/run_summary.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/dager_ce/results_470f4cfa6fbd_n_inputs_full/sentence_results.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hybrid_ce/results_7abc9f6e7801_n_inputs_full/input_results.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hybrid_ce/results_7abc9f6e7801_n_inputs_full/run_summary.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hybrid_ce/results_7abc9f6e7801_n_inputs_full/sentence_results.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/slurm_scripts/batch_ablation.sh" beforeDir="false" afterPath="$PROJECT_DIR$/slurm_scripts/batch_ablation.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/slurm_scripts/collect_experiment_hashes.sh" beforeDir="false" afterPath="$PROJECT_DIR$/slurm_scripts/collect_experiment_hashes.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/slurm_scripts/run_dager_gpu.slurm" beforeDir="false" afterPath="$PROJECT_DIR$/slurm_scripts/run_dager_gpu.slurm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/experiment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -224,7 +211,7 @@
       <workItem from="1776801338518" duration="25698000" />
       <workItem from="1776924293598" duration="780000" />
       <workItem from="1776937412108" duration="4698000" />
-      <workItem from="1777016268738" duration="13139000" />
+      <workItem from="1777016268738" duration="13322000" />
     </task>
     <servers />
   </component>
