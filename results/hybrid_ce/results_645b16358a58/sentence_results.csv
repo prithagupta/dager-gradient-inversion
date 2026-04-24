@@ -1,0 +1,801 @@
+run_id,attack,model,dataset,input_index,sentence_index,reference,prediction,rouge1_fm,rouge2_fm,rougeL_fm,exact_match,token_acc,padded_token_acc,pred_len,ref_len
+deeac7916cf7,hybrid_ce,gpt2,cola,0,0,John made Bill master of himself.,John made Bill master of himself.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,0,1,John will rain tomorrow.,John will rain tomorrow.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,0,2,I served leek soup to my guests.,I served leek soup to my guests.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,0,3,We created a monster.,We created a monster.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,0,4,Either Sam plays the bassoon or Jekyll the oboe.,Either Sam plays the bassoon or Jekyll the oboe.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,0,5,there is nothing to do.,there is nothing to do.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,0,6,Sandy had read how many papers?!,Sandy had read how many papers?!,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,0,7,I don't know if I should agree.,I don't know if I should agree.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,1,0,The defendants denies the allegation.,The defendants denies the allegation.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,1,1,"I know that Meg's attracted to Harry, but they don't know who.","I know that Meg's attracted to Harry, but they don't know who.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,1,2,It was a brand new car that he bought.,It was a brand new car that he bought.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,1,3,Nora sent Peter the book.,Nora sent Peter the book.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,1,4,"Tom will smoke the grass, and Reuben has the hash.","Tom will smoke the grass, and Reuben has the hash.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,1,5,Chris was handed Sandy a note.,Chris was handed Sandy a note.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,1,6,Students studying English reads Conrad's Heart of Darkness while at university.,Students studying English reads Conrad's Heart of Darkness while at university.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,1,7,Phillip gave the medal to the soldier.,Phillip gave the medal to the soldier.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,2,0,"Most columnists claim that a senior White House official has been briefing them, but none will reveal which one.","Most columnists claim that a senior White House official has been briefing them, but none will reveal which one.",1.0,1.0,1.0,1,1.0,1.0,22,22
+deeac7916cf7,hybrid_ce,gpt2,cola,2,1,Nobody told Susan about herself.,Nobody told Susan about herself.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,2,2,That is the reason why he resigned.,That is the reason why he resigned.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,2,3,I borrowed Fred's diagram of a snake's eye because Steve's had been stolen.,I borrowed Fred's diagram of a snake's eye because Steve's had been stolen.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,2,4,Anson demonized up the Khyber,Anson demonized up the Khyber,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,2,5,The tub leaked water.,The tub leaked water.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,2,6,I inquired when could we leave.,I inquired when could we leave.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,2,7,The crocodile devoured the doughnut.,The crocodile devoured the doughnut.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,3,0,Sandra beamed a cheerful welcome.,Sandra beamed a cheerful welcome.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,3,1,Bill's funny story about Sue and Max's boring one about Kathy both amazed me.,Bill's funny story about Sue and Max's boring one about Kathy both amazed me.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,3,2,I drank some of water.,I drank some of water.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,3,3,The bread cuts easily.,The bread cuts easily.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,3,4,Many people were fond of Pat.,Many people were fond of Pat.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,3,5,Colin asked if they could get a mortgage.,Colin asked if they could get a mortgage.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,3,6,Something happened I couldn't really talk about.,Something happened I couldn't really talk about.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,3,7,The defendant deny the allegation.,The defendant deny the allegation.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,4,0,Tabs were kept on each agent by the other.,Tabs were kept on each agent by the other.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,4,1,Chocolate eggs were hidden from every child by his mother.,Chocolate eggs were hidden from every child by his mother.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,4,2,I noticed the.,I noticed the.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,4,3,"Though he may hate those that criticize Carter, it doesn't matter.","Though he may hate those that criticize Carter, it doesn't matter.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,4,4,We donated wire for the convicts to build cages with.,We donated wire for the convicts to build cages with.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,4,5,"After reading the pamphlet, Judy threw it into the garbage can.","After reading the pamphlet, Judy threw it into the garbage can.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,4,6,"The newspaper has reported that they are about to appoint someone, but I can't remember who the newspaper has reported that they are about to appoint.","The newspaper has reported that they are about to appoint someone, but I can't remember who the newspaper has reported that they are about to appoint.",1.0,1.0,1.0,1,1.0,1.0,29,29
+deeac7916cf7,hybrid_ce,gpt2,cola,4,7,Cohen proved the independence of the continuum hypothesis.,Cohen proved the independence of the continuum hypothesis.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,5,0,Susan frightens her.,Susan frightens her.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,5,1,I talked to Winston about himself.,I talked to Winston about himself.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,5,2,Chocolate eggs were hidden from each other by the children.,Chocolate eggs were hidden from each other by the children.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,5,3,A pilot could be flying this plane.,A pilot could be flying this plane.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,5,4,He let the cats which were whining out.,He let the cats which were whining out.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,5,5,"Bill's story about Sue may be amazing, but Max's is virtually incredible.","Bill's story about Sue may be amazing, but Max's is virtually incredible.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,5,6,We offered a job to her.,We offered a job to her.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,5,7,"I know which book Mag read, and which book Bob said that you hadn't.","I know which book Mag read, and which book Bob said that you hadn't.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,6,0,The bills passed by the House yesterday that we objected to were vetoed.,The bills passed by the House yesterday that we objected to were vetoed.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,6,1,I want that Bill left to remain a secret.,I want that Bill left to remain a secret.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,6,2,I wondered who Medea had poisoned.,I wondered who Medea had poisoned.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,6,3,Who do you think Tom saw?,Who do you think Tom saw?,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,6,4,It was from six to nine or it took place from six to nine.,It was from six to nine or it took place from six to nine.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,6,5,We put the pigs in a pen.,We put the pigs in a pen.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,6,6,"I can't believe Fred won't, either.","I can't believe Fred won't, either.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,6,7,John considers Bill silly.,John considers Bill silly.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,7,0,Newsweek appeared on the newsstands.,Newsweek appeared on the newsstands.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,7,1,I believe there to be no way out.,I believe there to be no way out.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,7,2,We forgot our invitations.,We forgot our invitations.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,7,3,John was struck as sick.,John was struck as sick.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,7,4,Mary was respected by John.,Mary was respected by John.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,7,5,"The more Fred is obnoxious, the less attention you should pay to him.","The more Fred is obnoxious, the less attention you should pay to him.",1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,7,6,The bucket was kicked by Pat.,The bucket was kicked by Pat.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,7,7,Vote for you!,Vote for you!,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,8,0,John has a fear of dogs.,John has a fear of dogs.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,8,1,It's Anson that I like,It's Anson that I like,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,8,2,We gave us presents.,We gave us presents.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,8,3,A wonderful opportunity presented itself to him yesterday.,A wonderful opportunity presented itself to him yesterday.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,8,4,This dogs barked.,This dogs barked.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,8,5,Cynthia nibbled on the carrot.,Cynthia nibbled on the carrot.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,8,6,It is to give up to leave.,It is to give up to leave.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,8,7,I like the book which you gave me.,I like the book which you gave me.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,9,0,Janet broke the cup.,Janet broke the cup.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,9,1,We celebrated in the streets.,We celebrated in the streets.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,9,2,Cynthia chewed.,Cynthia chewed.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,9,3,These cars drive easily.,These cars drive easily.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,9,4,The fort fluttered with many flags.,The fort fluttered with many flags.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,9,5,The children amused.,The children amused.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,9,6,Which boy's did we elect guardian's employer president?,Which boy's did we elect guardian's employer president?,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,9,7,"They love to play golf, but I do not.","They love to play golf, but I do not.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,10,0,This is my favorite.,This is my favorite.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,10,1,They realised that never had Sir Thomas been so offended.,They realised that never had Sir Thomas been so offended.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,10,2,I live at the place where Route 150 crosses the River and my dad lives at the place where Route 150 crosses the Hudson River too.,I live at the place where Route 150 crosses the River and my dad lives at the place where Route 150 crosses the Hudson River too.,1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,10,3,"I know that Meg's attracted to Harry, but they don't know who.","I know that Meg's attracted to Harry, but they don't know who.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,10,4,Leslie used a pen.,Leslie used a pen.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,10,5,The birds gives the worm a tug.,The birds gives the worm a tug.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,10,6,The voices echoed in the hall.,The voices echoed in the hall.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,10,7,John offers many advice.,John offers many advice.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,11,0,"Drowning cats, which is against the law, are hard to rescue.","Drowning cats, which is against the law, are hard to rescue.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,11,1,A student who to talk to us just walked in.,A student who to talk to us just walked in.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,11,2,We talked to them about there.,We talked to them about there.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,11,3,The candidates bring advantage to the voters.,The candidates bring advantage to the voters.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,11,4,I dislike the people in whose house we stayed.,I dislike the people in whose house we stayed.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,11,5,In which way is Clinton anxious to find out which budget dilemmas Panetta would be willing to solve?,In which way is Clinton anxious to find out which budget dilemmas Panetta would be willing to solve?,1.0,1.0,1.0,1,1.0,1.0,22,22
+deeac7916cf7,hybrid_ce,gpt2,cola,11,6,There is a monster in Loch Ness.,There is a monster in Loch Ness.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,11,7,the baker from whom I bought these bagels left.,the baker from whom I bought these bagels left.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,12,0,I hit that you knew the answer.,I hit that you knew the answer.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,12,1,Carmen obtained the spare part at the hardware store.,Carmen obtained the spare part at the hardware store.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,12,2,Mary beautifully plays the violin.,Mary beautifully plays the violin.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,12,3,Water bubbled up out of the kettle.,Water bubbled up out of the kettle.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,12,4,John left orders to follow Pete.,John left orders to follow Pete.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,12,5,"She was dancing with somebody, but I don't know who with.","She was dancing with somebody, but I don't know who with.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,12,6,Mary came to be introduced by the bartender and I also came to be.,Mary came to be introduced by the bartender and I also came to be.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,12,7,Mickey looked up it.,Mickey looked up it.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,13,0,John became deadly afraid of flying.,John became deadly afraid of flying.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,13,1,"Sally is tall, and may be blond, and Sheila is short, and definitely is, blond.","Sally is tall, and may be blond, and Sheila is short, and definitely is, blond.",1.0,1.0,1.0,1,1.0,1.0,21,21
+deeac7916cf7,hybrid_ce,gpt2,cola,13,2,Maxwell is quite a doctor.,Maxwell is quite a doctor.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,13,3,"They're going to serve the guests something, but it's unclear what.","They're going to serve the guests something, but it's unclear what.",1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,13,4,There is believed to be sheep in the park.,There is believed to be sheep in the park.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,13,5,The person responsible confessed.,The person responsible confessed.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,13,6,"If you had eaten more, you would want less.","If you had eaten more, you would want less.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,13,7,Books were taken from each student by the other.,Books were taken from each student by the other.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,14,0,This violin is difficult to play sonatas on.,This violin is difficult to play sonatas on.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,14,1,They make good cooks.,They make good cooks.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,14,2,Soaring temperatures are predicted for this weekend.,Soaring temperatures are predicted for this weekend.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,14,3,John decided for Bill to get the prize.,John decided for Bill to get the prize.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,14,4,I want goes to the store.,I want goes to the store.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,14,5,This is the senator to whose mother's friend's sister's I sent the letter.,This is the senator to whose mother's friend's sister's I sent the letter.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,14,6,"Only Churchill remembered Churchill giving the Blood, Sweat and Tears speech.","Only Churchill remembered Churchill giving the Blood, Sweat and Tears speech.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,14,7,Ricky can be relied on.,Ricky can be relied on.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,15,0,TV puts dumb ideas.,TV puts dumb ideas.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,15,1,It mattered that the Giants had lost.,It mattered that the Giants had lost.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,15,2,"Max seemed to be trying to begin to love Harriet, and Fred to be trying to begin to love Sue.","Max seemed to be trying to begin to love Harriet, and Fred to be trying to begin to love Sue.",1.0,1.0,1.0,1,1.0,1.0,22,22
+deeac7916cf7,hybrid_ce,gpt2,cola,15,3,John grudgingly accepted judgments of his incompetence as an auto mechanic.,John grudgingly accepted judgments of his incompetence as an auto mechanic.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,15,4,Ourselves like ourselves.,Ourselves like ourselves.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,15,5,Fred talked about everything before Rusty did talk about something.,Fred talked about everything before Rusty did talk about something.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,15,6,Everyone relies on someone. It's unclear who.,Everyone relies on someone. It's unclear who.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,15,7,The book that I said that I'd never read.,The book that I said that I'd never read.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,16,0,John tried to leave.,John tried to leave.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,16,1,That Sam sometimes didn't sleep must have pleased somebody.,That Sam sometimes didn't sleep must have pleased somebody.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,16,2,Susan devoted herself to linguistics.,Susan devoted herself to linguistics.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,16,3,Cohen proved that the continuum hypothesis was independent.,Cohen proved that the continuum hypothesis was independent.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,16,4,The magazines were sent to herself by Mary.,The magazines were sent to herself by Mary.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,16,5,"Most elections are quickly forgotten, but the election of 2000, everyone will remember for a long time.","Most elections are quickly forgotten, but the election of 2000, everyone will remember for a long time.",1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,16,6,The farmer loaded the cart with apples.,The farmer loaded the cart with apples.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,16,7,I shaved myself.,I shaved myself.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,17,0,John became rich.,John became rich.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,17,1,John whispered Mary left.,John whispered Mary left.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,17,2,Fanny regretted having to talk to Aunt Norris.,Fanny regretted having to talk to Aunt Norris.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,17,3,A hundred men surrounded the fort.,A hundred men surrounded the fort.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,17,4,The Peter we all like was at the party,The Peter we all like was at the party,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,17,5,We elected me.,We elected me.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,17,6,Everyone hopes that he will sleep.,Everyone hopes that he will sleep.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,17,7,Jason happens to appear to seem to be sick.,Jason happens to appear to seem to be sick.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,18,0,"Each of the performers came in, but were sitting so far back that we couldn't see who.","Each of the performers came in, but were sitting so far back that we couldn't see who.",1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,18,1,I saw even the student.,I saw even the student.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,18,2,Any pilot on duty today could be flying this plane.,Any pilot on duty today could be flying this plane.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,18,3,To please John is easy.,To please John is easy.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,18,4,Sandy was trying to work out which students would be able to solve a problem.,Sandy was trying to work out which students would be able to solve a problem.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,18,5,John placed Kim behind the garage.,John placed Kim behind the garage.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,18,6,Jason persuaded the doctor to treat Medea,Jason persuaded the doctor to treat Medea,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,18,7,Dumb ideas are put notions in children's heads by TV.,Dumb ideas are put notions in children's heads by TV.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,19,0,It was the peasant girl who got it.,It was the peasant girl who got it.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,19,1,I enjoy yourself.,I enjoy yourself.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,19,2,Protect yourself!,Protect yourself!,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,19,3,The book what inspired them was very long.,The book what inspired them was very long.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,19,4,the putter of books left.,the putter of books left.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,19,5,Linda taped the picture to the wall.,Linda taped the picture to the wall.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,19,6,Frank Churchill crossed the street.,Frank Churchill crossed the street.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,19,7,Terry delighted my pain.,Terry delighted my pain.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,20,0,The mechanical doll wriggled itself loose.,The mechanical doll wriggled itself loose.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,20,1,Lights go out at ten. There will be no talking afterwards.,Lights go out at ten. There will be no talking afterwards.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,20,2,John ate his noodle quietly.,John ate his noodle quietly.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,20,3,Bill's story about Sue and Max's about Kathy both amazed me.,Bill's story about Sue and Max's about Kathy both amazed me.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,20,4,Susan told her a story.,Susan told her a story.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,20,5,There is a bench to sit on.,There is a bench to sit on.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,20,6,Kris donated a book to the library.,Kris donated a book to the library.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,20,7,That surprised me.,That surprised me.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,21,0,There was some particular dog who saved every family.,There was some particular dog who saved every family.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,21,1,Blue leather shows herself that Betsy is pretty.,Blue leather shows herself that Betsy is pretty.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,21,2,Heidi thinks that Andy to eat salmon flavored candy bars.,Heidi thinks that Andy to eat salmon flavored candy bars.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,21,3,I kicked myself,I kicked myself,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,21,4,It has been determined that somebody will be appointed; it's just not clear yet who.,It has been determined that somebody will be appointed; it's just not clear yet who.,1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,21,5,These dogs barked.,These dogs barked.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,21,6,He left the train with somebody else's wallet in his pocket.,He left the train with somebody else's wallet in his pocket.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,21,7,Some people consider the noisy dogs dangerous.,Some people consider the noisy dogs dangerous.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,22,0,"The administration has issued a statement that it is willing to meet a student group, but I'm not sure which one.","The administration has issued a statement that it is willing to meet a student group, but I'm not sure which one.",1.0,1.0,1.0,1,1.0,1.0,24,24
+deeac7916cf7,hybrid_ce,gpt2,cola,22,1,They may grow as high as bamboo.,They may grow as high as bamboo.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,22,2,The police sprayed water on the protesters.,The police sprayed water on the protesters.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,22,3,John gave Bill the dog dead.,John gave Bill the dog dead.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,22,4,"That he was hungry, John whined.","That he was hungry, John whined.",1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,22,5,I have much of the manuscript left to type.,I have much of the manuscript left to type.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,22,6,Lou hoped the umbrella was broken.,Lou hoped the umbrella was broken.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,22,7,Which topic did you choose without getting his approval?,Which topic did you choose without getting his approval?,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,23,0,"Fluffy is sick, which not everybody knows.","Fluffy is sick, which not everybody knows.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,23,1,John believes it that Bill is here.,John believes it that Bill is here.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,23,2,"If I can, I will work on it.","If I can, I will work on it.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,23,3,Nobody who hates to eat anything should work in a delicatessen.,Nobody who hates to eat anything should work in a delicatessen.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,23,4,Did Calvin his homework?,Did Calvin his homework?,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,23,5,John tried to be a good boy.,John tried to be a good boy.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,23,6,Mary saw the boy walking toward the railroad station.,Mary saw the boy walking toward the railroad station.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,23,7,I met the man who grows peaches.,I met the man who grows peaches.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,24,0,They represented seriously to the dean Mary as a genuine linguist.,They represented seriously to the dean Mary as a genuine linguist.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,24,1,We never found any of the unicorns.,We never found any of the unicorns.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,24,2,Jack is the person with whom Jenny fell in love with.,Jack is the person with whom Jenny fell in love with.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,24,3,John regretted it that Bill had a good time.,John regretted it that Bill had a good time.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,24,4,With no job would John be happy.,With no job would John be happy.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,24,5,What did you leave before they did?,What did you leave before they did?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,24,6,The storm arrived while we ate lunch.,The storm arrived while we ate lunch.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,24,7,The paper was written up by John.,The paper was written up by John.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,25,0,Which experts testified against defendants who exposed them?,Which experts testified against defendants who exposed them?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,25,1,How many feature structures categories can label the first daughter?,How many feature structures categories can label the first daughter?,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,25,2,The jury believed the defendant lied.,The jury believed the defendant lied.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,25,3,The teacher handed the student.,The teacher handed the student.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,25,4,I wonder whose mother died.,I wonder whose mother died.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,25,5,She talked to John or Mary but I don't know which.,She talked to John or Mary but I don't know which.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,25,6,The paper was written by John up.,The paper was written by John up.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,25,7,John's mother likes himself.,John's mother likes himself.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,26,0,the attempt by John to leave surprised me.,the attempt by John to leave surprised me.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,26,1,Joan ate dinner with someone but I don't know who with.,Joan ate dinner with someone but I don't know who with.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,26,2,They were taking a hard look at possible FTA.,They were taking a hard look at possible FTA.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,26,3,the book of poems and from Blackwell takes a very long time to read.,the book of poems and from Blackwell takes a very long time to read.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,26,4,"I know which book Mag read, and which book Bob read my report that you hadn't.","I know which book Mag read, and which book Bob read my report that you hadn't.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,26,5,It is obvious that Pat is lying.,It is obvious that Pat is lying.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,26,6,Jean wants Bill to do the Macarena.,Jean wants Bill to do the Macarena.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,26,7,Mike talked about politics yesterday to my friends.,Mike talked about politics yesterday to my friends.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,27,0,Books were taken from no student and given to Mary.,Books were taken from no student and given to Mary.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,27,1,He's a more reliable man.,He's a more reliable man.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,27,2,That banana is eating the monkey.,That banana is eating the monkey.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,27,3,Bother you that Kim left!,Bother you that Kim left!,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,27,4,I wonder whose mother's dog died.,I wonder whose mother's dog died.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,27,5,"John, told Mary that it would be appropriate to leave together.","John, told Mary that it would be appropriate to leave together.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,27,6,A large dog chased a small cat.,A large dog chased a small cat.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,27,7,Chocolate eggs were hidden from no child by any adult.,Chocolate eggs were hidden from no child by any adult.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,28,0,I gave money to the charity.,I gave money to the charity.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,28,1,the one with a red cover takes a very long time to read.,the one with a red cover takes a very long time to read.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,28,2,I know you eat asparagus.,I know you eat asparagus.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,28,3,"Max seemed to be trying to force Ted to leave the room, and Walt, Ira.","Max seemed to be trying to force Ted to leave the room, and Walt, Ira.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,28,4,John tries to leave the country.,John tries to leave the country.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,28,5,Each author whose contribution is written in any language other than English will provide a summary in English.,Each author whose contribution is written in any language other than English will provide a summary in English.,1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,28,6,Pat is the captain of the team.,Pat is the captain of the team.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,28,7,What did you ask who saw?,What did you ask who saw?,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,29,0,There is a nurse available.,There is a nurse available.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,29,1,I have to try to finish grading some papers.,I have to try to finish grading some papers.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,29,2,Anson became a muscle bound.,Anson became a muscle bound.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,29,3,"Bill bought a red house, and Max bought one too.","Bill bought a red house, and Max bought one too.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,29,4,I served my guests.,I served my guests.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,29,5,John asked.,John asked.,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,29,6,The man who Mary loves and Sally hates computed my tax.,The man who Mary loves and Sally hates computed my tax.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,29,7,Who achieved the best result was Angela.,Who achieved the best result was Angela.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,30,0,Which article did Terry file papers without reading?,Which article did Terry file papers without reading?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,30,1,A pound was weighed by the book.,A pound was weighed by the book.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,30,2,That Chris knew the answer occurred to Pat.,That Chris knew the answer occurred to Pat.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,30,3,"Mary likes to tour art galleries, but Bill hates to.","Mary likes to tour art galleries, but Bill hates to.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,30,4,I wonder whom us to trust.,I wonder whom us to trust.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,30,5,Penny skated around the rink.,Penny skated around the rink.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,30,6,I ate that she was happy,I ate that she was happy,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,30,7,I bought three quarts of wine and two of Clorox.,I bought three quarts of wine and two of Clorox.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,31,0,"I think Agnes said that Bill would speak, but I don't remember what about.","I think Agnes said that Bill would speak, but I don't remember what about.",1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,31,1,Somebody apparently struck the unidentified victim during the early morning hours.,Somebody apparently struck the unidentified victim during the early morning hours.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,31,2,to die is no fun.,to die is no fun.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,31,3,The farmer dumped the cart with apples.,The farmer dumped the cart with apples.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,31,4,She knew French for Tom.,She knew French for Tom.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,31,5,Kim alienated cats and beating his dog.,Kim alienated cats and beating his dog.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,31,6,John said Joan saw someone from her graduating class.,John said Joan saw someone from her graduating class.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,31,7,Some people consider noisy dogs in my neighborhood dangerous.,Some people consider noisy dogs in my neighborhood dangerous.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,32,0,"George has spent a lot of money, hasn't he?","George has spent a lot of money, hasn't he?",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,32,1,"Sandy is wondering whether there will be students who have to drop the class for a certain reason, but she won't reveal what.","Sandy is wondering whether there will be students who have to drop the class for a certain reason, but she won't reveal what.",1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,32,2,"I will see them, but I don't know how many of them.","I will see them, but I don't know how many of them.",1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,32,3,The tube was escaped by gas.,The tube was escaped by gas.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,32,4,Lora buttered at the toast.,Lora buttered at the toast.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,32,5,Kim depends for Sandy.,Kim depends for Sandy.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,32,6,I found the place where we can relax.,I found the place where we can relax.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,32,7,Tom's dog with one eye attacked Fred's.,Tom's dog with one eye attacked Fred's.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,33,0,Was sunk.,Was sunk.,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,33,1,Fiona might be here by 5 o'clock.,Fiona might be here by 5 o'clock.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,33,2,Sandy was trying to work out which students would be able to solve a certain problem.,Sandy was trying to work out which students would be able to solve a certain problem.,1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,33,3,I would like to could swim,I would like to could swim,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,33,4,The problem perceives easily.,The problem perceives easily.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,33,5,The manager laughed.,The manager laughed.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,33,6,They talk to themselves.,They talk to themselves.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,33,7,The rules require that the executives be polite.,The rules require that the executives be polite.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,34,0,Our friends like us.,Our friends like us.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,34,1,A sick owl doesn't hunt mice.,A sick owl doesn't hunt mice.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,34,2,I saw that gas can explode.,I saw that gas can explode.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,34,3,This teacher is a genius.,This teacher is a genius.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,34,4,An evil thought struck Dave.,An evil thought struck Dave.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,34,5,List all experts for the defendant who represented himself.,List all experts for the defendant who represented himself.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,34,6,Somebody just left - guess who.,Somebody just left - guess who.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,34,7,"Meg is attracted to Harry, but they don't know who she is attracted to.","Meg is attracted to Harry, but they don't know who she is attracted to.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,35,0,John loaded the wagon with hay green.,John loaded the wagon with hay green.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,35,1,John put the book in the box.,John put the book in the box.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,35,2,The storm arrived while the picnic.,The storm arrived while the picnic.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,35,3,This building is tall.,This building is tall.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,35,4,What did Bill buy?,What did Bill buy?,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,35,5,Which hat did Mike quip that she never wore?,Which hat did Mike quip that she never wore?,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,35,6,What the water did to the whole bottle was fill it.,What the water did to the whole bottle was fill it.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,35,7,We made them be rude.,We made them be rude.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,36,0,The witch poisoned the children.,The witch poisoned the children.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,36,1,"They noticed the painting, but I don't know for how long.","They noticed the painting, but I don't know for how long.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,36,2,The argument was summed by the coach up.,The argument was summed by the coach up.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,36,3,We admired the pictures of us in the album.,We admired the pictures of us in the album.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,36,4,I know a man who Tom drives as drives.,I know a man who Tom drives as drives.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,36,5,"Tom picked these grapes, and I washed some turnips, and Suzie will prepare these grapes.","Tom picked these grapes, and I washed some turnips, and Suzie will prepare these grapes.",1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,36,6,It would be unwise for there to be no fire exit.,It would be unwise for there to be no fire exit.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,36,7,The proof this set is recursive is difficult.,The proof this set is recursive is difficult.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,37,0,John was believed to be telling the truth by Mary.,John was believed to be telling the truth by Mary.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,37,1,I am counting on Bill to incriminate himself.,I am counting on Bill to incriminate himself.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,37,2,John bought a dog for himself to play with.,John bought a dog for himself to play with.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,37,3,Newsweek about crime appeared on the newsstands.,Newsweek about crime appeared on the newsstands.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,37,4,The defendant walk.,The defendant walk.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,37,5,Sophie will theater.,Sophie will theater.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,37,6,It isn't because Sue said anything bad about me that I'm angry.,It isn't because Sue said anything bad about me that I'm angry.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,37,7,"The more you would want, the less you would eat.","The more you would want, the less you would eat.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,38,0,There is a seat available.,There is a seat available.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,38,1,I'll work on it if I can.,I'll work on it if I can.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,38,2,I won't have some money.,I won't have some money.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,38,3,I forgot how good beer tastes.,I forgot how good beer tastes.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,38,4,She goes and buying some whiskey.,She goes and buying some whiskey.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,38,5,Dumb ideas are put in children's heads.,Dumb ideas are put in children's heads.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,38,6,He was arrested by the police.,He was arrested by the police.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,38,7,We expect there to will rain.,We expect there to will rain.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,39,0,It is a golden hair.,It is a golden hair.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,39,1,The elixir was hidden in a hole in the ground,The elixir was hidden in a hole in the ground,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,39,2,Everyone who knows either Susan or Laura likes her.,Everyone who knows either Susan or Laura likes her.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,39,3,A magazine about crime appeared on the newsstands.,A magazine about crime appeared on the newsstands.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,39,4,"The soup cooks, thickens.","The soup cooks, thickens.",1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,39,5,There was a felon elected to the city council.,There was a felon elected to the city council.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,39,6,"Bill wondered how many papers Sandy had read, but he didn't care which ones.","Bill wondered how many papers Sandy had read, but he didn't care which ones.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,39,7,That girl was given my binoculars by him.,That girl was given my binoculars by him.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,40,0,They knew that pictures of each other would be on sale.,They knew that pictures of each other would be on sale.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,40,1,John taught English Syntax to new students.,John taught English Syntax to new students.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,40,2,I will fix the computer for Carol.,I will fix the computer for Carol.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,40,3,Anson thought that himself was happy.,Anson thought that himself was happy.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,40,4,Whose bagels do you like?,Whose bagels do you like?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,40,5,"The higher the stakes, the lower his expectations are.","The higher the stakes, the lower his expectations are.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,40,6,Jean is reluctant to dance.,Jean is reluctant to dance.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,40,7,Ellen said about the present conditions.,Ellen said about the present conditions.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,41,0,The storm arrived after the picnic.,The storm arrived after the picnic.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,41,1,I feel that Arch will show up.,I feel that Arch will show up.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,41,2,What John promised is to be gentle.,What John promised is to be gentle.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,41,3,"If Sam was going, Sally would know where.","If Sam was going, Sally would know where.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,41,4,"Bill didn't eat the peaches, nor Harry.","Bill didn't eat the peaches, nor Harry.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,41,5,Sandy removed her ballet shoes.,Sandy removed her ballet shoes.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,41,6,Advantage is taken of every opportunity for improvement.,Advantage is taken of every opportunity for improvement.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,41,7,The stream twists through the valley.,The stream twists through the valley.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,42,0,The car won't run.,The car won't run.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,42,1,The window was broken with a hammer.,The window was broken with a hammer.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,42,2,"She said she had spoken to everybody, but he wasn't sure who.","She said she had spoken to everybody, but he wasn't sure who.",1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,42,3,did the policeman meet in the park?,did the policeman meet in the park?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,42,4,The cat was bitten the mouse by the dog.,The cat was bitten the mouse by the dog.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,42,5,The report that crime was declining surprised many people.,The report that crime was declining surprised many people.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,42,6,The book surprised many people.,The book surprised many people.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,42,7,Carmen bought Mary a dress.,Carmen bought Mary a dress.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,43,0,I bought Bill a book to read.,I bought Bill a book to read.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,43,1,Mary revealed himself to John.,Mary revealed himself to John.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,43,2,Emma and Harriet were attacked yesterday.,Emma and Harriet were attacked yesterday.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,43,3,"They claimed they had settled on something, but it wasn't clear what they had settled on.","They claimed they had settled on something, but it wasn't clear what they had settled on.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,43,4,In which way is Sandy very anxious to see if the students will be able to solve the homework problem?,In which way is Sandy very anxious to see if the students will be able to solve the homework problem?,1.0,1.0,1.0,1,1.0,1.0,21,21
+deeac7916cf7,hybrid_ce,gpt2,cola,43,5,Anybody who attended last week's huge rally signed the petition.,Anybody who attended last week's huge rally signed the petition.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,43,6,John promised Bill to leave.,John promised Bill to leave.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,43,7,"Mary listens to the Grateful Dead, she gets depressed.","Mary listens to the Grateful Dead, she gets depressed.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,44,0,They praised the dedication in the volunteers.,They praised the dedication in the volunteers.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,44,1,She said she talked to those students but I don't know how many.,She said she talked to those students but I don't know how many.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,44,2,John was seen the book.,John was seen the book.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,44,3,1 gave Mary after the party a book.,1 gave Mary after the party a book.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,44,4,John ate dinner but I don't know who.,John ate dinner but I don't know who.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,44,5,You should sit before there.,You should sit before there.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,44,6,The defendants walks.,The defendants walks.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,44,7,Agnes wondered how John could eat but it's not clear what.,Agnes wondered how John could eat but it's not clear what.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,45,0,Kim and Terry is happy.,Kim and Terry is happy.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,45,1,John was spoken to by Mary.,John was spoken to by Mary.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,45,2,John counted on Bill to get there on time.,John counted on Bill to get there on time.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,45,3,The cat slept soundly and furry.,The cat slept soundly and furry.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,45,4,You wanted to meet the man I saw.,You wanted to meet the man I saw.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,45,5,"John likes some students, but I don't know who John likes some students.","John likes some students, but I don't know who John likes some students.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,45,6,John was spoke by Mary to.,John was spoke by Mary to.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,45,7,We found your letter to ourselves in the trash.,We found your letter to ourselves in the trash.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,46,0,I know the people that voted in the election.,I know the people that voted in the election.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,46,1,Jessica loaded boxes on the wagon.,Jessica loaded boxes on the wagon.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,46,2,John put old books in the box.,John put old books in the box.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,46,3,Who did John send the book?,Who did John send the book?,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,46,4,I'm creating a committee. Kim – you're in charge.,I'm creating a committee. Kim – you're in charge.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,46,5,There presented itself a wonderful opportunity yesterday.,There presented itself a wonderful opportunity yesterday.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,46,6,John is sad.,John is sad.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,46,7,Muriel said nothing else than that she had been insulted.,Muriel said nothing else than that she had been insulted.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,47,0,That acorn will grow into an oak tree.,That acorn will grow into an oak tree.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,47,1,How did you guess that he fixed the computer?,How did you guess that he fixed the computer?,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,47,2,John was spoken by Mary to.,John was spoken by Mary to.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,47,3,The children admire their mother.,The children admire their mother.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,47,4,Joan ate dinner with someone but I don't know who.,Joan ate dinner with someone but I don't know who.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,47,5,Did Athena help us?,Did Athena help us?,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,47,6,John went home.,John went home.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,47,7,Agamemnon seems to be a maniac,Agamemnon seems to be a maniac,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,48,0,"We launched the rocket to the moon, but it blew up before it got there.","We launched the rocket to the moon, but it blew up before it got there.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,48,1,"Sally asked if somebody was going to fail math class, but I can't remember who.","Sally asked if somebody was going to fail math class, but I can't remember who.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,48,2,Which topic did you get bored because Mary talked about?,Which topic did you get bored because Mary talked about?,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,48,3,We arrived about six o'clock,We arrived about six o'clock,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,48,4,I was already aware of fact.,I was already aware of fact.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,48,5,"Sandy was trying to work out which students would be able to solve a certain problem, but she wouldn't tell us which one.","Sandy was trying to work out which students would be able to solve a certain problem, but she wouldn't tell us which one.",1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,48,6,Lou put the umbrella in the closet.,Lou put the umbrella in the closet.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,48,7,Some people consider dogs dangerous.,Some people consider dogs dangerous.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,49,0,The sailors rode the breeze clear of the rocks.,The sailors rode the breeze clear of the rocks.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,49,1,Chris handed Bo.,Chris handed Bo.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,49,2,Who has Peter talked with?,Who has Peter talked with?,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,49,3,That we invaded Iraq really bites.,That we invaded Iraq really bites.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,49,4,Those pictures of us offended us.,Those pictures of us offended us.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,49,5,"John and someone were dancing together, but I don't know who.","John and someone were dancing together, but I don't know who.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,49,6,The only person that I like whose kids Dana is willing to put up with is Pat.,The only person that I like whose kids Dana is willing to put up with is Pat.,1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,49,7,how mad was Bill made?,how mad was Bill made?,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,50,0,John wants to leave.,John wants to leave.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,50,1,"Put a picture of Bill on your desk before tomorrow, this girl in the red coat will put a picture of Bill on your desk before tomorrow.","Put a picture of Bill on your desk before tomorrow, this girl in the red coat will put a picture of Bill on your desk before tomorrow.",1.0,1.0,1.0,1,1.0,1.0,29,29
+deeac7916cf7,hybrid_ce,gpt2,cola,50,2,Packages drive easily to New York.,Packages drive easily to New York.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,50,3,That you will marry any student is not certain.,That you will marry any student is not certain.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,50,4,Henry found that Bill is sad.,Henry found that Bill is sad.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,50,5,"Extremely frantically, Anson danced at Trade","Extremely frantically, Anson danced at Trade",1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,50,6,"Sandy is very anxious to see if the students will be able to solve the homework problem in a particular way, but she won't tell us which.","Sandy is very anxious to see if the students will be able to solve the homework problem in a particular way, but she won't tell us which.",1.0,1.0,1.0,1,1.0,1.0,31,31
+deeac7916cf7,hybrid_ce,gpt2,cola,50,7,John loaded the wagon full with hay.,John loaded the wagon full with hay.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,51,0,Who is she trying to make up to now?,Who is she trying to make up to now?,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,51,1,the election of John president surprised me.,the election of John president surprised me.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,51,2,The needle poked the cloth.,The needle poked the cloth.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,51,3,Heidi thinks that Andy should eat salmon flavored candy bars.,Heidi thinks that Andy should eat salmon flavored candy bars.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,51,4,It tries to leave the country.,It tries to leave the country.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,51,5,Nobody saw Pat.,Nobody saw Pat.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,51,6,Mary has always preferred lemons to limes.,Mary has always preferred lemons to limes.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,51,7,"As a statesman, scarcely could he do anything worth mentioning.","As a statesman, scarcely could he do anything worth mentioning.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,52,0,The worker will have a job.,The worker will have a job.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,52,1,he had spent five thousand dollars.,he had spent five thousand dollars.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,52,2,I felt that I know you.,I felt that I know you.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,52,3,It's not because I have any sympathy for urban guerillas that I helped him.,It's not because I have any sympathy for urban guerillas that I helped him.,1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,52,4,That movie always shocks people.,That movie always shocks people.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,52,5,Medea tried the nurse to poison her children.,Medea tried the nurse to poison her children.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,52,6,The book was written.,The book was written.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,52,7,Some sentences go on and on and on.,Some sentences go on and on and on.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,53,0,I lent the book partway to Tony.,I lent the book partway to Tony.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,53,1,The car was driven by John to Maine.,The car was driven by John to Maine.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,53,2,I dislike the people in who we placed our trust.,I dislike the people in who we placed our trust.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,53,3,Jessica crammed boxes at the truck.,Jessica crammed boxes at the truck.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,53,4,The box contained the ball from the tree.,The box contained the ball from the tree.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,53,5,John told Mary that it would be important to leave early.,John told Mary that it would be important to leave early.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,53,6,Susan whispered the news.,Susan whispered the news.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,53,7,Who did you get an accurate description of?,Who did you get an accurate description of?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,54,0,"Mary asked me if, in St. Louis, John could rent a house cheap.","Mary asked me if, in St. Louis, John could rent a house cheap.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,54,1,I dislike the person with whom we were talking.,I dislike the person with whom we were talking.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,54,2,Carla slid the book.,Carla slid the book.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,54,3,"Jones, that we were talking to last night, always watches football games alone.","Jones, that we were talking to last night, always watches football games alone.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,54,4,Janet broke Bill on the finger.,Janet broke Bill on the finger.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,54,5,The chair pushed.,The chair pushed.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,54,6,"I demand that the more John eat, the more he pays.","I demand that the more John eat, the more he pays.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,54,7,The book which inspired them was very long.,The book which inspired them was very long.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,55,0,She's reading. I can't imagine what.,She's reading. I can't imagine what.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,55,1,I wonder what to be a clown on the cover of.,I wonder what to be a clown on the cover of.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,55,2,"Several firefighters were injured, but it's not known.","Several firefighters were injured, but it's not known.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,55,3,A proof that the claim had been. made was giver that John had lied.,A proof that the claim had been. made was giver that John had lied.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,55,4,They lost themselves' books.,They lost themselves' books.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,55,5,The person confessed responsible.,The person confessed responsible.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,55,6,A smith hammered the metal.,A smith hammered the metal.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,55,7,That movie always shocks.,That movie always shocks.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,56,0,A magazine appeared on the newsstands.,A magazine appeared on the newsstands.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,56,1,I forgot how good beer tastes.,I forgot how good beer tastes.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,56,2,We recommend to eat less cake and pastry.,We recommend to eat less cake and pastry.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,56,3,Out of the box jumped a little white rabbit.,Out of the box jumped a little white rabbit.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,56,4,"Mary arranged for, in St. Louis, John to rent a house cheap.","Mary arranged for, in St. Louis, John to rent a house cheap.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,56,5,No one can forgive that comment to you.,No one can forgive that comment to you.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,56,6,John arranged for himself to get the prize.,John arranged for himself to get the prize.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,56,7,It is not true that I might be going to the party.,It is not true that I might be going to the party.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,57,0,It was to to amuse us that Kim was singing that they wanted.,It was to to amuse us that Kim was singing that they wanted.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,57,1,The guard marched the prisoners round the yard.,The guard marched the prisoners round the yard.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,57,2,Linda taped the picture onto the wall.,Linda taped the picture onto the wall.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,57,3,Sue gave to Bill a book.,Sue gave to Bill a book.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,57,4,"Bob tried to wash himself, and Mary to read the funnies.","Bob tried to wash himself, and Mary to read the funnies.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,57,5,"The younger woman might have been tall and, and the older one definitely was, blond.","The younger woman might have been tall and, and the older one definitely was, blond.",1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,57,6,It was believed by the students that they would have an exam.,It was believed by the students that they would have an exam.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,57,7,"Joe's neuroses bother his patrons, and Sally does too.","Joe's neuroses bother his patrons, and Sally does too.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,58,0,"John was tall, but I don't know on what occasions.","John was tall, but I don't know on what occasions.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,58,1,We gave presents to ourselves.,We gave presents to ourselves.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,58,2,The administration has issued a statement that it is willing to meet a student group.,The administration has issued a statement that it is willing to meet a student group.,1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,58,3,TV puts dumb ideas in children's heads.,TV puts dumb ideas in children's heads.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,58,4,This girl in the red coat will put a picture of Bill in the mailbox and on your desk before tomorrow.,This girl in the red coat will put a picture of Bill in the mailbox and on your desk before tomorrow.,1.0,1.0,1.0,1,1.0,1.0,22,22
+deeac7916cf7,hybrid_ce,gpt2,cola,58,5,There tended to be a lot of discussion.,There tended to be a lot of discussion.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,58,6,These stockings will run.,These stockings will run.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,58,7,Burn them!,Burn them!,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,59,0,"Joan said she talked to the students, but Fred couldn't figure out who.","Joan said she talked to the students, but Fred couldn't figure out who.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,59,1,Maytag will give a brand-new dryer to the winner of the Mrs.,Maytag will give a brand-new dryer to the winner of the Mrs.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,59,2,Leslie likes ourselves.,Leslie likes ourselves.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,59,3,I would prefer to leave.,I would prefer to leave.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,59,4,Sally kissed himself.,Sally kissed himself.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,59,5,"We wanted to invite someone, but we couldn't decide who to.","We wanted to invite someone, but we couldn't decide who to.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,59,6,Heidi likes her violin.,Heidi likes her violin.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,59,7,"She doesn't meet anyone for dinner, but they can't figure out who.","She doesn't meet anyone for dinner, but they can't figure out who.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,60,0,John was struck by Bill as pompous.,John was struck by Bill as pompous.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,60,1,Tom's dog with one eye attacked Frank's with three legs.,Tom's dog with one eye attacked Frank's with three legs.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,60,2,On whom are you counting to incriminate himself?,On whom are you counting to incriminate himself?,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,60,3,Neither of students failed.,Neither of students failed.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,60,4,The book was by John written.,The book was by John written.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,60,5,We appeared to them to vote for themselves.,We appeared to them to vote for themselves.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,60,6,"Which book's, author did you meet?","Which book's, author did you meet?",1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,60,7,The paper is cut by Mary.,The paper is cut by Mary.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,61,0,"You may pick every flower, but leave a few for Mary.","You may pick every flower, but leave a few for Mary.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,61,1,That the Cardinal won the game gave Sandy a thrill.,That the Cardinal won the game gave Sandy a thrill.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,61,2,Brown presented a plaque to Jones.,Brown presented a plaque to Jones.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,61,3,He could not] have been working.,He could not] have been working.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,61,4,We need to pen the pigs to keep them from getting into the corn.,We need to pen the pigs to keep them from getting into the corn.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,61,5,"She mailed John a letter, but I don't know to whom.","She mailed John a letter, but I don't know to whom.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,61,6,Birds sings.,Birds sings.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,61,7,It is a problem that he is here.,It is a problem that he is here.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,62,0,"If I am a rich man, I'd buy a diamond ring.","If I am a rich man, I'd buy a diamond ring.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,62,1,The madrigals which Henry plays the lute and sings sound lousy.,The madrigals which Henry plays the lute and sings sound lousy.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,62,2,I'm sure I would like him to eat fruit more than I would cookies.,I'm sure I would like him to eat fruit more than I would cookies.,1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,62,3,John has something for Bill to do.,John has something for Bill to do.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,62,4,John tried to please Stephen.,John tried to please Stephen.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,62,5,John wants not to leave the town.,John wants not to leave the town.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,62,6,In the classroom John put the book on the table.,In the classroom John put the book on the table.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,62,7,the panther's the coat is dark black.,the panther's the coat is dark black.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,63,0,That dogs bark annoys people.,That dogs bark annoys people.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,63,1,I hope to would study in France.,I hope to would study in France.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,63,2,"The more people you give beer to, the more people get sick.","The more people you give beer to, the more people get sick.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,63,3,Carrie touched that cat.,Carrie touched that cat.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,63,4,"If he were a rich man, he'd buy a diamond ring.","If he were a rich man, he'd buy a diamond ring.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,63,5,John is tall on several occasions.,John is tall on several occasions.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,63,6,"Max seemed to be trying to force Ted to leave the room, and Walt to stay a little longer.","Max seemed to be trying to force Ted to leave the room, and Walt to stay a little longer.",1.0,1.0,1.0,1,1.0,1.0,21,21
+deeac7916cf7,hybrid_ce,gpt2,cola,63,7,Wash you!,Wash you!,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,64,0,Some people consider noisy dogs dangerous.,Some people consider noisy dogs dangerous.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,64,1,"Sandy was trying to work out which students would be able to solve a certain problem, but she wouldn't tell us which one.","Sandy was trying to work out which students would be able to solve a certain problem, but she wouldn't tell us which one.",1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,64,2,"If the ants were called elephants and elephants ants, I'd be able to squash an elephant.","If the ants were called elephants and elephants ants, I'd be able to squash an elephant.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,64,3,John believed it that Bill was tardy.,John believed it that Bill was tardy.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,64,4,Each of the boys fought with some of the other boys.,Each of the boys fought with some of the other boys.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,64,5,You must pick any flower you see.,You must pick any flower you see.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,64,6,Neither von Karajan's recording of Beethoven's 6th on Columbia nor Klemperer's has the right tempo.,Neither von Karajan's recording of Beethoven's 6th on Columbia nor Klemperer's has the right tempo.,1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,64,7,I dislike the company in which we placed our trust.,I dislike the company in which we placed our trust.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,65,0,I ate a salad that was filled with lima beans.,I ate a salad that was filled with lima beans.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,65,1,Magnus went to Ireland.,Magnus went to Ireland.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,65,2,He attributed to a short circuit which was caused by an overloaded transducer the fire which destroyed most of my factory.,He attributed to a short circuit which was caused by an overloaded transducer the fire which destroyed most of my factory.,1.0,1.0,1.0,1,1.0,1.0,24,24
+deeac7916cf7,hybrid_ce,gpt2,cola,65,3,A felon was elected to the city council.,A felon was elected to the city council.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,65,4,Gilgamesh is having fought the dragon.,Gilgamesh is having fought the dragon.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,65,5,What did you leave before they started playing?,What did you leave before they started playing?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,65,6,My mother is easy to please my father and.,My mother is easy to please my father and.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,65,7,The book is boring.,The book is boring.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,66,0,I live at the place where Route 150 crosses the Hudson River and my dad lives at it too.,I live at the place where Route 150 crosses the Hudson River and my dad lives at it too.,1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,66,1,John was promised by Bill to leave.,John was promised by Bill to leave.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,66,2,Chris was handed.,Chris was handed.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,66,3,The cat were bitten by the dog.,The cat were bitten by the dog.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,66,4,"Harry told Sue that Albania is a lovely place for a vacation, and Tom told Sally that Albania is a lovely place for a vacation.","Harry told Sue that Albania is a lovely place for a vacation, and Tom told Sally that Albania is a lovely place for a vacation.",1.0,1.0,1.0,1,1.0,1.0,27,27
+deeac7916cf7,hybrid_ce,gpt2,cola,66,5,John was lots more obnoxious than Fred.,John was lots more obnoxious than Fred.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,66,6,The Dodgers beat the Red Sox and were beaten by the Giants.,The Dodgers beat the Red Sox and were beaten by the Giants.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,66,7,"She was reading the books under the table, but Fred didn't know what books.","She was reading the books under the table, but Fred didn't know what books.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,67,0,The men will all leave.,The men will all leave.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,67,1,Nora sent the book.,Nora sent the book.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,67,2,Harriet admired Mr Knightley.,Harriet admired Mr Knightley.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,67,3,John thinks it would upset himself to die.,John thinks it would upset himself to die.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,67,4,I am both expecting to get the job and of the opinion that it is a desirable one.,I am both expecting to get the job and of the opinion that it is a desirable one.,1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,67,5,There loved Sandy.,There loved Sandy.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,67,6,It was to John that I gave the book.,It was to John that I gave the book.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,67,7,"Which book's, author did you meet who you liked?","Which book's, author did you meet who you liked?",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,68,0,Us like them.,Us like them.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,68,1,John paid me against the book.,John paid me against the book.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,68,2,Any trouble is what I don't want.,Any trouble is what I don't want.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,68,3,"Every senator seems to become more corrupt, as he talks to more lobbyists.","Every senator seems to become more corrupt, as he talks to more lobbyists.",1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,68,4,It is the problem that he is here.,It is the problem that he is here.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,68,5,I'm sure we even got these tickets!,I'm sure we even got these tickets!,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,68,6,It is painting by Klee or drawing by Miro that the museum displays no.,It is painting by Klee or drawing by Miro that the museum displays no.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,68,7,He washed her.,He washed her.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,69,0,Michelle kept the desk with the papers.,Michelle kept the desk with the papers.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,69,1,I won't ask you to believe that he tried to force me to give her any money.,I won't ask you to believe that he tried to force me to give her any money.,1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,69,2,The monkey is ate the banana,The monkey is ate the banana,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,69,3,I said that never in my life had I seen a place like Bangor.,I said that never in my life had I seen a place like Bangor.,1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,69,4,The man I saw get into the cab robbed the bank.,The man I saw get into the cab robbed the bank.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,69,5,I threw away a book that Sandy thought we had read.,I threw away a book that Sandy thought we had read.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,69,6,Dumb ideas are put in children's heads by TV.,Dumb ideas are put in children's heads by TV.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,69,7,Leslie told ourselves about us.,Leslie told ourselves about us.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,70,0,"Dave, Dan, Erin, Jaime, and Alina left.","Dave, Dan, Erin, Jaime, and Alina left.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,70,1,I want to try and buy some whiskey.,I want to try and buy some whiskey.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,70,2,"The TA's have been arguing about whether some student or other should pass, but I can't now remember which one.","The TA's have been arguing about whether some student or other should pass, but I can't now remember which one.",1.0,1.0,1.0,1,1.0,1.0,24,24
+deeac7916cf7,hybrid_ce,gpt2,cola,70,3,Dana walked and Leslie ran.,Dana walked and Leslie ran.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,70,4,Sharon fainted from hunger.,Sharon fainted from hunger.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,70,5,Neither Von Karajan's recording of Beethoven's 6th on Columbia nor Klemperer's on Angel has the right tempo.,Neither Von Karajan's recording of Beethoven's 6th on Columbia nor Klemperer's on Angel has the right tempo.,1.0,1.0,1.0,1,1.0,1.0,29,29
+deeac7916cf7,hybrid_ce,gpt2,cola,70,6,It was expected by the reporters that the principal would fire some teacher.,It was expected by the reporters that the principal would fire some teacher.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,70,7,"I know how many assignments I've graded, but I don't know how many Bill has.","I know how many assignments I've graded, but I don't know how many Bill has.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,71,0,Which report that John was incompetent did he submit?,Which report that John was incompetent did he submit?,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,71,1,"Whenever Russia has made a major political blunder, the U.S. has too.","Whenever Russia has made a major political blunder, the U.S. has too.",1.0,1.0,1.0,1,1.0,1.0,18,18
+deeac7916cf7,hybrid_ce,gpt2,cola,71,2,It did not rain.,It did not rain.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,71,3,They want them arrested.,They want them arrested.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,71,4,Kim gave a dollar to Bobbie and a dime to Jean.,Kim gave a dollar to Bobbie and a dime to Jean.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,71,5,We investigated the area for bombs.,We investigated the area for bombs.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,71,6,The mayor regarded as being absurd the proposal to build a sidewalk from Dartmouth to Smith.,The mayor regarded as being absurd the proposal to build a sidewalk from Dartmouth to Smith.,1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,71,7,Lou put the umbrella was broken.,Lou put the umbrella was broken.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,72,0,"Suddenly, there arrived two inspectors from the INS.","Suddenly, there arrived two inspectors from the INS.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,72,1,This flyer and that flyer differ apart.,This flyer and that flyer differ apart.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,72,2,There seemed to be intelligent.,There seemed to be intelligent.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,72,3,A good friend is remained to me by him.,A good friend is remained to me by him.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,72,4,Anson demonized David every day,Anson demonized David every day,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,72,5,"I never know which papers Sandy has read, but I usually know how many.","I never know which papers Sandy has read, but I usually know how many.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,72,6,"Every student, and he wears socks, is a swinger.","Every student, and he wears socks, is a swinger.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,72,7,Protect you!,Protect you!,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,73,0,It is some disgruntled old pigs in those ditches that humans love to eat.,It is some disgruntled old pigs in those ditches that humans love to eat.,1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,73,1,"Sandy is very anxious to see if the students will be able to solve the homework problem in a particular way, but she won't tell us in which way.","Sandy is very anxious to see if the students will be able to solve the homework problem in a particular way, but she won't tell us in which way.",1.0,1.0,1.0,1,1.0,1.0,33,33
+deeac7916cf7,hybrid_ce,gpt2,cola,73,2,It bothers me that he is here.,It bothers me that he is here.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,73,3,Felicia kicked the ball off the bench.,Felicia kicked the ball off the bench.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,73,4,"That the cops spoke to the janitor about it yesterday is terrible, that robbery.","That the cops spoke to the janitor about it yesterday is terrible, that robbery.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,73,5,The bears sniffed,The bears sniffed,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,73,6,Nobody likes us.,Nobody likes us.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,73,7,"I know which book José didn't read for class, and which book Lilly did it for him.","I know which book José didn't read for class, and which book Lilly did it for him.",1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,74,0,A letter was received Jones would be upset by.,A letter was received Jones would be upset by.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,74,1,John left singing.,John left singing.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,74,2,John is likely to leave.,John is likely to leave.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,74,3,"That dog is so ferocious, it even tried to bite itself.","That dog is so ferocious, it even tried to bite itself.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,74,4,It is nice to go abroad.,It is nice to go abroad.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,74,5,I didn't have a red cent.,I didn't have a red cent.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,74,6,Ellen said that melons were selling well.,Ellen said that melons were selling well.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,74,7,"That the fuzz wanted him worried John, but that the fuzz wanted her didn't worry Mary.","That the fuzz wanted him worried John, but that the fuzz wanted her didn't worry Mary.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,75,0,Dana walking and Leslie ran.,Dana walking and Leslie ran.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,75,1,The only people being added to our group who were at Harvard were students.,The only people being added to our group who were at Harvard were students.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,75,2,Sentences some go on and on and on and on.,Sentences some go on and on and on and on.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,75,3,Most of the fruit is rotten.,Most of the fruit is rotten.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,75,4,Smith loaned a valuable collection of manuscripts to the library.,Smith loaned a valuable collection of manuscripts to the library.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,75,5,I saw someone yesterday I hadn't seen for years.,I saw someone yesterday I hadn't seen for years.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,75,6,Which house does your friend live?,Which house does your friend live?,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,75,7,"Hopefully, we'll make it through the winter without snow.","Hopefully, we'll make it through the winter without snow.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,76,0,I bought it to give to Pete.,I bought it to give to Pete.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,76,1,It bothers me that John coughs.,It bothers me that John coughs.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,76,2,He turned into a frog.,He turned into a frog.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,76,3,"No writer, nor any playwright, meets in Vienna.","No writer, nor any playwright, meets in Vienna.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,76,4,We relied above Leslie.,We relied above Leslie.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,76,5,John believes it sincerely that Bill is here.,John believes it sincerely that Bill is here.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,76,6,"John wants to read Fred's story, and I also want to.","John wants to read Fred's story, and I also want to.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,76,7,The building's the roof is leaking.,The building's the roof is leaking.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,77,0,I would hate for John to leave.,I would hate for John to leave.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,77,1,The visitor rang the bell.,The visitor rang the bell.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,77,2,John convinced Bill that Mary should sleep.,John convinced Bill that Mary should sleep.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,77,3,The kennel which Mary made and Fido sleeps has been stolen.,The kennel which Mary made and Fido sleeps has been stolen.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,77,4,"Scientists at the South Hanoi Institute of Technology have succeeded in raising one dog with five legs, another with a cow's liver, and a third with no head.","Scientists at the South Hanoi Institute of Technology have succeeded in raising one dog with five legs, another with a cow's liver, and a third with no head.",1.0,1.0,1.0,1,1.0,1.0,34,34
+deeac7916cf7,hybrid_ce,gpt2,cola,77,5,That kind of person is hard to find anyone to look after.,That kind of person is hard to find anyone to look after.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,77,6,He can not have been working.,He can not have been working.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,77,7,The dogs barked.,The dogs barked.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,78,0,John's arriving dead surprised me.,John's arriving dead surprised me.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,78,1,John talked to Bill about himself.,John talked to Bill about himself.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,78,2,She asked was Alison coming to the party.,She asked was Alison coming to the party.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,78,3,"She was bathing, but I couldn't make out who.","She was bathing, but I couldn't make out who.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,78,4,"Bill ate the peaches, and Harry did, too.","Bill ate the peaches, and Harry did, too.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,78,5,"Most people probably consider, even though the courts didn't actually find, Klaus guilty of murder.","Most people probably consider, even though the courts didn't actually find, Klaus guilty of murder.",1.0,1.0,1.0,1,1.0,1.0,19,19
+deeac7916cf7,hybrid_ce,gpt2,cola,78,6,A job offered.,A job offered.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,78,7,John is afraid of Bill.,John is afraid of Bill.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,79,0,Nobody told Susan.,Nobody told Susan.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,79,1,I thought that you were sick.,I thought that you were sick.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,79,2,People with children who use drugs should be locked up.,People with children who use drugs should be locked up.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,79,3,Chris was handed a note.,Chris was handed a note.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,79,4,I sensed his eagerness.,I sensed his eagerness.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,79,5,They needn't take this exam.,They needn't take this exam.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,79,6,Mary was given by John the book.,Mary was given by John the book.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,79,7,"Sam doesn't play bassoon, nor Medusa oboe.","Sam doesn't play bassoon, nor Medusa oboe.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,80,0,"He announced he had eaten the asparagus, but we didn't know what.","He announced he had eaten the asparagus, but we didn't know what.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,80,1,Some people yell at the dogs in my neighborhood.,Some people yell at the dogs in my neighborhood.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,80,2,Marianne did not leave.,Marianne did not leave.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,80,3,I sent the package halfway around the world.,I sent the package halfway around the world.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,80,4,Each candidate who has interest in semantics will be admitted to the department.,Each candidate who has interest in semantics will be admitted to the department.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,80,5,That Fred was unpopular nominated Bill.,That Fred was unpopular nominated Bill.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,80,6,I gave John gold apples.,I gave John gold apples.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,80,7,I gave it to Pete to take to the fair.,I gave it to Pete to take to the fair.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,81,0,The gardener grew that acorn into an oak tree.,The gardener grew that acorn into an oak tree.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,81,1,"Poor Bill, it had started to rain and he had no umbrella.","Poor Bill, it had started to rain and he had no umbrella.",1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,81,2,It loved Sandy.,It loved Sandy.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,81,3,"Tony sent Mo a picture that he painted, but it's not clear with what.","Tony sent Mo a picture that he painted, but it's not clear with what.",1.0,1.0,1.0,1,1.0,1.0,17,17
+deeac7916cf7,hybrid_ce,gpt2,cola,81,4,Frances hid the presents in the drawer.,Frances hid the presents in the drawer.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,81,5,Fed knows which politician her to vote for.,Fed knows which politician her to vote for.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,81,6,The defendant denied the accusation.,The defendant denied the accusation.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,81,7,We admired the pictures of ourselves in the album.,We admired the pictures of ourselves in the album.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,82,0,John is sick.,John is sick.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,82,1,"Which boy's, mother, did you meet?","Which boy's, mother, did you meet?",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,82,2,I wonder in whom them to place their trust.,I wonder in whom them to place their trust.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,82,3,Will Anson come to the party?,Will Anson come to the party?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,82,4,Who did you think kissed the gorilla?,Who did you think kissed the gorilla?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,82,5,Us love they.,Us love they.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,82,6,how silly is Bill considered?,how silly is Bill considered?,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,82,7,Sarah smiled a charming smile.,Sarah smiled a charming smile.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,83,0,Some people yell at the dogs.,Some people yell at the dogs.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,83,1,Amanda carried the package to Pamela.,Amanda carried the package to Pamela.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,83,2,Who does John visit Sally because he likes?,Who does John visit Sally because he likes?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,83,3,Which king did you ask which city invaded?,Which king did you ask which city invaded?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,83,4,I remembered having kissed Mary.,I remembered having kissed Mary.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,83,5,I shaped a loaf.,I shaped a loaf.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,83,6,The students drove cars.,The students drove cars.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,83,7,It stinks that Aphrodite is omnipotent.,It stinks that Aphrodite is omnipotent.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,84,0,That Fido barks annoys me.,That Fido barks annoys me.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,84,1,All who lost money in the scam are eligible for the program.,All who lost money in the scam are eligible for the program.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,84,2,Kick you!,Kick you!,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,84,3,Did the child be in the school?,Did the child be in the school?,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,84,4,This dye will run.,This dye will run.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,84,5,The problem we are discussing is George.,The problem we are discussing is George.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,84,6,Some my jobs are in jeopardy.,Some my jobs are in jeopardy.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,84,7,John is eager.,John is eager.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,85,0,The teacher became.,The teacher became.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,85,1,"Picture of Bill, this girl in the red coat will put a picture of Bill on your desk before tomorrow.","Picture of Bill, this girl in the red coat will put a picture of Bill on your desk before tomorrow.",1.0,1.0,1.0,1,1.0,1.0,22,22
+deeac7916cf7,hybrid_ce,gpt2,cola,85,2,John is aware of it that Bill is here.,John is aware of it that Bill is here.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,85,3,He danced.,He danced.,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,85,4,The monkeys proud of their leader.,The monkeys proud of their leader.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,85,5,We persuaded Mary to leave and Sue to stay.,We persuaded Mary to leave and Sue to stay.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,85,6,"I like Bill's yellow shirt, but not Max's.","I like Bill's yellow shirt, but not Max's.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,85,7,I gave Pete the book to impress.,I gave Pete the book to impress.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,86,0,It seems that Lucy was mugged.,It seems that Lucy was mugged.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,86,1,John promise Mary to shave himself.,John promise Mary to shave himself.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,86,2,I wrote to Bill.,I wrote to Bill.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,86,3,The person whose mother's dog we were all fond of.,The person whose mother's dog we were all fond of.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,86,4,Lou hoped the umbrella in the closet.,Lou hoped the umbrella in the closet.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,86,5,We think that Leslie likes us.,We think that Leslie likes us.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,86,6,I know you like the back of my hand.,I know you like the back of my hand.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,86,7,Susan whispered at Rachel.,Susan whispered at Rachel.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,87,0,The dog bit the cat.,The dog bit the cat.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,87,1,The patient died.,The patient died.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,87,2,I might be not going to the party but washing my hair,I might be not going to the party but washing my hair,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,87,3,I presented it to Bill to read.,I presented it to Bill to read.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,87,4,I met the person who left.,I met the person who left.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,87,5,"He shouted again, but I don't know who to.","He shouted again, but I don't know who to.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,87,6,Paperback books lift onto the table easily.,Paperback books lift onto the table easily.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,87,7,Jerry attempted to blow up the Pentagon.,Jerry attempted to blow up the Pentagon.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,88,0,Jessica loaded boxes under the wagon.,Jessica loaded boxes under the wagon.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,88,1,Kim likes dogs.,Kim likes dogs.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,88,2,Mira condemned Terry for the accident.,Mira condemned Terry for the accident.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,88,3,The boat seen down the river sank.,The boat seen down the river sank.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,88,4,We gave us to the cause.,We gave us to the cause.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,88,5,The horse that was raced past the barn fell.,The horse that was raced past the barn fell.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,88,6,The socks are ready for for you to put on to be planned.,The socks are ready for for you to put on to be planned.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,88,7,It was the policeman met that several young students in the park last night.,It was the policeman met that several young students in the park last night.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,89,0,Who who you like does Sandy also like?,Who who you like does Sandy also like?,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,89,1,I'll work on it if Sam will be working on it.,I'll work on it if Sam will be working on it.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,89,2,The fugitive lay motionless in order to avoid discovery.,The fugitive lay motionless in order to avoid discovery.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,89,3,Emma made Harriet some food.,Emma made Harriet some food.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,89,4,Some people consider the dogs dangerous.,Some people consider the dogs dangerous.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,89,5,"The TA's have been arguing about whether some student or other should pass, but I can't now remember which one.","The TA's have been arguing about whether some student or other should pass, but I can't now remember which one.",1.0,1.0,1.0,1,1.0,1.0,24,24
+deeac7916cf7,hybrid_ce,gpt2,cola,89,6,The child put the toy on the table.,The child put the toy on the table.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,89,7,"As a teacher, you have to deal simultaneously with the administration's pressure on you to succeed, and the children's to be a nice guy.","As a teacher, you have to deal simultaneously with the administration's pressure on you to succeed, and the children's to be a nice guy.",1.0,1.0,1.0,1,1.0,1.0,29,29
+deeac7916cf7,hybrid_ce,gpt2,cola,90,0,Bill didn't allege that Roger had eaten anything.,Bill didn't allege that Roger had eaten anything.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,90,1,"Mary claimed that eating cabbage, Holly shouldn't.","Mary claimed that eating cabbage, Holly shouldn't.",1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,90,2,Brian threw the fence with the stick.,Brian threw the fence with the stick.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,90,3,a tall building.,a tall building.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,90,4,That he is here is clear.,That he is here is clear.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,90,5,Over the fire there bubbled a fragrant stew.,Over the fire there bubbled a fragrant stew.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,90,6,"Arizona elected Goldwater Senator, and Massachusetts, McCormack.","Arizona elected Goldwater Senator, and Massachusetts, McCormack.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,90,7,The horse raced past the barn fell.,The horse raced past the barn fell.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,91,0,The bird sings.,The bird sings.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,91,1,"The angrier Mary got, the more she looked at pictures.","The angrier Mary got, the more she looked at pictures.",1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,91,2,We walks.,We walks.,1.0,1.0,1.0,1,1.0,1.0,3,3
+deeac7916cf7,hybrid_ce,gpt2,cola,91,3,John owns the book.,John owns the book.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,91,4,Mary wonders that Bill will come.,Mary wonders that Bill will come.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,91,5,"Simon quickly dropped the gold, and Jack the diamonds.","Simon quickly dropped the gold, and Jack the diamonds.",1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,91,6,The chickens seem fond of the farmer.,The chickens seem fond of the farmer.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,91,7,The committee knows whose efforts to achieve peace the world should honor.,The committee knows whose efforts to achieve peace the world should honor.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,92,0,The book that crime was declining surprised many people.,The book that crime was declining surprised many people.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,92,1,"He announced he would marry the woman he loved most, but none of his relatives could figure out who.","He announced he would marry the woman he loved most, but none of his relatives could figure out who.",1.0,1.0,1.0,1,1.0,1.0,21,21
+deeac7916cf7,hybrid_ce,gpt2,cola,92,2,The table was wiped clean by John.,The table was wiped clean by John.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,92,3,Vote for yourself!,Vote for yourself!,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,92,4,That's a new car dealership.,That's a new car dealership.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,92,5,I read some of the book.,I read some of the book.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,92,6,That professor is feared by all students.,That professor is feared by all students.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,92,7,The bed was slept in.,The bed was slept in.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,93,0,The idea dismayed the Prime Minister that the Dome was dull.,The idea dismayed the Prime Minister that the Dome was dull.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,93,1,I mixed the sugar into the butter.,I mixed the sugar into the butter.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,93,2,"With my parents as supportive as they are, I'll be in fine shape.","With my parents as supportive as they are, I'll be in fine shape.",1.0,1.0,1.0,1,1.0,1.0,16,16
+deeac7916cf7,hybrid_ce,gpt2,cola,93,3,Books were taken from each student and given to Mary by the other.,Books were taken from each student and given to Mary by the other.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,93,4,It gave Sandy a thrill that the Cardinal won the game.,It gave Sandy a thrill that the Cardinal won the game.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,93,5,She didn't talk to one student.,She didn't talk to one student.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,93,6,The children are fond that they have ice cream.,The children are fond that they have ice cream.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,93,7,There is a programme about Euripides on a Radio 4 tonight?,There is a programme about Euripides on a Radio 4 tonight?,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,94,0,I wonder who to place my trust in.,I wonder who to place my trust in.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,94,1,Bill sent a package to Tom.,Bill sent a package to Tom.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,94,2,Sharon came the room.,Sharon came the room.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,94,3,Dana walking and Leslie running.,Dana walking and Leslie running.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,94,4,John decided Bill to get the prize.,John decided Bill to get the prize.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,94,5,They were interested in his.,They were interested in his.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,94,6,"Millie will send the President an obscene telegram, and Paul, the Secretary a rude letter.","Millie will send the President an obscene telegram, and Paul, the Secretary a rude letter.",1.0,1.0,1.0,1,1.0,1.0,20,20
+deeac7916cf7,hybrid_ce,gpt2,cola,94,7,They chased the man with the car.,They chased the man with the car.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,95,0,John considers himself proud of Mary.,John considers himself proud of Mary.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,95,1,I'm even sure we got these tickets!,I'm even sure we got these tickets!,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,95,2,The child and her mother clung together.,The child and her mother clung together.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,95,3,"No writer, and no playwright, meets in Vienna.","No writer, and no playwright, meets in Vienna.",1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,95,4,The artist drew the child with a pencil.,The artist drew the child with a pencil.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,95,5,Who did they see someone?,Who did they see someone?,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,95,6,We pulled free.,We pulled free.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,95,7,We think that Leslie likes ourselves.,We think that Leslie likes ourselves.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,96,0,It was believed to be illegal by them to do that.,It was believed to be illegal by them to do that.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,96,1,Ellen warned Helen against skating on thin ice.,Ellen warned Helen against skating on thin ice.,1.0,1.0,1.0,1,1.0,1.0,10,10
+deeac7916cf7,hybrid_ce,gpt2,cola,96,2,It was believed by everybody that Mary was a thief.,It was believed by everybody that Mary was a thief.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,96,3,John can kick the ball.,John can kick the ball.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,96,4,One of Korea's most famous poets wrote these lines.,One of Korea's most famous poets wrote these lines.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,96,5,Leslie slept.,Leslie slept.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,96,6,Tom said he would and Bill actually did eat a raw eggplant.,Tom said he would and Bill actually did eat a raw eggplant.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,96,7,I can't remember the name of somebody who had misgivings.,I can't remember the name of somebody who had misgivings.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,97,0,Herman whipped the sugar and the cream.,Herman whipped the sugar and the cream.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,97,1,My heart is pounding me.,My heart is pounding me.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,97,2,Ann bought a first edition of Richard III for $1000.,Ann bought a first edition of Richard III for $1000.,1.0,1.0,1.0,1,1.0,1.0,12,12
+deeac7916cf7,hybrid_ce,gpt2,cola,97,3,John put under the bathtub.,John put under the bathtub.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,97,4,Came right in he did without so much as a knock.,Came right in he did without so much as a knock.,1.0,1.0,1.0,1,1.0,1.0,13,13
+deeac7916cf7,hybrid_ce,gpt2,cola,97,5,The defendant walks.,The defendant walks.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,97,6,The birds give the worm a tug.,The birds give the worm a tug.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,97,7,Of whom are you thinking?,Of whom are you thinking?,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,98,0,Terry delighted in my pain.,Terry delighted in my pain.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,98,1,It never occurred to Pat that Chris knew the answer.,It never occurred to Pat that Chris knew the answer.,1.0,1.0,1.0,1,1.0,1.0,11,11
+deeac7916cf7,hybrid_ce,gpt2,cola,98,2,Sam offered the ball out of the basket.,Sam offered the ball out of the basket.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,98,3,Books were taken from no student and given to Mary by any professor.,Books were taken from no student and given to Mary by any professor.,1.0,1.0,1.0,1,1.0,1.0,14,14
+deeac7916cf7,hybrid_ce,gpt2,cola,98,4,The dog stole the turkey.,The dog stole the turkey.,1.0,1.0,1.0,1,1.0,1.0,6,6
+deeac7916cf7,hybrid_ce,gpt2,cola,98,5,The guests dined.,The guests dined.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,98,6,Kerry remarked it was late.,Kerry remarked it was late.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,98,7,Everything you like is on the table.,Everything you like is on the table.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,99,0,John is near Larry.,John is near Larry.,1.0,1.0,1.0,1,1.0,1.0,5,5
+deeac7916cf7,hybrid_ce,gpt2,cola,99,1,The cake that Jones got was more delicious than the one that Smith got.,The cake that Jones got was more delicious than the one that Smith got.,1.0,1.0,1.0,1,1.0,1.0,15,15
+deeac7916cf7,hybrid_ce,gpt2,cola,99,2,Jack hates Sue and is loved by Mary.,Jack hates Sue and is loved by Mary.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,99,3,Bill was struck by John as stupid.,Bill was struck by John as stupid.,1.0,1.0,1.0,1,1.0,1.0,8,8
+deeac7916cf7,hybrid_ce,gpt2,cola,99,4,Some people consider dogs in my neighborhood dangerous.,Some people consider dogs in my neighborhood dangerous.,1.0,1.0,1.0,1,1.0,1.0,9,9
+deeac7916cf7,hybrid_ce,gpt2,cola,99,5,He offended Sandy.,He offended Sandy.,1.0,1.0,1.0,1,1.0,1.0,4,4
+deeac7916cf7,hybrid_ce,gpt2,cola,99,6,To leave would be a pleasure.,To leave would be a pleasure.,1.0,1.0,1.0,1,1.0,1.0,7,7
+deeac7916cf7,hybrid_ce,gpt2,cola,99,7,The table was wiped by John clean.,The table was wiped by John clean.,1.0,1.0,1.0,1,1.0,1.0,8,8

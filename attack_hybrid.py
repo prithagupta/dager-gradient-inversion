@@ -597,7 +597,7 @@ def reconstruct(args, sample, metric, model_wrapper, lm):
 def main():
     if args.task != 'seq_class':
         raise NotImplementedError('Hybrid attack currently supports --task seq_class.')
-
+    print(f"Hash Value {job_hash} Started")
     attack_name = f"hybrid_{args.loss}"
     is_complete, results_dir = is_attack_complete(attack_name, job_hash)
     if is_complete:

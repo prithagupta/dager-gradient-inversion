@@ -96,6 +96,21 @@ def get_args(argv=None):
     parser.add_argument('--maxC', type=int, default=10000000)
     parser.add_argument('--reduce_incorrect', type=int, default=0)
     parser.add_argument('--n_incorrect', type=int, default=None)
+    parser.add_argument('--augment_candidates', action='store_true',
+                        help='Augment DAGER per-position token candidates with a global embedding-gradient recall pool '
+                             'and rerank before decoder filtering.')
+    parser.add_argument('--aug_global_k', type=int, default=256,
+                        help='Number of globally scored tokens to merge into each position when '
+                             '--augment_candidates is enabled.')
+    parser.add_argument('--aug_keep_per_pos', type=int, default=96,
+                        help='Number of reranked candidates to keep per position after augmentation.')
+    parser.add_argument('--aug_beta_global', type=float, default=0.75,
+                        help='Weight on the global embedding-gradient score during candidate reranking.')
+    parser.add_argument('--aug_delta_quality', type=float, default=0.15,
+                        help='Weight on the token-quality heuristic during candidate reranking.')
+    parser.add_argument('--aug_local_bonus', type=float, default=0.50,
+                        help='Bonus given to original DAGER candidates so augmentation improves recall without '
+                             'discarding the precise local candidates too aggressively.')
 
     # FedAVG
     parser.add_argument('--algo', type=str, default='sgd', choices=['sgd', 'fedavg'])

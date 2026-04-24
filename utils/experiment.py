@@ -33,7 +33,18 @@ def args_to_dict(args):
 
 
 def get_hash_value_for_args(args):
-    hash_string = json.dumps(args_to_dict(args), sort_keys=True, default=str)
+    dict_args = args_to_dict(args)
+    if "device" in dict_args.keys():
+        del dict_args["device"]
+    if "device_grad" in dict_args.keys():
+        del dict_args["device_grad"]
+    if "cache_dir" in dict_args.keys():
+        del dict_args["cache_dir"]
+    if "neptune" in dict_args.keys():
+        del dict_args["neptune"]
+    if "neptune_offline" in dict_args.keys():
+        del dict_args["neptune_offline"]
+    hash_string = json.dumps(dict_args, sort_keys=True, default=str)
     return hashlib.sha1(hash_string.encode()).hexdigest()[:12]
 
 
@@ -57,10 +68,7 @@ def _log_file_completed(log_path):
     if len(nonempty_lines) < 2:
         return False
 
-    return (
-            nonempty_lines[-1].endswith("Done with all.")
-            and re.search(r"\bExperiment time\b", nonempty_lines[-2]) is not None
-    )
+    return (nonempty_lines[-1].endswith("Done with all."))
 
 
 def get_results_dir(attack_name, job_hash):
@@ -206,7 +214,7 @@ def setup_experiment_logging(args, attack_name, level=logging.INFO):
 
     formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)-8s %(message)s",
                                   datefmt="%Y-%m-%d %H:%M:%S", )
-
+    print(f"Does the log file exits and the experiments are done {append_to_completed_log}")
     file_handler = logging.FileHandler(log_path, mode="a" if append_to_completed_log else "w")
     file_handler.setFormatter(formatter)
     file_handler.setLevel(level)

@@ -11,3 +11,9 @@ rsync -avz --progress \
   --exclude "copy_to_cluster.sh" \
   ~/projects/dager-gradient-inversion/ \
   rub1:/lustre/guptap69/projects/dager-gradient-inversion/
+
+#rsync -avz --progress rub1:/lustre/guptap69/projects/dager-gradient-inversion/results/ ~/projects/dager-gradient-inversion/results/
+# rsync -avz --progress rub1:/lustre/guptap69/projects/dager-gradient-inversion/logs/ ~/projects/dager-gradient-inversion/logs/
+
+#rsync -avz --progress ~/projects/dager-gradient-inversion/results rub1:/lustre/guptap69/projects/dager-gradient-inversion/results/
+#rsync -avz --progress ~/projects/dager-gradient-inversion/logs rub1:/lustre/guptap69/projects/dager-gradient-inversion/logs/

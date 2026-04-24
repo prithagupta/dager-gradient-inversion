@@ -11,16 +11,19 @@ OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/logs}"
 mkdir -p "$OUTPUT_DIR"
 
 MAIN_HASH_FILE="$OUTPUT_DIR/main_benchmark_hashes.txt"
+MAIN_COMPARISON_FILE="$OUTPUT_DIR/main_benchmark_comparison_hashes.txt"
 BATCH_HASH_FILE="$OUTPUT_DIR/batch_ablation_hashes.txt"
 HYBRID_HASH_FILE="$OUTPUT_DIR/hybrid_ablation_hashes.txt"
 
 : > "$MAIN_HASH_FILE"
+: > "$MAIN_COMPARISON_FILE"
 : > "$BATCH_HASH_FILE"
 : > "$HYBRID_HASH_FILE"
 
 CACHE_DIR="${CACHE_DIR:-${HF_HOME:-$HOME/.cache/huggingface}/gia_exp_cache}"
 
 main_count=0
+main_comparison_count=0
 batch_count=0
 hybrid_count=0
 
@@ -73,6 +76,28 @@ hash_dager_args() {
   python "$REPO_ROOT/print_job_hash.py" "$@"
 }
 
+write_main_comparison_record() {
+  local outfile="$1"
+  local model="$2"
+  local dataset="$3"
+  local batch="$4"
+  local seed="$5"
+  local dager_hash="$6"
+  local hybrid_hash="$7"
+
+  printf 'category=main_benchmark_compare model=%s dataset=%s batch=%s seed=%s dager_hash=%s hybrid_hash=%s dager_results=%s hybrid_results=%s dager_summary=%s hybrid_summary=%s\n' \
+    "$model" \
+    "$dataset" \
+    "$batch" \
+    "$seed" \
+    "$dager_hash" \
+    "$hybrid_hash" \
+    "$REPO_ROOT/results/dager_ce/results_${dager_hash}" \
+    "$REPO_ROOT/results/hybrid_ce/results_${hybrid_hash}" \
+    "$REPO_ROOT/results/dager_ce/results_${dager_hash}/run_summary.json" \
+    "$REPO_ROOT/results/hybrid_ce/results_${hybrid_hash}/run_summary.json" >> "$outfile"
+}
+
 collect_main_benchmark_hashes() {
   local datasets=( "sst2" "cola" "rotten_tomatoes" )
   local models=( "gpt2" "gpt2-large" )
@@ -80,65 +105,66 @@ collect_main_benchmark_hashes() {
   local seeds=( 40 41 42 )
   local batch="8"
 
-  local dataset model method seed model_path hash
-  local run_args final_args
+  local dataset model seed model_path dager_hash hybrid_hash
+  local run_args dager_args hybrid_args
   for model in "${models[@]}"; do
     for dataset in "${datasets[@]}"; do
       for seed in "${seeds[@]}"; do
-        for method in "${methods[@]}"; do
-          run_args=( --rng_seed "$seed" )
-          if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
-            run_args+=( --use_hf_split )
-          fi
+        run_args=( --rng_seed "$seed" )
+        if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
+          run_args+=( --use_hf_split )
+        fi
 
-          apply_attack_defaults "$batch" "${run_args[@]}"
-          run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+        apply_attack_defaults "$batch" "${run_args[@]}"
+        run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
 
-          if [ "$model" = "gpt2" ]; then
-            model_path="gpt2"
-          else
-            model_path="openai-community/gpt2-large"
-          fi
+        if [ "$model" = "gpt2" ]; then
+          model_path="gpt2"
+        else
+          model_path="openai-community/gpt2-large"
+        fi
 
-          if [ "$method" = "dager" ]; then
-            final_args=(
-              --dataset "$dataset"
-              --split val
-              --n_inputs 100
-              --batch_size "$batch"
-              --l1_filter all
-              --l2_filter non-overlap
-              --model_path "$model_path"
-              --device auto
-              --task seq_class
-              --cache_dir "$CACHE_DIR"
-              "${run_args[@]}"
-            )
-          else
-            final_args=(
-              --dataset "$dataset"
-              --split val
-              --n_inputs 100
-              --batch_size "$batch"
-              --l1_filter all
-              --l2_filter non-overlap
-              --model_path "$model_path"
-              --device auto
-              --task seq_class
-              --cache_dir "$CACHE_DIR"
-            )
-            if [ "$model" = "gpt2" ]; then
-              final_args+=( --n_steps 10 )
-            else
-              final_args+=( --n_steps 50 )
-            fi
-            final_args+=( "${run_args[@]}" )
-          fi
+        dager_args=(
+          --dataset "$dataset"
+          --split val
+          --n_inputs 100
+          --batch_size "$batch"
+          --l1_filter all
+          --l2_filter non-overlap
+          --model_path "$model_path"
+          --device auto
+          --task seq_class
+          --cache_dir "$CACHE_DIR"
+          "${run_args[@]}"
+        )
+        dager_hash="$(hash_dager_args "${dager_args[@]}")"
+        write_hash_record "$MAIN_HASH_FILE" "main_benchmark" "dager" "$model" "$dataset" "$batch" "$seed" "$dager_hash" "${dager_args[@]}"
+        main_count=$((main_count + 1))
 
-          hash="$(hash_dager_args "${final_args[@]}")"
-          write_hash_record "$MAIN_HASH_FILE" "main_benchmark" "$method" "$model" "$dataset" "$batch" "$seed" "$hash" "${final_args[@]}"
-          main_count=$((main_count + 1))
-        done
+        hybrid_args=(
+          --dataset "$dataset"
+          --split val
+          --n_inputs 100
+          --batch_size "$batch"
+          --l1_filter all
+          --l2_filter non-overlap
+          --model_path "$model_path"
+          --device auto
+          --task seq_class
+          --cache_dir "$CACHE_DIR"
+        )
+        if [ "$model" = "gpt2" ]; then
+          hybrid_args+=( --n_steps 10 )
+        else
+          hybrid_args+=( --n_steps 50 )
+        fi
+        hybrid_args+=( "${run_args[@]}" )
+        hybrid_hash="$(hash_dager_args "${hybrid_args[@]}")"
+        write_hash_record "$MAIN_HASH_FILE" "main_benchmark" "hybrid" "$model" "$dataset" "$batch" "$seed" "$hybrid_hash" "${hybrid_args[@]}"
+        main_count=$((main_count + 1))
+
+        write_main_comparison_record "$MAIN_COMPARISON_FILE" "$model" "$dataset" "$batch" "$seed" "$dager_hash" "$hybrid_hash"
+        main_comparison_count=$((main_comparison_count + 1))
       done
     done
   done
@@ -309,5 +335,6 @@ collect_batch_ablation_hashes
 collect_hybrid_ablation_hashes
 
 echo "Wrote $main_count hashes to $MAIN_HASH_FILE"
+echo "Wrote $main_comparison_count paired comparison rows to $MAIN_COMPARISON_FILE"
 echo "Wrote $batch_count hashes to $BATCH_HASH_FILE"
 echo "Wrote $hybrid_count hashes to $HYBRID_HASH_FILE"

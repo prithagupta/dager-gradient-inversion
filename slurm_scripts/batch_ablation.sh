@@ -134,8 +134,8 @@ run_wrapper() {
   bash "$script" "$dataset" "$batch" "${run_args[@]}"
 }
 
-for dataset in "${datasets[@]}"; do
-  for model in "${models[@]}"; do
+for model in "${models[@]}"; do
+  for dataset in "${datasets[@]}"; do
     for batch in "${batches[@]}"; do
       for method in "${methods[@]}"; do
         run_wrapper "$method" "$model" "$dataset" "$batch"

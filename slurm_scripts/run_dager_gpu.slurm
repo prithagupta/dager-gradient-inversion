@@ -6,7 +6,7 @@
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem=256G
-#SBATCH --time=24:00:00
+#SBATCH --time=20:00:00
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err
