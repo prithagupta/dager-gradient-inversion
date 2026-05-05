@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$REPO_ROOT/scripts/common_attack_args.sh"
+source "$REPO_ROOT/slurm_scripts/common_benchmark_args.sh"
+cd "$REPO_ROOT"
+
+extra_args=( "$@" )
+
+models=( "gpt2" "gpt2-large" )
+batches=( 1 2 4 8 16 32 64 80)
+methods=( "dager" "hybrid" )
+datasets=( "sst2" "cola" )
+
+echo "[CONFIG] script=batch_ablation_canary.sh"
+echo "[CONFIG] datasets=${datasets[*]}"
+echo "[CONFIG] batches=${batches[*]}"
+echo "[CONFIG] models=${models[*]}"
+echo "[CONFIG] methods=${methods[*]}"
+echo "[CONFIG] canary_marker_prefix=${CANARY_MARKER_PREFIX:-qxjkvcanary}"
+echo "[CONFIG] extra_args=$(printf '%q ' "${extra_args[@]}")"
+
+run_wrapper() {
+  local method="$1"
+  local model="$2"
+  local dataset="$3"
+  local batch="$4"
+  local run_args=()
+
+  if [ "${#extra_args[@]}" -gt 0 ]; then
+    run_args=( "${extra_args[@]}" )
+  fi
+
+  local script="${REPO_ROOT}/scripts/${method}_${model}.sh"
+  if [ "$batch" -gt 64 ]; then
+    if ! has_cli_arg "--max_ids" "${run_args[@]}"; then
+      run_args+=( --max_ids 96 )
+    fi
+    if ! has_cli_arg "--rank_tol" "${run_args[@]}"; then
+      run_args+=( --rank_tol 1e-8 )
+    fi
+    if ! has_cli_arg "--l1_span_thresh" "${run_args[@]}"; then
+      run_args+=( --l1_span_thresh 5e-5 )
+    fi
+    if ! has_cli_arg "--l2_span_thresh" "${run_args[@]}"; then
+      run_args+=( --l2_span_thresh 2e-3 )
+    fi
+    if ! has_cli_arg "--distinct_thresh" "${run_args[@]}"; then
+      run_args+=( --distinct_thresh 0.6 )
+    fi
+  fi
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_rank_tol_arg "$batch" "${run_args[@]}"
+  else
+    set_default_rank_tol_arg "$batch"
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  if [ "${#run_args[@]}" -gt 0 ]; then
+    set_default_max_ids_arg "$batch" "${run_args[@]}"
+  else
+    set_default_max_ids_arg "$batch"
+  fi
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  append_safe_eval_dataset_args "$dataset" "$batch" 50 "${run_args[@]}"
+  set_default_arg --device_grad cpu "${run_args[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  set_default_flag_arg --preprocess_unique_canary_markers "${ATTACK_EXTRA_ARGS[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  set_default_arg --canary_marker_prefix "${CANARY_MARKER_PREFIX:-qxjkvcanary}" "${run_args[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  echo "Resolved attack args: $(printf '%q ' "${run_args[@]}")"
+  echo ""
+  echo "=================================================="
+  echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch} | synthetic_canary=1"
+  echo "Command: ${script} ${dataset} ${batch} ${run_args[*]}"
+  echo "=================================================="
+  bash "$script" "$dataset" "$batch" "${run_args[@]}"
+}
+
+for batch in "${batches[@]}"; do
+  for model in "${models[@]}"; do
+    for dataset in "${datasets[@]}"; do
+      for method in "${methods[@]}"; do
+        run_wrapper "$method" "$model" "$dataset" "$batch"
+      done
+    done
+  done
+done

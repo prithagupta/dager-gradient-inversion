@@ -1,5 +1,4 @@
 import logging
-
 import torch
 
 from utilities import get_reconstruction_loss, get_closest_tokens, fix_special_tokens

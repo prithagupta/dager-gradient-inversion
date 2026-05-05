@@ -5,6 +5,49 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d65cac68-3e53-4517-9e74-c619be21d3c3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/.idea/Plug-and-Play-Attacks.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/notebooks/distance_toy_example.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attack.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/final_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/final_selection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/initial_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/initial_selection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/attacks/optimize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/CelebA_FFHQ.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/CelebA_FFHQ.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/CelebA_MetFaces.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/CelebA_MetFaces.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/FaceScrub_FFHQ.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/FaceScrub_FFHQ.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/FaceScrub_MetFaces.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/FaceScrub_MetFaces.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/Stanford_Dogs_AFHQ.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/Stanford_Dogs_AFHQ.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/default_attacking.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/default_attacking.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/default_attacking_local.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/attacking/default_attacking_local.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/default_training.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/default_training.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_V3_FaceScrub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_V3_FaceScrub.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_V3_Stanford_Dogs.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_V3_Stanford_Dogs.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_v3_CelebA.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/evaluation/Inception_v3_CelebA.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_CelebA.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_CelebA.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_FaceScrub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_FaceScrub.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_Stanford_Dogs.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/configs/training/targets/ResNet152_Stanford_Dogs.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/attack_latents.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/attack_latents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/celeba.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/celeba.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/custom_subset.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/custom_subset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/facescrub.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/facescrub.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/stanford_dogs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/datasets/stanford_dogs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/knowledge_extraction_score.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/knowledge_extraction_score.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/losses/poincare.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/losses/poincare.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/base_metric.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/base_metric.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/classification_acc.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/classification_acc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/distance_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/distance_metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/fid_score.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/fid_score.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/prcd.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/metrics/prcd.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/models/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/models/base_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/models/classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/models/classifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/notebooks/label_smoothing_toy_example.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/train_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/train_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/attack_config_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/attack_config_parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/datasets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/stylegan.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/stylegan.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/training_config_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/training_config_parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/wandb.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Plug-and-Play-Attacks/utils/wandb.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -13,7 +56,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="112" />
+    <option name="cachedIndexableFilesCount" value="247353" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -23,8 +66,20 @@
       </list>
     </option>
   </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -38,6 +93,9 @@
     &quot;accountId&quot;: &quot;a9d7bf21-29e3-4686-9d16-33499ee3e67f&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/logs/dager_attack_e8bbf3fec952.log" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -51,46 +109,64 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Git.Working.Tree.Tab.closed.by.user": "closed",
-    "Python.attack_hybrid.executor": "Debug",
-    "Python.compare_main_benchmark_results.executor": "Run",
-    "Python.migrate_hash_artifacts.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "SHELLCHECK.PATH": "/Users/prithagupta/Library/Application Support/JetBrains/PyCharm2026.1/plugins/Shell Script/shellcheck",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_directory_selection": "/Users/prithagupta/projects/dager-gradient-inversion/utils",
-    "last_opened_file_path": "/Users/prithagupta/projects/dager-gradient-inversion",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Git.Working.Tree.Tab.closed.by.user&quot;: &quot;closed&quot;,
+    &quot;Python.analyze_attack_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.analyze_sentence_failures.executor&quot;: &quot;Run&quot;,
+    &quot;Python.attack_hybrid.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.classify_batch_ablation_cases.executor&quot;: &quot;Run&quot;,
+    &quot;Python.classify_dager_vs_hybrid_cases.executor&quot;: &quot;Run&quot;,
+    &quot;Python.classify_improvement_over_baseline.executor&quot;: &quot;Run&quot;,
+    &quot;Python.compare_batch_ablation_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.compare_hybrid_ablation_canary_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.compare_hybrid_ablation_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.compare_main_benchmark_canary_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.compare_main_benchmark_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.inventory_current_and_old_runs.executor&quot;: &quot;Run&quot;,
+    &quot;Python.migrate_hash_artifacts.executor&quot;: &quot;Run&quot;,
+    &quot;Python.results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_ppa_experiments.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/prithagupta/Library/Application Support/JetBrains/PyCharm2026.1/plugins/Shell Script/shellcheck&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_directory_selection&quot;: &quot;/Users/prithagupta/projects/dager-gradient-inversion/utils&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/prithagupta/projects/dager-gradient-inversion/slurm_scripts&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.fileTypes&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/slurm_scripts" />
+      <recent name="$PROJECT_DIR$/analyze_results/logs" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks/scripts" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks/losses" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/analyze_results" />
       <recent name="$PROJECT_DIR$/slurm_scripts" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/scripts" />
-      <recent name="$PROJECT_DIR$/scripts/old_unusedscripts" />
-      <recent name="$PROJECT_DIR$/dager" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks/checkpoints/facescrub" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks/checkpoints/celeba" />
+      <recent name="$PROJECT_DIR$/../Plug-and-Play-Attacks/scripts" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.compare_main_benchmark_results">
-    <configuration name="attack_hybrid" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.analyze_attack_results">
+    <configuration name="analyze_attack_results" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="dager-gradient-inversion" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -99,39 +175,14 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analyze_results" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/attack_hybrid.py" />
-      <option name="PARAMETERS" value="--dataset sst2 --split val --n_inputs 100 --batch_size 8 --l1_filter all --l2_filter non-overlap --model_path gpt2 --device auto --task seq_class --cache_dir ./models_cache --rank_tol 1e-5 --rng_seed 10100 --n_inputs 5 --use_hf_split" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="compare_main_benchmark_results" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="dager-gradient-inversion" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/compare_main_benchmark_results.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analyze_results/analyze_attack_results.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -140,7 +191,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="migrate_hash_artifacts" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="analyze_sentence_failures" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="dager-gradient-inversion" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -149,14 +200,14 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analyze_results" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/migrate_hash_artifacts.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analyze_results/analyze_sentence_failures.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -165,11 +216,95 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="classify_batch_ablation_cases" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dager-gradient-inversion" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analyze_results" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analyze_results/classify_batch_ablation_cases.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="classify_improvement_over_baseline" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dager-gradient-inversion" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analyze_results" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analyze_results/classify_improvement_over_baseline.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="inventory_current_and_old_runs" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dager-gradient-inversion" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analyze_results" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analyze_results/inventory_current_and_old_runs.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.analyze_attack_results" />
+      <item itemvalue="Python.inventory_current_and_old_runs" />
+      <item itemvalue="Python.analyze_sentence_failures" />
+      <item itemvalue="Python.classify_batch_ablation_cases" />
+      <item itemvalue="Python.classify_improvement_over_baseline" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.compare_main_benchmark_results" />
-        <item itemvalue="Python.migrate_hash_artifacts" />
-        <item itemvalue="Python.attack_hybrid" />
+        <item itemvalue="Python.analyze_attack_results" />
+        <item itemvalue="Python.inventory_current_and_old_runs" />
+        <item itemvalue="Python.classify_improvement_over_baseline" />
+        <item itemvalue="Python.classify_batch_ablation_cases" />
+        <item itemvalue="Python.analyze_sentence_failures" />
       </list>
     </recent_temporary>
   </component>
@@ -211,7 +346,59 @@
       <workItem from="1776801338518" duration="25698000" />
       <workItem from="1776924293598" duration="780000" />
       <workItem from="1776937412108" duration="4698000" />
-      <workItem from="1777016268738" duration="13356000" />
+      <workItem from="1777016268738" duration="20189000" />
+      <workItem from="1777054407987" duration="1020000" />
+      <workItem from="1777059180598" duration="48000" />
+      <workItem from="1777108386221" duration="11959000" />
+      <workItem from="1777127281820" duration="4082000" />
+      <workItem from="1777131386688" duration="16000" />
+      <workItem from="1777131408758" duration="1000" />
+      <workItem from="1777137436891" duration="850000" />
+      <workItem from="1777138499416" duration="14541000" />
+      <workItem from="1777218429513" duration="2159000" />
+      <workItem from="1777227396526" duration="2000" />
+      <workItem from="1777227405924" duration="2701000" />
+      <workItem from="1777235424743" duration="1596000" />
+      <workItem from="1777270612782" duration="2808000" />
+      <workItem from="1777278634975" duration="28198000" />
+      <workItem from="1777363657242" duration="9256000" />
+      <workItem from="1777377378693" duration="12173000" />
+      <workItem from="1777446507980" duration="6989000" />
+      <workItem from="1777455249529" duration="191000" />
+      <workItem from="1777455456138" duration="965000" />
+      <workItem from="1777456928718" duration="6249000" />
+      <workItem from="1777466276946" duration="12882000" />
+      <workItem from="1777480390287" duration="2892000" />
+      <workItem from="1777483413646" duration="828000" />
+      <workItem from="1777484283226" duration="56000" />
+      <workItem from="1777490846831" duration="106000" />
+      <workItem from="1777536587190" duration="16231000" />
+      <workItem from="1777579970019" duration="138000" />
+      <workItem from="1777580304404" duration="1189000" />
+      <workItem from="1777581503775" duration="377000" />
+      <workItem from="1777582035567" duration="1604000" />
+      <workItem from="1777617887188" duration="708000" />
+      <workItem from="1777652620302" duration="609000" />
+      <workItem from="1777741657974" duration="484000" />
+      <workItem from="1777749404670" duration="603000" />
+      <workItem from="1777801085335" duration="685000" />
+      <workItem from="1777801780264" duration="1151000" />
+      <workItem from="1777803629906" duration="1315000" />
+      <workItem from="1777810837352" duration="3803000" />
+      <workItem from="1777819380895" duration="17000" />
+      <workItem from="1777819404881" duration="80000" />
+      <workItem from="1777819491742" duration="161000" />
+      <workItem from="1777819959159" duration="39000" />
+      <workItem from="1777820010793" duration="229000" />
+      <workItem from="1777824095904" duration="22589000" />
+      <workItem from="1777904370140" duration="6066000" />
+      <workItem from="1777912884377" duration="117000" />
+      <workItem from="1777961356298" duration="102000" />
+      <workItem from="1777962049008" duration="53000" />
+      <workItem from="1777969920636" duration="4043000" />
+      <workItem from="1777998303505" duration="9028000" />
+      <workItem from="1778009890439" duration="3540000" />
+      <workItem from="1778017437901" duration="2716000" />
     </task>
     <servers />
   </component>
@@ -230,8 +417,20 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_main_benchmark_results.coverage" NAME="compare_main_benchmark_results Coverage Results" MODIFIED="1777021361587" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/dager_gradient_inversion$migrate_hash_artifacts.coverage" NAME="migrate_hash_artifacts Coverage Results" MODIFIED="1777020533003" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$run_ppa_experiments.coverage" NAME="run_ppa_experiments Coverage Results" MODIFIED="1777457664687" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../Plug-and-Play-Attacks/scripts" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_batch_ablation_results.coverage" NAME="compare_batch_ablation_results Coverage Results" MODIFIED="1777886225429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
     <SUITE FILE_PATH="coverage/dager_gradient_inversion$attack_hybrid.coverage" NAME="attack_hybrid Coverage Results" MODIFIED="1776437048269" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$classify_batch_ablation_cases.coverage" NAME="classify_batch_ablation_cases Coverage Results" MODIFIED="1777886237505" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_main_benchmark_canary_results.coverage" NAME="compare_main_benchmark_canary_results Coverage Results" MODIFIED="1777886207819" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_main_benchmark_results.coverage" NAME="compare_main_benchmark_results Coverage Results" MODIFIED="1777886205486" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$classify_dager_vs_hybrid_cases.coverage" NAME="classify_dager_vs_hybrid_cases Coverage Results" MODIFIED="1777392109998" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_hybrid_ablation_results.coverage" NAME="compare_hybrid_ablation_results Coverage Results" MODIFIED="1777886216095" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$analyze_sentence_failures.coverage" NAME="analyze_sentence_failures Coverage Results" MODIFIED="1777886233204" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$classify_improvement_over_baseline.coverage" NAME="classify_improvement_over_baseline Coverage Results" MODIFIED="1777886555811" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$analyze_attack_results.coverage" NAME="analyze_attack_results Coverage Results" MODIFIED="1778011729379" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$compare_hybrid_ablation_canary_results.coverage" NAME="compare_hybrid_ablation_canary_results Coverage Results" MODIFIED="1777886227718" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$inventory_current_and_old_runs.coverage" NAME="inventory_current_and_old_runs Coverage Results" MODIFIED="1778002039020" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/analyze_results" />
+    <SUITE FILE_PATH="coverage/dager_gradient_inversion$results.coverage" NAME="results Coverage Results" MODIFIED="1777882730189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/results" />
   </component>
 </project>

@@ -1,8 +1,8 @@
-import os
-import sys
 from pathlib import Path
 
+import os
 import pandas as pd
+import sys
 import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM
@@ -15,7 +15,6 @@ from args_factory import get_args
 from utils.experiment import cleanup_memory, load_rouge_metric
 from utils.filtering_decoder import filter_decoder
 from utils.functional import (
-    check_if_in_span,
     fallback_gpt2_l1_candidates,
     fallback_rope_l1_candidates,
     filter_outliers,
@@ -33,7 +32,6 @@ from utils.somp_core import (
     beam_search_decoder,
 )
 from utils.somp_models import SOMPModelWrapper
-
 
 SMALL_SENTENCES = [
     "bad.",
@@ -55,15 +53,15 @@ def default_cache_dir():
 
 
 def build_attack_args(
-    *,
-    dataset="sst2",
-    batch_size=2,
-    model_path="gpt2",
-    split="val",
-    n_inputs=1,
-    rng_seed=42,
-    cache_dir=None,
-    extra_args=None,
+        *,
+        dataset="sst2",
+        batch_size=2,
+        model_path="gpt2",
+        split="val",
+        n_inputs=1,
+        rng_seed=42,
+        cache_dir=None,
+        extra_args=None,
 ):
     cache_dir = cache_dir or default_cache_dir()
     argv = [
@@ -170,8 +168,8 @@ def dager_filter_l1_trace(args, model_wrapper, R_Qs):
             end_token_ind = ids.index(model_wrapper.eos_token)
             sentence_token_type = res_types[-1][end_token_ind]
             sentence_ends.append((p, sentence_token_type))
-            ids = ids[:end_token_ind] + ids[end_token_ind + 1 :]
-            res_types[-1] = res_types[-1][:end_token_ind] + res_types[-1][end_token_ind + 1 :]
+            ids = ids[:end_token_ind] + ids[end_token_ind + 1:]
+            res_types[-1] = res_types[-1][:end_token_ind] + res_types[-1][end_token_ind + 1:]
         res_ids += [ids]
         res_pos += res_pos_new.tolist()
         p += 1
@@ -249,7 +247,7 @@ def grad_match_loss(dummy_grads, true_grads, args):
             continue
         true_grad = true_grad.to(dummy_grad.device)
         curr = 1.0 - (dummy_grad * true_grad).sum() / (
-            dummy_grad.reshape(-1).norm(p=2) * true_grad.reshape(-1).norm(p=2) + 1e-9
+                dummy_grad.reshape(-1).norm(p=2) * true_grad.reshape(-1).norm(p=2) + 1e-9
         )
         loss = curr if loss is None else loss + curr
         n_grads += 1
@@ -411,8 +409,8 @@ def select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch):
 
         for sentence in correct_sentences:
             similar = (
-                (torch.tensor(sentence) == approx_sentences_ext_tensor[:, : len(sentence)]).sum(1)
-                >= torch.min(approx_sentences_lens, torch.tensor(len(sentence))) * args.distinct_thresh
+                    (torch.tensor(sentence) == approx_sentences_ext_tensor[:, : len(sentence)]).sum(1)
+                    >= torch.min(approx_sentences_lens, torch.tensor(len(sentence))) * args.distinct_thresh
             )
             approx_scores[similar] = torch.inf
 
@@ -422,8 +420,8 @@ def select_dager_decoder_ids(args, model_wrapper, R_Qs, res_ids, orig_batch):
                 break
             selected_sentences.append(approx_sentences[idx])
             similar = (
-                (torch.tensor(approx_sentences_ext[idx]) == approx_sentences_ext_tensor).sum(1)
-                >= max_len * args.distinct_thresh
+                    (torch.tensor(approx_sentences_ext[idx]) == approx_sentences_ext_tensor).sum(1)
+                    >= max_len * args.distinct_thresh
             )
             approx_scores[similar] = torch.inf
 
@@ -464,8 +462,10 @@ def trace_hybrid_attack(args, sequences, labels=None, traced_steps=8):
     input_ids = orig_batch["input_ids"].to(args.device)
     attention_mask = orig_batch["attention_mask"].to(args.device)
     pad_mask = attention_mask == 0
-    candidate_mask = build_candidate_mask(l1["res_ids"], input_ids.shape[1], emb_matrix.shape[0], model_wrapper.pad_token, args.device)
-    x_embeds = init_embeddings_from_candidates(args, model_wrapper, l1["res_ids"], input_ids, attention_mask, init_ids=init_ids)
+    candidate_mask = build_candidate_mask(l1["res_ids"], input_ids.shape[1], emb_matrix.shape[0],
+                                          model_wrapper.pad_token, args.device)
+    x_embeds = init_embeddings_from_candidates(args, model_wrapper, l1["res_ids"], input_ids, attention_mask,
+                                               init_ids=init_ids)
     optimizer = torch.optim.Adam([x_embeds], lr=args.lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=args.lr_decay)
     history = []
@@ -486,8 +486,10 @@ def trace_hybrid_attack(args, sequences, labels=None, traced_steps=8):
         scheduler.step()
 
         with torch.no_grad():
-            projected_ids = project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask, model_wrapper.pad_token, emb_norm)
-            projected_text = [remove_padding(tokenizer, projected_ids[i], left=(args.pad == "left")) for i in range(projected_ids.shape[0])]
+            projected_ids = project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask,
+                                                  model_wrapper.pad_token, emb_norm)
+            projected_text = [remove_padding(tokenizer, projected_ids[i], left=(args.pad == "left")) for i in
+                              range(projected_ids.shape[0])]
 
         history.append(
             {
@@ -514,7 +516,8 @@ def trace_hybrid_attack(args, sequences, labels=None, traced_steps=8):
         "step_history": pd.DataFrame(history),
         "reference_table": preview_sentences(
             tokenizer,
-            [remove_padding(tokenizer, orig_batch["input_ids"][i], left=(args.pad == "left")) for i in range(orig_batch["input_ids"].shape[0])],
+            [remove_padding(tokenizer, orig_batch["input_ids"][i], left=(args.pad == "left")) for i in
+             range(orig_batch["input_ids"].shape[0])],
         ),
     }
 
@@ -535,7 +538,8 @@ def trace_somp_attack(args, sequences, labels=None):
     rank, R_Qs, head_R_Qs = model_wrapper.get_matrices_expansions(mixed_grads, B=None, tol=args.rank_tol)
     pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else model_wrapper.pad_token
     eff_len_each = (orig_batch["input_ids"] != pad_id).sum(dim=1).cpu()
-    candidate_pool_indices = build_global_candidate_pool(args, model_wrapper, mixed_grads, R_Qs, head_R_Qs, eff_len_each)
+    candidate_pool_indices = build_global_candidate_pool(args, model_wrapper, mixed_grads, R_Qs, head_R_Qs,
+                                                         eff_len_each)
 
     length_rows = []
     candidate_pool = []
@@ -557,7 +561,8 @@ def trace_somp_attack(args, sequences, labels=None):
                 unique_texts.add(text)
                 candidate_pool.append(candidate)
 
-    clustered = _cluster_candidates(candidate_pool, tokenizer, metric, float(args.cluster_rouge_l)) if candidate_pool else []
+    clustered = _cluster_candidates(candidate_pool, tokenizer, metric,
+                                    float(args.cluster_rouge_l)) if candidate_pool else []
     predictions, references = reconstruct_with_omp(args, (sequences, labels), metric, model_wrapper)
     return {
         "model_wrapper": model_wrapper,

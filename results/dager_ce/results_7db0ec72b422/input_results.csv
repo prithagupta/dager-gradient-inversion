@@ -1,0 +1,4 @@
+attack,model,dataset,input_index,num_sentences,joined_reference,joined_prediction,reconstruction_time_sec,rouge1_fm,rouge2_fm,rougeL_fm,exact_match,token_acc,padded_token_acc,pred_len,ref_len
+dager_ce,gpt2,sst2,0,1,it confirms fincher's status as a film maker who artfully bends technical know-how to the service of psychological insight. ,it confirms fincher's status as a film maker who artfully bends technical know-how to the service of psychological insight. ,39.930989265441895,1.0,1.0,1.0,1,1.0,1.0,26,26
+dager_ce,gpt2,sst2,1,1,too much of it feels unfocused and underdeveloped. ,too much of it feels unfocused and underdeveloped. ,36.24286150932312,1.0,1.0,1.0,1,1.0,1.0,11,11
+dager_ce,gpt2,sst2,2,1,a great ensemble cast can't lift this heartfelt enterprise out of the familiar. ,a great ensemble cast can't lift this heartfelt enterprise out of the familiar. ,37.88014507293701,1.0,1.0,1.0,1,1.0,1.0,16,16

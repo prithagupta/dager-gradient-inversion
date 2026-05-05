@@ -1,9 +1,8 @@
 import argparse
 import logging
+import numpy as np
 import os
 import sys
-
-import numpy as np
 import torch
 
 from utils.data import TextDataset

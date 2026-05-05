@@ -6,53 +6,32 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$REPO_ROOT/scripts/common_attack_args.sh"
+source "$REPO_ROOT/slurm_scripts/common_benchmark_args.sh"
 cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 seeds=( 40 41 42 )
 
-datasets=(  "sst2" "cola" "rotten_tomatoes")
+datasets=( "sst2" "cola" "rotten_tomatoes" )
+batches=( 16 32 64)
 models=("gpt2" "gpt2-large")
 methods=("dager" "hybrid")
 
-has_split_arg() {
-  local arg
-  if [ "${#extra_args[@]}" -eq 0 ]; then
-    return 1
-  fi
-  for arg in "${extra_args[@]}"; do
-    if [ "$arg" = "--split" ] || [[ "$arg" == --split=* ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-has_use_hf_split_arg() {
-  local arg
-  if [ "${#extra_args[@]}" -eq 0 ]; then
-    return 1
-  fi
-  for arg in "${extra_args[@]}"; do
-    if [ "$arg" = "--use_hf_split" ]; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-default_batch_size() {
-  echo "8"
-}
+echo "[CONFIG] script=main_benchmark.sh"
+echo "[CONFIG] datasets=${datasets[*]}"
+echo "[CONFIG] batches=${batches[*]}"
+echo "[CONFIG] models=${models[*]}"
+echo "[CONFIG] methods=${methods[*]}"
+echo "[CONFIG] seeds=${seeds[*]}"
+echo "[CONFIG] extra_args=$(printf '%q ' "${extra_args[@]}")"
 
 run_wrapper() {
   local method="$1"
   local model="$2"
   local dataset="$3"
-  local seed="$4"
-  local batch
+  local batch="$4"
+  local seed="$5"
   local run_args=()
-  batch="$(default_batch_size "$dataset" "$model")"
 
   if [ "${#extra_args[@]}" -gt 0 ]; then
     run_args=( "${extra_args[@]}" )
@@ -72,11 +51,10 @@ run_wrapper() {
   fi
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   run_args+=( --rng_seed "$seed" )
-  if [ "$dataset" = "sst2" ] || [ "$dataset" = "cola" ]; then
-    if ! has_use_hf_split_arg; then
-      run_args+=( --use_hf_split )
-    fi
-  fi
+  append_safe_eval_dataset_args "$dataset" "$batch" 50 "${run_args[@]}"
+  set_default_arg --device_grad cpu "${run_args[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  echo "Resolved attack args: $(printf '%q ' "${run_args[@]}")"
   echo ""
   echo "=================================================="
   echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch} | rng_seed=${seed}"
@@ -86,11 +64,13 @@ run_wrapper() {
 }
 
 
-for model in "${models[@]}"; do
-  for dataset in "${datasets[@]}"; do
-    for seed in "${seeds[@]}"; do
-      for method in "${methods[@]}"; do
-        run_wrapper "$method" "$model" "$dataset" "$seed"
+for batch in "${batches[@]}"; do
+  for model in "${models[@]}"; do
+    for dataset in "${datasets[@]}"; do
+      for seed in "${seeds[@]}"; do
+        for method in "${methods[@]}"; do
+          run_wrapper "$method" "$model" "$dataset" "$batch" "$seed"
+        done
       done
     done
   done

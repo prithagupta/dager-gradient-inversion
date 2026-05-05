@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=dager-cpu
+#SBATCH --job-name=dager
 #SBATCH -N 1
 #SBATCH --account=haberi2x_0000
 #SBATCH --partition=cpu
 #SBATCH --gpus=0
 #SBATCH --mem=256G
 #SBATCH --time=24:00:00
-#SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err
 #SBATCH --open-mode=append
@@ -39,7 +38,7 @@ conda activate dager-cuda
 set -u
 
 # HuggingFace cache: keep everything under $HF_HOME/gia_exp_cache
-export HF_HOME="${HF_HOME:-${DATA_FOLDER}/.cache/huggingface}"
+export HF_HOME="${HF_HOME:-${DATA_FOLDER:-/lustre/$USER}/.cache/huggingface}"
 export CACHE_DIR="${HF_HOME}/gia_exp_cache"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-${CACHE_DIR}/.hf_hub}"
 export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HUB_CACHE}"
@@ -56,8 +55,8 @@ export HF_UPDATE_DOWNLOAD_COUNTS="${HF_UPDATE_DOWNLOAD_COUNTS:-0}"
 export PYTHONUNBUFFERED=1
 
 # Threads
-export OMP_NUM_THREADS="${SLURM_CPUS_PER_GPU:-4}"
-export MKL_NUM_THREADS="${SLURM_CPUS_PER_GPU:-4}"
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-${SLURM_CPUS_ON_NODE:-4}}"
+export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-${SLURM_CPUS_ON_NODE:-4}}"
 
 mkdir -p "/lustre/$USER/logs"
 mkdir -p "$HF_HUB_CACHE" "$HF_DATASETS_CACHE" "$TRANSFORMERS_CACHE" "$HF_MODULES_CACHE" "$HF_EVALUATE_CACHE" "$HF_METRICS_CACHE"

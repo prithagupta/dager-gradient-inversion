@@ -1,6 +1,6 @@
-import logging
 from collections import Counter
 
+import logging
 import torch
 from transformers.tokenization_utils_base import BatchEncoding
 

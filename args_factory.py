@@ -68,8 +68,20 @@ def get_args(argv=None):
     parser.add_argument('--use_hf_split', action='store_true',
                         help='Use the official Hugging Face validation split for GLUE datasets. '
                              'By default, DAGER keeps its original train-subset split protocol.')
+    parser.add_argument('--preprocess_numbered_markers', action='store_true',
+                        help='Wrap each sequence before tokenization as "<slot>.#start@ ... <slot>.end@" '
+                             'using the example slot index within the batch.')
+    parser.add_argument('--preprocess_boundary_markers', action='store_true',
+                        help='Wrap each sequence before tokenization as "#start@ ... #end@" without numbering.')
+    parser.add_argument('--preprocess_unique_canary_markers', action='store_true',
+                        help='Wrap each sequence before tokenization with a unique synthetic canary anchor, '
+                             'for example "qxjkvcanary000123 ... qxjkvcanary000123". This is intended for '
+                             'synthetic leakage-audit experiments, not the passive baseline threat model.')
+    parser.add_argument('--canary_marker_prefix', type=str, default='qxjkvcanary',
+                        help='Prefix used for synthetic unique canary anchors when '
+                             '--preprocess_unique_canary_markers is enabled.')
     parser.add_argument('-b', '--batch_size', type=int, default=1)
-    parser.add_argument('--n_inputs', type=int, required=True)  # val:10/20, test:100
+    parser.add_argument('--n_inputs', type=int, required=True, default=50)  # val:10/20, test:100
     parser.add_argument('--start_input', type=int, default=0)
     parser.add_argument('--end_input', type=int, default=100000)
 
@@ -96,6 +108,10 @@ def get_args(argv=None):
     parser.add_argument('--maxC', type=int, default=10000000)
     parser.add_argument('--reduce_incorrect', type=int, default=0)
     parser.add_argument('--n_incorrect', type=int, default=None)
+    parser.add_argument('--debug_candidates', action='store_true',
+                        help='Log detailed L1/L2 candidate and decoder-prefix diagnostics.')
+    parser.add_argument('--debug_decode_topk', type=int, default=3,
+                        help='Number of decoded candidate/prefix examples to print when --debug_candidates is set.')
     parser.add_argument('--augment_candidates', action='store_true',
                         help='Augment DAGER per-position token candidates with a global embedding-gradient recall pool '
                              'and rerank before decoder filtering.')
@@ -161,6 +177,24 @@ def get_args(argv=None):
                              '"candidate_periodic" also snaps to DAGER candidates during optimization based on '
                              '--hybrid_project_every. "none" disables DAGER-candidate projection and decodes by '
                              'nearest full-vocab embeddings.')
+    parser.add_argument('--iterative_dager_lamp', action='store_true',
+                        help='Run iterative DAGER->LAMP rounds in attack_hybrid.py. Each round optimizes continuous '
+                             'embeddings from the current projected batch, projects back to tokens, and accepts the '
+                             'new batch only when projected full-gradient loss improves.')
+    parser.add_argument('--iterative_rounds', type=int, default=3,
+                        help='Number of DAGER->LAMP projection rounds when --iterative_dager_lamp is enabled.')
+    parser.add_argument('--iterative_steps_per_round', type=int, default=0,
+                        help='Optimization steps per iterative round. Default 0 splits --n_steps across rounds.')
+    parser.add_argument('--iterative_accept_margin', type=float, default=1e-6,
+                        help='Required projected-loss improvement for accepting an iterative round.')
+    parser.add_argument('--iterative_stall_patience', type=int, default=1,
+                        help='Stop iterative DAGER->LAMP after this many non-improving rounds.')
+    parser.add_argument('--iterative_refresh_candidates', action='store_true',
+                        help='After an accepted round, insert the projected tokens at the front of each DAGER '
+                             'position candidate list so later projections can keep them.')
+    parser.add_argument('--iterative_noise_init_ids', action='store_true',
+                        help='When iterative rounds initialize from projected token ids, still add '
+                             '--hybrid_init_noise before optimization.')
     parser.add_argument('--print_every', type=int, default=50)
 
     # LoRA

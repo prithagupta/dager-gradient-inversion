@@ -1,9 +1,8 @@
 import datetime
+import numpy as np
 import os
 import sys
 import time
-
-import numpy as np
 import torch
 from evaluate import load as load_metric
 from tqdm import tqdm

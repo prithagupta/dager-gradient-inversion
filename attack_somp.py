@@ -2,10 +2,9 @@ import argparse
 import datetime
 import json
 import os
+import pandas as pd
 import sys
 import time
-
-import pandas as pd
 
 from args_factory import get_args
 from utils.data import TextDataset

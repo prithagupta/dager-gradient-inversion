@@ -1,12 +1,16 @@
-import os
-
 import numpy as np
+import os
 import torch
+import warnings
+
+from constants import DEFAULT_CANARY_MARKER_PREFIX
 from datasets import load_dataset, load_from_disk
 
 
 class TextDataset:
-    def __init__(self, device, dataset, split, n_inputs, batch_size, cache_dir=None, use_hf_split=False):
+    def __init__(self, device, dataset, split, n_inputs, batch_size, cache_dir=None, use_hf_split=False,
+                 preprocess_numbered_markers=False, preprocess_boundary_markers=False,
+                 preprocess_unique_canary_markers=False, canary_marker_prefix=DEFAULT_CANARY_MARKER_PREFIX):
         if cache_dir is None:
             cache_dir = "/lustre/guptap69/.cache/huggingface/gia_exp_cache"
 
@@ -20,6 +24,19 @@ class TextDataset:
             'swj0419/WikiMIA': 'input',
         }
         seq_key = seq_keys[dataset]
+
+        def _make_unique_canary_anchor(example_idx: int) -> str:
+            return f"{canary_marker_prefix}{example_idx:06d}"
+
+        def _maybe_add_markers(text_value: str, slot_idx: int, example_idx: int):
+            if preprocess_unique_canary_markers:
+                anchor = _make_unique_canary_anchor(example_idx)
+                return f"{anchor} {text_value} {anchor}"
+            if preprocess_numbered_markers:
+                return f"{slot_idx + 1}.#start@ {text_value} {slot_idx + 1}.end@"
+            if preprocess_boundary_markers:
+                return f"#start@ {text_value} #end@"
+            return text_value
 
         def _safe_name(name: str) -> str:
             return name.replace("/", "__")
@@ -123,29 +140,42 @@ class TextDataset:
         #    import pdb; pdb.set_trace()
         #    assert idxs[0] == 2310 # with seed 101
 
-        n_samples = n_inputs * batch_size
+        effective_n_inputs = n_inputs
+        n_samples = effective_n_inputs * batch_size
 
-        def _raise_insufficient_samples(selected_split_name: str):
-            max_inputs = len(full) // batch_size
-            raise ValueError(
-                f"Requested n_inputs={n_inputs} with batch_size={batch_size} "
-                f"({n_samples} total samples), but split '{selected_split_name}' for dataset '{dataset}' "
-                f"contains only {len(full)} samples. "
-                f"Use a smaller --n_inputs (max {max_inputs} for this batch size), "
-                f"a smaller --batch_size, or disable --use_hf_split if you want the larger "
-                f"train-derived DAGER validation protocol for GLUE datasets."
-            )
+        def _cap_n_inputs_with_warning(selected_split_name: str, available_samples: int, extra_guidance: str = ""):
+            nonlocal effective_n_inputs, n_samples
+            max_inputs = available_samples // batch_size
+            if max_inputs < 1:
+                raise ValueError(
+                    f"Requested batch_size={batch_size} for split '{selected_split_name}' of dataset '{dataset}', "
+                    f"but only {available_samples} samples are available, which is not enough for one full batch."
+                )
+            if effective_n_inputs > max_inputs:
+                warnings.warn(
+                    f"Requested n_inputs={effective_n_inputs} with batch_size={batch_size} "
+                    f"({n_samples} total samples), but split '{selected_split_name}' for dataset '{dataset}' "
+                    f"contains only {available_samples} samples. Auto-capping n_inputs to {max_inputs}. "
+                    f"{extra_guidance}".strip(),
+                    RuntimeWarning,
+                )
+                effective_n_inputs = max_inputs
+                n_samples = effective_n_inputs * batch_size
 
         if using_hf_source_split:
             if n_samples > len(full):
-                _raise_insufficient_samples(source_split)
+                _cap_n_inputs_with_warning(
+                    source_split,
+                    len(full),
+                    "Disable --use_hf_split if you want the larger train-derived DAGER validation protocol for GLUE datasets.",
+                )
             idxs = idxs[:n_samples]
         elif split == 'test':
             if n_samples > 1000:
-                raise ValueError(
-                    f"Requested n_inputs={n_inputs} with batch_size={batch_size} "
-                    f"({n_samples} total samples), but DAGER split='test' reserves only 1000 samples. "
-                    f"Use max n_inputs={1000 // batch_size} for this batch size."
+                _cap_n_inputs_with_warning(
+                    "test",
+                    1000,
+                    f"DAGER split='test' reserves only 1000 samples; max n_inputs for this batch size is {1000 // batch_size}.",
                 )
             idxs = idxs[:n_samples]
         elif split == 'val':
@@ -169,10 +199,12 @@ class TextDataset:
         # Slice
         self.seqs = []
         self.labels = []
-        for i in range(n_inputs):
+        for i in range(effective_n_inputs):
             seqs = []
             for j in range(batch_size):
-                seqs.append(full[idxs[i * batch_size + j]][seq_key])
+                example_pos = i * batch_size + j
+                raw_text = full[idxs[example_pos]][seq_key]
+                seqs.append(_maybe_add_markers(raw_text, j, example_pos))
             if dataset != 'glnmario/ECHR':
                 labels = torch.tensor([full[idxs[i * batch_size: (i + 1) * batch_size]]['label']], device=device)
             else:
@@ -180,8 +212,8 @@ class TextDataset:
                                       device=device)
             self.seqs.append(seqs)
             self.labels.append(labels)
-        assert len(self.seqs) == n_inputs
-        assert len(self.labels) == n_inputs
+        assert len(self.seqs) == effective_n_inputs
+        assert len(self.labels) == effective_n_inputs
 
     def __getitem__(self, idx):
         return (self.seqs[idx], self.labels[idx])

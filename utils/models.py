@@ -1,16 +1,14 @@
 import logging
 import os
-from types import SimpleNamespace
-
-import numpy as np
 import peft
 import torch
 import torch.nn.functional as F
 from torch import nn
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForCausalLM
+from types import SimpleNamespace
 
 from constants import config
-from utils.functional import get_layer_decomp
+from utils.functional import get_layer_decomp, stable_matrix_rank
 from utils.partial_models import add_partial_forward_gpt2, add_partial_forward_bert, add_partial_forward_llama
 
 logger = logging.getLogger(__name__)
@@ -503,10 +501,27 @@ class ModelWrapper():
         else:
             self.model.train()
         dev = y_labels.device
+        requested_grad_device = torch.device(self.args.device_grad) if self.args.precision != '8bit' else dev
+        grad_device = requested_grad_device
+        if (
+                _is_llama_path(self.args.model_path)
+                and self.args.precision == 'half'
+                and not str(requested_grad_device).startswith('cuda')
+                and str(dev).startswith('cuda')
+        ):
+            grad_device = dev
+            logger.info(
+                'compute_grads: using %s instead of requested device_grad=%s for half-precision Llama '
+                'to avoid extremely slow CPU gradient computation.',
+                grad_device,
+                requested_grad_device,
+            )
         if self.args.precision != '8bit':
-            batch = batch.to(self.args.device_grad)
-            y_labels = y_labels.to(self.args.device_grad)
-            self.model.to(self.args.device_grad)
+            batch = batch.to(grad_device)
+            y_labels = y_labels.to(grad_device)
+            self.model.to(grad_device)
+            if self._force_llama_non_cuda_float32(grad_device):
+                self._prepare_llama_non_cuda_float32()
         if self.args.task == 'next_token_pred':
             labels = torch.where(batch['attention_mask'].bool(), batch['input_ids'], -100)
         elif self.args.task == 'seq_class':
@@ -518,9 +533,6 @@ class ModelWrapper():
                 outputs = self.model(**batch)
                 logits = outputs.logits.float()
                 loss = torch.nn.functional.nll_loss(torch.nn.functional.log_softmax(logits, dim=-1), labels.squeeze(0))
-                for name, param in self.model.named_parameters():
-                    param.requires_grad = True
-                    logger.info("%s %s %s", name, param.shape, param.requires_grad)
                 grad = torch.autograd.grad(loss, self.trainable_parameters(), create_graph=create_graph,
                                            allow_unused=True)
 
@@ -575,13 +587,25 @@ class ModelWrapper():
         else:
             self.model.train()
 
+        original_device = x_embeds.device
+        requested_grad_device = torch.device(self.args.device_grad) if self.args.precision != '8bit' else original_device
+        grad_device = requested_grad_device
+        if create_graph and requested_grad_device != original_device:
+            grad_device = original_device
+            logger.info(
+                'compute_grads_from_embeds: create_graph=True requires a single autograd device; '
+                'using %s instead of requested device_grad=%s.',
+                original_device,
+                requested_grad_device,
+            )
         dev = y_labels.device
-        y_labels = y_labels.to(x_embeds.device)
+        x_embeds = x_embeds.to(grad_device)
+        y_labels = y_labels.to(grad_device)
         if attention_mask is not None:
-            attention_mask = attention_mask.to(x_embeds.device)
+            attention_mask = attention_mask.to(grad_device)
 
-        self.model.to(x_embeds.device)
-        if self._force_llama_non_cuda_float32(x_embeds.device):
+        self.model.to(grad_device)
+        if self._force_llama_non_cuda_float32(grad_device):
             self._prepare_llama_non_cuda_float32()
             x_embeds = x_embeds.float()
 
@@ -648,17 +672,14 @@ class ModelWrapper():
                 grad = true_grads[i]
                 if _is_gpt2_path(self.args.model_path):
                     grad = grad.T
-                grad_np = grad.detach().float().cpu().numpy()
-                if self.args.precision == 'half':
-                    B = np.linalg.matrix_rank(grad_np, tol=tol)
-                else:
-                    B = np.linalg.matrix_rank(grad_np, tol=tol)
+                B = stable_matrix_rank(grad, tol=tol)
                 if max_rank < B:
                     max_rank = B
             B = max_rank
         if self.args.algo == 'fedavg':
             B += 60
         B = min(B, self.emb_size - self.args.rank_cutoff)
+        B = max(int(B), 1)
 
         R_Qs = []
 
@@ -749,6 +770,8 @@ class ModelWrapper():
         return self.start_token is not None
 
     def is_lower(self):
+        if _is_llama_path(self.args.model_path):
+            return False
         if self._force_llama_non_cuda_float32():
             return False
         return self.args.precision in ['8bit', 'half']

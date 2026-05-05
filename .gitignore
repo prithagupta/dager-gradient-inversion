@@ -13,6 +13,9 @@ models/
 
 # Logs
 *.log
+logs_old/
+aresults/
 logs/
 results/
 scripts/*.py
+analyze_results/*

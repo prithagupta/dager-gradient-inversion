@@ -1,6 +1,4 @@
 import os
-
-import numpy as np
 import peft
 import torch
 from huggingface_hub import hf_hub_download
@@ -11,7 +9,7 @@ from transformers import GPT2LMHeadModel
 from transformers import MT5Tokenizer
 
 from constants import config
-from utils.functional import get_layer_decomp
+from utils.functional import get_layer_decomp, stable_matrix_rank
 from utils.partial_models import add_partial_forward_gpt2, add_partial_forward_bert, add_partial_forward_llama
 
 
@@ -390,10 +388,7 @@ class ModelWrapper():
                 if self.args.model_path in ['gpt2', 'openai-community/gpt2-large', 'gpt2-large', 'ai-forever/mGPT',
                                             'THUMT/mGPT']:
                     grad = grad.T
-                if self.args.precision == 'half':
-                    rank = np.linalg.matrix_rank(grad.float().cpu(), tol=tol)
-                else:
-                    rank = np.linalg.matrix_rank(grad.cpu(), tol=tol)
+                rank = stable_matrix_rank(grad, tol=tol)
                 if max_rank < rank:
                     max_rank = rank
             B = max_rank
@@ -404,6 +399,7 @@ class ModelWrapper():
         if hasattr(self, 'emb_size'):
             B = min(B, self.emb_size - self.args.rank_cutoff)
             B = min(B, self.model.config.hidden_size - self.args.rank_cutoff)
+        B = max(int(B), 1)
         R_Qs_original = []
         for i in range(self.args.n_layers):
             grad_Q = true_grads[self.layer_ids[i]]

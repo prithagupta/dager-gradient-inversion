@@ -2,12 +2,11 @@
 #SBATCH --job-name=dager
 #SBATCH -N 1
 #SBATCH --account=haberi2x_0000
-#SBATCH --partition=fat_gpu
+#SBATCH --partition=gpu
 #SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=4
+#SBATCH --cpus-per-gpu=6
 #SBATCH --mem=256G
-#SBATCH --time=20:00:00
-#SBATCH --output=/lustre/%u/logs/%x_%j.out
+#SBATCH --time=48:00:00
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err
 #SBATCH --open-mode=append
@@ -40,7 +39,7 @@ conda activate dager-cuda
 set -u
 
 # HuggingFace cache: keep everything under $HF_HOME/gia_exp_cache
-export HF_HOME="${HF_HOME:-${DATA_FOLDER}/.cache/huggingface}"
+export HF_HOME="${HF_HOME:-${DATA_FOLDER:-/lustre/$USER}/.cache/huggingface}"
 export CACHE_DIR="${HF_HOME}/gia_exp_cache"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-${CACHE_DIR}/.hf_hub}"
 export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HUB_CACHE}"
@@ -55,7 +54,7 @@ export TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-1}"
 export HF_EVALUATE_OFFLINE="${HF_EVALUATE_OFFLINE:-1}"
 export HF_UPDATE_DOWNLOAD_COUNTS="${HF_UPDATE_DOWNLOAD_COUNTS:-0}"
 export PYTHONUNBUFFERED=1
-
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:128
 # Threads
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_GPU:-4}"
 export MKL_NUM_THREADS="${SLURM_CPUS_PER_GPU:-4}"

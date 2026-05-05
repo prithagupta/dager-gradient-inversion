@@ -55,21 +55,52 @@ def get_closest_tokens(inputs_embeds, unused_tokens, embeddings_weight, metric='
 
 
 def get_layer_decomp(grad, B=None, tol=None, upcast=False):
-    grad = grad.detach().cpu().numpy()
+    grad = torch.nan_to_num(
+        grad.detach().cpu(),
+        nan=0.0,
+        posinf=1e5,
+        neginf=-1e5,
+    )
+    work_dtype = torch.float32 if upcast else torch.float64
+    grad = grad.to(work_dtype)
+    if B is None:
+        B = stable_matrix_rank(grad, tol=tol)
+    B = min(max(int(B), 1), min(grad.shape))
+
+    try:
+        _, _, vh = torch.linalg.svd(grad, full_matrices=False)
+        R = vh[:B]
+    except RuntimeError:
+        _, _, v = torch.svd_lowrank(grad.float(), q=B, niter=10)
+        R = v.T
+    R = _orthonormalize_rows(R.float())
     if upcast:
-        grad = grad.astype(np.float32)
-    if B == None:
-        if upcast:
-            B = np.linalg.matrix_rank(grad.astype(np.float32), tol=tol)
-            grad = grad.float()
-        else:
-            B = np.linalg.matrix_rank(grad, tol=tol)
-    U, S, Vh = torch.svd_lowrank(torch.tensor(grad), q=B, niter=10)
-    if upcast:
-        R = Vh.T.half()
-    else:
-        R = Vh.T
-    return B, torch.Tensor(R).detach()
+        R = R.half()
+    return B, R.detach()
+
+
+def stable_matrix_rank(grad, tol=None):
+    grad = torch.nan_to_num(
+        grad.detach().cpu(),
+        nan=0.0,
+        posinf=1e5,
+        neginf=-1e5,
+    ).to(torch.float64)
+    if grad.ndim != 2 or min(grad.shape) == 0:
+        return 0
+    singular_values = torch.linalg.svdvals(grad)
+    if singular_values.numel() == 0:
+        return 0
+    if tol is None:
+        tol = max(grad.shape) * torch.finfo(grad.dtype).eps * singular_values.max().item()
+    return int((singular_values > float(tol)).sum().item())
+
+
+def _orthonormalize_rows(rows):
+    if rows.numel() == 0:
+        return rows
+    q, _ = torch.linalg.qr(rows.T.contiguous(), mode="reduced")
+    return q.T.contiguous()
 
 
 def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weight, c=0.1):
@@ -87,13 +118,18 @@ def get_perplexity(gpt2, x_embeds, bert_embeddings_weight, gpt2_embeddings_weigh
 
 
 def check_if_in_span(R_K_norm, v, norm='l2'):
-    v /= v.pow(2).sum(-1, keepdim=True).sqrt()
-    proj = torch.einsum('ik,ij,...j->...k', R_K_norm, R_K_norm, v)
-    out_of_span = proj - v
+    work_dtype = torch.float32 if v.dtype in (torch.float16, torch.bfloat16) else v.dtype
+    basis = R_K_norm.to(device=v.device, dtype=work_dtype)
+    v_norm = F.normalize(v.to(work_dtype), dim=-1, eps=1e-12)
+    basis = F.normalize(basis, dim=-1, eps=1e-12)
+    proj = torch.matmul(torch.matmul(v_norm, basis.T), basis)
+    out_of_span = proj - v_norm
     if norm == 'l2':
         size = out_of_span.pow(2).sum(-1).sqrt()
     elif norm == 'l1':
         size = out_of_span.abs().mean(-1)
+    else:
+        raise ValueError(f"Unknown span distance norm: {norm}")
 
     return size
 
@@ -153,7 +189,8 @@ def get_span_dists(args, model_wrapper, R_Qs, embeds, p=0, stage='token'):
             dists.append(check_if_in_span(R_Qs[i + 1], embs[i], args.dist_norm))
 
     print('dists', torch.cat(dists, axis=1).shape)
-    d = torch.log(torch.cat(dists, axis=1)) - torch.log(1 - torch.cat(dists, axis=1))
+    span_dists = torch.cat(dists, axis=1).clamp(min=1e-12, max=1.0 - 1e-6)
+    d = torch.log(span_dists) - torch.log1p(-span_dists)
     d = d.mean(axis=1).cpu().detach()
 
     return d

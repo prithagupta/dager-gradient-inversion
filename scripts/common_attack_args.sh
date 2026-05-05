@@ -80,3 +80,81 @@ set_default_rng_seed_arg() {
 
   ATTACK_EXTRA_ARGS+=( --rng_seed "$seed" )
 }
+
+set_default_arg() {
+  local flag="$1"
+  local value="$2"
+  shift 2 || true
+
+  ATTACK_EXTRA_ARGS=( "$@" )
+
+  if has_cli_arg "$flag" "${ATTACK_EXTRA_ARGS[@]}"; then
+    return
+  fi
+
+  ATTACK_EXTRA_ARGS+=( "$flag" "$value" )
+}
+
+set_default_flag_arg() {
+  local flag="$1"
+  shift || true
+
+  ATTACK_EXTRA_ARGS=( "$@" )
+
+  if has_cli_arg "$flag" "${ATTACK_EXTRA_ARGS[@]}"; then
+    return
+  fi
+
+  ATTACK_EXTRA_ARGS+=( "$flag" )
+}
+
+uses_hf_validation_split_dataset() {
+  case "$1" in
+    sst2|cola) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+set_default_hf_split_arg() {
+  local dataset="$1"
+  shift || true
+
+  ATTACK_EXTRA_ARGS=( "$@" )
+
+  if ! uses_hf_validation_split_dataset "$dataset"; then
+    return
+  fi
+
+  if has_cli_arg "--use_hf_split" "${ATTACK_EXTRA_ARGS[@]}"; then
+    return
+  fi
+
+  ATTACK_EXTRA_ARGS+=( --use_hf_split )
+}
+
+set_default_idager_hybrid_args() {
+  local lm_mode="$1"
+  shift || true
+
+  ATTACK_EXTRA_ARGS=( "$@" )
+
+  set_default_arg "--n_steps" "300" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--print_every" "50" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--hybrid_init_mode" "dager" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--hybrid_projection_mode" "candidate_periodic" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--hybrid_project_every" "10" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--iterative_rounds" "3" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--iterative_steps_per_round" "0" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--iterative_accept_margin" "1e-6" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_arg "--iterative_stall_patience" "1" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_flag_arg "--iterative_dager_lamp" "${ATTACK_EXTRA_ARGS[@]}"
+  set_default_flag_arg "--iterative_refresh_candidates" "${ATTACK_EXTRA_ARGS[@]}"
+
+  if [ "$lm_mode" = "gpt2" ]; then
+    set_default_arg "--hybrid_use_lm_prior" "true" "${ATTACK_EXTRA_ARGS[@]}"
+    set_default_arg "--coeff_perplexity" "0.2" "${ATTACK_EXTRA_ARGS[@]}"
+  else
+    set_default_arg "--hybrid_use_lm_prior" "false" "${ATTACK_EXTRA_ARGS[@]}"
+    set_default_arg "--coeff_perplexity" "0.0" "${ATTACK_EXTRA_ARGS[@]}"
+  fi
+}

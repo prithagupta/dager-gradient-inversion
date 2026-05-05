@@ -6,14 +6,16 @@ rsync -avz --progress \
   --exclude "*.pyc" \
   --exclude ".DS_Store" \
   --exclude "results/" \
+  --exclude "aresults/" \
   --exclude "logs/" \
+  --exclude "analyze_results/" \
   --exclude ".idea/" \
   --exclude "copy_to_cluster.sh" \
   ~/projects/dager-gradient-inversion/ \
   rub1:/lustre/guptap69/projects/dager-gradient-inversion/
 
-#rsync -avz --progress rub1:/lustre/guptap69/projects/dager-gradient-inversion/results/ ~/projects/dager-gradient-inversion/results/
-# rsync -avz --progress rub1:/lustre/guptap69/projects/dager-gradient-inversion/logs/ ~/projects/dager-gradient-inversion/logs/
-
-#rsync -avz --progress ~/projects/dager-gradient-inversion/results rub1:/lustre/guptap69/projects/dager-gradient-inversion/results/
+rsync -avz --progress --exclude "*.lock" rub1:/lustre/guptap69/projects/dager-gradient-inversion/results/ ~/projects/dager-gradient-inversion/results/
+rsync -avz --progress --exclude "*.lock" rub1:/lustre/guptap69/projects/dager-gradient-inversion/logs/ ~/projects/dager-gradient-inversion/logs/
+rsync -avz --progress rub1:/lustre/guptap69/logs/ ~/projects/logs/
+#rsync -avz --progress ~/projects/dager-gradient-inversion/aresults rub1:/lustre/guptap69/projects/dager-gradient-inversion/aresults/
 #rsync -avz --progress ~/projects/dager-gradient-inversion/logs rub1:/lustre/guptap69/projects/dager-gradient-inversion/logs/

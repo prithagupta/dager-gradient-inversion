@@ -1,13 +1,12 @@
 import importlib
 import inspect
-import types
-from typing import Optional, Tuple, List, Union
-
 import torch
+import types
 from transformers import GPT2Model, BertModel, LlamaModel
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.modeling_attn_mask_utils import _prepare_4d_attention_mask_for_sdpa, \
     _prepare_4d_causal_attention_mask_for_sdpa
+from typing import Optional, Tuple, List, Union
 
 
 def add_partial_forward_gpt2(model: GPT2Model) -> None:

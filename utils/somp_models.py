@@ -1,8 +1,6 @@
 import logging
 
-import numpy as np
-
-from utils.functional import get_layer_decomp
+from utils.functional import get_layer_decomp, stable_matrix_rank
 from utils.models import ModelWrapper
 from utils.models import _is_gpt2_path
 
@@ -59,8 +57,7 @@ class SOMPModelWrapper(ModelWrapper):
                 if grad is None:
                     continue
                 grad = self._query_grad(grad)
-                grad_np = grad.detach().float().cpu().numpy()
-                rank = np.linalg.matrix_rank(grad_np, tol=tol)
+                rank = stable_matrix_rank(grad, tol=tol)
                 max_rank = max(max_rank, rank)
             B = max_rank
 

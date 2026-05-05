@@ -13,8 +13,9 @@
 # limitations under the License.
 """Accuracy metric."""
 
-import datasets
 from sklearn.metrics import accuracy_score
+
+import datasets
 
 _DESCRIPTION = """
 Accuracy is the proportion of correct predictions among the total number of cases processed. It can be computed with:
@@ -40,20 +41,20 @@ Examples:
 
     Example 1-A simple example
         >>> accuracy_metric = datasets.load_metric("accuracy")
-        >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0])
-        >>> results
+        >>> aresults = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0])
+        >>> aresults
         {'accuracy': 0.5}
 
     Example 2-The same as Example 1, except with `normalize` set to `False`.
         >>> accuracy_metric = datasets.load_metric("accuracy")
-        >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], normalize=False)
-        >>> results
+        >>> aresults = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], normalize=False)
+        >>> aresults
         {'accuracy': 3.0}
 
     Example 3-The same as Example 1, except with `sample_weight` set.
         >>> accuracy_metric = datasets.load_metric("accuracy")
-        >>> results = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], sample_weight=[0.5, 2, 0.7, 0.5, 9, 0.4])
-        >>> results
+        >>> aresults = accuracy_metric.compute(references=[0, 1, 2, 0, 1, 2], predictions=[0, 1, 1, 2, 1, 0], sample_weight=[0.5, 2, 0.7, 0.5, 9, 0.4])
+        >>> aresults
         {'accuracy': 0.8778625954198473}
 """
 

@@ -1,30 +1,29 @@
 import datetime
-import json
+import numpy as np
 import os
 import sys
 import time
-
-import numpy as np
-import pandas as pd
 import torch
 from scipy.optimize import linear_sum_assignment
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric
-from utils.experiment import setup_experiment_logging
+from utils.experiment import (args_to_dict, cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric,
+                              load_partial_attack_state, write_attack_artifacts, setup_experiment_logging,
+                              release_all_log_locks)
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
 from utils.functional import (fallback_gpt2_l1_candidates, fallback_rope_l1_candidates, get_top_B_in_span,
-                              check_if_in_span, log_distances,
+                              check_if_in_span, log_candidate_recall_debug, log_distances,
                               remove_padding, filter_outliers, get_span_dists,
                               evaluate_prediction, print_single_metric_dict, summarize_metrics, _rouge_triplet,
-                              print_summary_table)
+                              print_summary_table, _safe_aggregated_metrics, maybe_add_canary_audit_metrics,
+                              extract_canary_metric_means, extract_canary_metric_summary)
 from utils.models import ModelWrapper
 
 # old seed: 100
 args = get_args()
-logger, log_path, job_hash = setup_experiment_logging(args, "dager_attack")
+logger, log_path, job_hash, log_claim_acquired = setup_experiment_logging(args, "dager_attack")
 logger.info(f"Arguments {args}")
 logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
 
@@ -132,7 +131,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
         total_true_token_count, total_true_token_count2 = 0, 0
         for i in range(orig_batch['input_ids'].shape[1]):
             total_true_token_count2 += args.batch_size - (
-                    orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
+                        orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
             uniques = torch.unique(orig_batch['input_ids'][:, i])
             total_true_token_count += uniques.numel()
             if model_wrapper.pad_token in uniques.tolist():
@@ -154,7 +153,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                 reference += [remove_padding(tokenizer, orig_batch['input_ids'][i], left=(args.pad == 'left'))]
             return ['' for _ in reference], reference
         if len(res_ids[0]) < 500:
-            logger.info("L1 candidate counts: %s", [len(ids) for ids in res_ids])
+            logger.info(f"L1 candidate counts: {[len(ids) for ids in res_ids]}")
 
         rec_l1, rec_l1_maxB, rec_l2 = [], [], []
 
@@ -217,11 +216,9 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
             l2_span_thresh = model_wrapper.effective_l2_span_thresh(args.l2_span_thresh)
             boolsq2 = sizesq2 < l2_span_thresh
             if model_wrapper.has_rope():
-                special_tokens = torch.tensor(
-                    [model_wrapper.pad_token, model_wrapper.start_token],
-                    device=orig_sentence.device,
-                    dtype=orig_sentence.dtype,
-                )
+                special_tokens = torch.tensor([model_wrapper.pad_token, model_wrapper.start_token],
+                                              device=orig_sentence.device,
+                                              dtype=orig_sentence.dtype, )
                 boolsq2 = torch.logical_or(boolsq2, torch.isin(orig_sentence, special_tokens))
             logger.info(sizesq2)
 
@@ -234,6 +231,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
 
         logger.info(
             f'Rec L1: {rec_l1}, Rec L1 MaxB: {rec_l1_maxB}, Rec MaxB Token: {total_correct_maxB_tokens / total_tokens}, Rec Token: {total_correct_tokens / total_tokens}, Rec L2: {rec_l2}')
+        log_candidate_recall_debug(logger, args, model_wrapper, orig_batch, res_ids, rec_l1, rec_l1_maxB, rec_l2)
 
         if args.neptune:
             args.neptune['logs/rec_l1'].log(np.array(rec_l1).sum())
@@ -294,9 +292,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                                      left=(args.pad == 'left'))]
 
     if len(predicted_sentences) == 0:
-        logger.info(
-            "Decoder produced no candidate reconstructions after L1/L2 filtering; returning empty predictions."
-        )
+        logger.info("Decoder produced no candidate reconstructions after L1/L2 filtering; returning empty predictions.")
         return ['' for _ in range(len(reference))], reference
 
     correct_sentences = []
@@ -388,9 +384,14 @@ def print_metrics(args, res, suffix):
 
 
 def main():
-    attack_name = f"dager_{args.loss}"
+    attack_prefix = "dager_canary" if args.preprocess_unique_canary_markers else "dager"
+    attack_name = f"{attack_prefix}_{args.loss}"
     is_complete, results_dir = is_attack_complete(attack_name, job_hash)
     print(f"Hash Value {job_hash} Started")
+    if not log_claim_acquired:
+        logger.info(f"Skipping hash {job_hash} because another job currently owns the primary log file for this run.")
+        print(f"Hash Value {job_hash} Skipped (locked)")
+        return
     if is_complete:
         logger.info(f"Results already exist for this config at {results_dir}; skipping attack.")
         logger.info('Done with all.')
@@ -400,7 +401,11 @@ def main():
     device = torch.device(args.device)
     metric = load_rouge_metric(cache_dir=args.cache_dir, logger=logger)
     dataset = TextDataset(device, args.dataset, args.split, args.n_inputs, args.batch_size, args.cache_dir,
-                          use_hf_split=args.use_hf_split)
+                          use_hf_split=args.use_hf_split,
+                          preprocess_numbered_markers=args.preprocess_numbered_markers,
+                          preprocess_boundary_markers=args.preprocess_boundary_markers,
+                          preprocess_unique_canary_markers=args.preprocess_unique_canary_markers,
+                          canary_marker_prefix=args.canary_marker_prefix)
     model_wrapper = ModelWrapper(args)
     wrapper_tokenizer = model_wrapper.tokenizer
 
@@ -413,8 +418,26 @@ def main():
     input_rows = []
     results_dir = get_results_dir(attack_name, job_hash)
     os.makedirs(results_dir, exist_ok=True)
+    partial_state = load_partial_attack_state(results_dir)
+    if partial_state["completed_inputs"]:
+        sentence_rows = partial_state["sentence_rows"]
+        input_rows = partial_state["input_rows"]
+        predictions = partial_state["predictions"]
+        references = partial_state["references"]
+        final_results = partial_state["final_results"]
+        final_per_input_results = partial_state["final_per_input_results"]
+        input_times = partial_state["input_times"]
+        logger.info(
+            "Resuming from partial aresults in %s | completed_inputs=%s | last_input=%s",
+            results_dir,
+            len(partial_state["completed_inputs"]),
+            max(partial_state["completed_inputs"]),
+        )
     t_start = time.time()
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
+        if i in partial_state["completed_inputs"]:
+            logger.info(f"Skipping already completed input #{i}.")
+            continue
         t_input_start = time.time()
         sample = dataset[i]  # (seqs, labels)
 
@@ -440,9 +463,13 @@ def main():
             logger.info(f"Reference: {ref}")
             logger.info(f"Prediction: {pred}")
             metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
+            metrics = maybe_add_canary_audit_metrics(
+                metrics, pred, ref, wrapper_tokenizer, metric,
+                enabled=args.preprocess_unique_canary_markers,
+                canary_prefix=args.canary_marker_prefix,
+            )
             curr_metrics.append(metrics)
             sentence_rows.append({
-                "run_id": job_hash,
                 "attack": attack_name,
                 "model": args.model_path,
                 "dataset": args.dataset,
@@ -453,11 +480,14 @@ def main():
                 **metrics})
         logger.info('========================')
         summary = summarize_metrics(curr_metrics)
+        input_canary_means = extract_canary_metric_means(summary)
         final_results.extend(curr_metrics)
         logger.info('[Curr input metrics]:')
         logger.info(f"{print_summary_table(summary)}")
         logger.info('[Aggregate metrics]:')
-        aggregated_results = evaluate_prediction(" ".join(prediction), " ".join(reference), wrapper_tokenizer, metric)
+        aggregated_results = _safe_aggregated_metrics(prediction, reference, wrapper_tokenizer, metric,
+                                                      curr_metrics, f"input #{i}")
+        aggregated_results.update(input_canary_means)
 
         final_per_input_results.append(aggregated_results)
         logger.info(f"{print_single_metric_dict(aggregated_results)}")
@@ -468,7 +498,6 @@ def main():
 
         logger.info(f'input #{i} time: {input_time} | total time: {total_time}')
         input_rows.append({
-            "run_id": job_hash,
             "attack": attack_name,
             "model": args.model_path,
             "dataset": args.dataset,
@@ -479,17 +508,31 @@ def main():
             "reconstruction_time_sec": input_time_sec,
             **aggregated_results})
         input_times.append(input_time_sec)
+
+        partial_summary = {
+            "Arguments": args_to_dict(args),
+            "completed_inputs": len(input_rows),
+            "last_completed_input": i,
+        }
+        write_attack_artifacts(results_dir, sentence_rows, input_rows, partial_summary, status="incomplete")
         del sample, prediction, reference, curr_metrics, aggregated_results
         cleanup_memory()
+        input_time_sec = time.time() - t_input_start
+        total_time_sec = time.time() - t_start
+        input_time = str(datetime.timedelta(seconds=input_time_sec)).split(".")[0]
+        total_time = str(datetime.timedelta(seconds=total_time_sec)).split(".")[0]
+        logger.info(f'Saving input #{i} time: {input_time} | total time: {total_time}')
         logger.info("")
         logger.info("")
     logger.info('[Aggregate metrics]:')
     total_time_sec = time.time() - t_start
-    aggregated_results = evaluate_prediction(" ".join(predictions), " ".join(references), wrapper_tokenizer, metric)
+    aggregated_results = _safe_aggregated_metrics(predictions, references, wrapper_tokenizer, metric,
+                                                  final_per_input_results, "full experiment")
+    summary = summarize_metrics(final_results)
+    aggregated_results.update(extract_canary_metric_means(summary))
     aggregated_results[f"experiment_time_mean"] = float(total_time_sec)
     aggregated_results[f"experiment_time_std"] = float(0)
     logger.info(f"Overall {print_single_metric_dict(aggregated_results)}")
-    summary = summarize_metrics(final_results)
     summary[f"reconstruction_time_mean"] = float(np.mean(input_times))
     summary[f"reconstruction_time_std"] = float(np.std(input_times))
     logger.info(f"Per Sentence{print_summary_table(summary)}")
@@ -498,12 +541,12 @@ def main():
     summary_per_input[f"reconstruction_time_std"] = float(np.std(input_times))
     logger.info(f"Per Input Results {print_summary_table(summary_per_input)}")
     summary_results = {"Overall Results": aggregated_results, "Per Sentence Results": summary,
-                       "Per Input Results": summary_per_input, "Arguments": vars(args)}
+                       "Per Input Results": summary_per_input, "Arguments": args_to_dict(args)}
+    canary_summary = extract_canary_metric_summary(summary)
+    if canary_summary:
+        summary_results["Canary Audit Results"] = canary_summary
     logger.info(f"Experiment time {total_time_sec}")
-    pd.DataFrame(sentence_rows).to_csv(os.path.join(results_dir, "sentence_results.csv"), index=False)
-    pd.DataFrame(input_rows).to_csv(os.path.join(results_dir, "input_results.csv"), index=False)
-    with open(os.path.join(results_dir, "run_summary.json"), "w") as f:
-        json.dump(summary_results, f, indent=2)
+    write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_results, status="complete")
     logger.info('Done with all.')
     print(f"Hash Value {job_hash} Done")
     if args.neptune:
@@ -511,4 +554,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        release_all_log_locks()

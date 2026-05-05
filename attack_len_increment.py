@@ -1,6 +1,5 @@
 import sys
 import time
-
 import torch
 
 from attack import reconstruct, args, logger

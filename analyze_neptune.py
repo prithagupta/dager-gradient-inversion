@@ -1,8 +1,7 @@
 import logging
-import os
-
 import neptune.new as neptune
 import numpy as np
+import os
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -137,4 +136,4 @@ for id in ids:
                              elapsed_time]
 
 df = df.set_index('id')
-df.to_csv('results.csv')
+df.to_csv('aresults.csv')
