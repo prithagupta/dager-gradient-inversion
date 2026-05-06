@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic autoregressive prototype evidence",
+  "type": "object",
+  "required": ["inputs"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "default": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["input_index", "positions"],
+        "properties": {
+          "input_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "positions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["position", "candidates"],
+              "properties": {
+                "position": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "candidates": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": ["token"],
+                    "properties": {
+                      "token": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "support": {
+                        "type": "number",
+                        "default": 1.0
+                      },
+                      "source_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "default": []
+                      },
+                      "is_noisy": {
+                        "type": "boolean",
+                        "default": false
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["from", "to"],
+              "properties": {
+                "from": {
+                  "type": "array",
+                  "prefixItems": [
+                    { "type": "integer", "minimum": 0 },
+                    { "type": "string", "minLength": 1 }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "to": {
+                  "type": "array",
+                  "prefixItems": [
+                    { "type": "integer", "minimum": 0 },
+                    { "type": "string", "minLength": 1 }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "weight": {
+                  "type": "number",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

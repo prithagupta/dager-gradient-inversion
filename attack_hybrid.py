@@ -5,6 +5,10 @@ import sys
 import time
 import torch
 import torch.nn.functional as F
+import warnings
+
+warnings.filterwarnings("ignore")
+
 from transformers import AutoModelForCausalLM
 
 from args_factory import get_args

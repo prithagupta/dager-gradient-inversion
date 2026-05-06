@@ -59,7 +59,9 @@ dependencies:
   - safetensors
   - sentencepiece
   - ffmpeg
+  - huggingface_hub
   - pip:
       - rouge-score==0.1.2
       - accelerate==0.34.2
       - peft==0.13.0
+      - -hf-transfer

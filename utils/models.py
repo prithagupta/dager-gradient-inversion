@@ -82,9 +82,6 @@ def _resolve_local_model_path(model_path, cache_dir):
     if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "config.json")):
         return model_path
 
-    if cache_dir is None:
-        return model_path
-
     candidate_dir_names = []
     normalized = _normalize_model_path(model_path)
     for key in {model_path, normalized}:
@@ -92,15 +89,25 @@ def _resolve_local_model_path(model_path, cache_dir):
         candidate_dir_names.append(_sanitize_model_dir_name(key))
         candidate_dir_names.append(key)
 
+    search_roots = []
+    if cache_dir is not None:
+        search_roots.append(cache_dir)
+        search_roots.append(os.path.join(cache_dir, "transformers"))
+        search_roots.append(os.path.join(cache_dir, "models"))
+    if os.environ.get("TRANSFORMERS_CACHE"):
+        search_roots.append(os.environ["TRANSFORMERS_CACHE"])
+
     seen = set()
-    for dir_name in candidate_dir_names:
-        if dir_name in seen:
-            continue
-        seen.add(dir_name)
-        candidate_path = os.path.join(cache_dir, dir_name)
-        if os.path.isdir(candidate_path) and os.path.exists(os.path.join(candidate_path, "config.json")):
-            logger.info("Resolved model path %s -> local cache directory %s", model_path, candidate_path)
-            return candidate_path
+    for root in search_roots:
+        for dir_name in candidate_dir_names:
+            candidate_key = (root, dir_name)
+            if candidate_key in seen:
+                continue
+            seen.add(candidate_key)
+            candidate_path = os.path.join(root, dir_name)
+            if os.path.isdir(candidate_path) and os.path.exists(os.path.join(candidate_path, "config.json")):
+                logger.info("Resolved model path %s -> local cache directory %s", model_path, candidate_path)
+                return candidate_path
 
     return model_path
 

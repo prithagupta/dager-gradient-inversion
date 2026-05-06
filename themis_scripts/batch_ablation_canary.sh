@@ -4,23 +4,25 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$SCRIPT_DIR/common_themis_env.sh"
 source "$REPO_ROOT/scripts/common_attack_args.sh"
-source "$REPO_ROOT/slurm_scripts/common_benchmark_args.sh"
+source "$SCRIPT_DIR/common_benchmark_args.sh"
 cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 
 models=( "gpt2" "gpt2-large" )
-batches=( 1 2 4 8 16 32 64 80)
+batches=( 32 64 80 ) # 1 2 4 8 16
 methods=( "dager" "hybrid" )
 datasets=( "sst2" "cola" )
 
-echo "[CONFIG] script=batch_ablation.sh"
+echo "[CONFIG] script=batch_ablation_canary.sh"
 echo "[CONFIG] datasets=${datasets[*]}"
 echo "[CONFIG] batches=${batches[*]}"
 echo "[CONFIG] models=${models[*]}"
 echo "[CONFIG] methods=${methods[*]}"
 echo "[CONFIG] seed_rule=wrapper/default seed"
+echo "[CONFIG] canary_marker_prefix=${CANARY_MARKER_PREFIX:-qxjkvcanary}"
 echo "[CONFIG] extra_args=$(printf '%q ' "${extra_args[@]}")"
 
 run_wrapper() {
@@ -66,11 +68,16 @@ run_wrapper() {
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   append_safe_eval_dataset_args "$dataset" "$batch" 50 "${run_args[@]}"
   set_default_arg --device_grad cpu "${run_args[@]}"
+  set_default_arg --cache_dir "$DAGER_CACHE_DIR" "${ATTACK_EXTRA_ARGS[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  set_default_flag_arg --preprocess_unique_canary_markers "${run_args[@]}"
+  run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
+  set_default_arg --canary_marker_prefix "${CANARY_MARKER_PREFIX:-qxjkvcanary}" "${run_args[@]}"
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   echo "Resolved attack args: $(printf '%q ' "${run_args[@]}")"
   echo ""
   echo "=================================================="
-  echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch} | rng_seed=wrapper-default"
+  echo "Running ${method} | model=${model} | dataset=${dataset} | batch_size=${batch} | rng_seed=wrapper-default | synthetic_canary=1"
   echo "Command: ${script} ${dataset} ${batch} ${run_args[*]}"
   echo "=================================================="
   bash "$script" "$dataset" "$batch" "${run_args[@]}"

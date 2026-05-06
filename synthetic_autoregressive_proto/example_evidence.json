@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "description": "Tiny example of external evidence accepted by benchmark.py --evidence_file.",
+  "inputs": [
+    {
+      "input_index": 0,
+      "metadata": {
+        "source": "handwritten toy evidence"
+      },
+      "positions": [
+        {
+          "position": 0,
+          "candidates": [
+            { "token": "it", "support": 0.8, "source_ids": [0] },
+            { "token": "a", "support": 0.7, "source_ids": [1] }
+          ]
+        },
+        {
+          "position": 1,
+          "candidates": [
+            { "token": "confirms", "support": 0.8, "source_ids": [0] },
+            { "token": "great", "support": 0.7, "source_ids": [1] }
+          ]
+        },
+        {
+          "position": 2,
+          "candidates": [
+            { "token": "fincher", "support": 0.8, "source_ids": [0] },
+            { "token": "ensemble", "support": 0.7, "source_ids": [1] }
+          ]
+        }
+      ],
+      "edges": [
+        { "from": [0, "it"], "to": [1, "confirms"], "weight": 1.0 },
+        { "from": [1, "confirms"], "to": [2, "fincher"], "weight": 1.0 },
+        { "from": [0, "a"], "to": [1, "great"], "weight": 1.0 },
+        { "from": [1, "great"], "to": [2, "ensemble"], "weight": 1.0 }
+      ]
+    }
+  ]
+}

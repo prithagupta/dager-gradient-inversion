@@ -14,8 +14,15 @@ models/
 # Logs
 *.log
 logs_old/
-aresults/
-logs/
-results/
+aresults/*
+logs/*
+results/*
 scripts/*.py
 analyze_results/*
+.idea/*
+copy_to_cluster.sh
+copy_to_themis.sh
+download_hfs.sh
+synthetic_autoregressive_proto/*.idea/
+synthetic_autoregressive_proto/*
+attack_synthetic_autoregressive_proto.py

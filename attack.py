@@ -4,7 +4,10 @@ import os
 import sys
 import time
 import torch
+import warnings
 from scipy.optimize import linear_sum_assignment
+
+warnings.filterwarnings("ignore")
 
 from args_factory import get_args
 from utils.data import TextDataset
@@ -427,12 +430,8 @@ def main():
         final_results = partial_state["final_results"]
         final_per_input_results = partial_state["final_per_input_results"]
         input_times = partial_state["input_times"]
-        logger.info(
-            "Resuming from partial aresults in %s | completed_inputs=%s | last_input=%s",
-            results_dir,
-            len(partial_state["completed_inputs"]),
-            max(partial_state["completed_inputs"]),
-        )
+        logger.info("Resuming from partial results in %s | completed_inputs=%s | last_input=%s", results_dir,
+                    len(partial_state["completed_inputs"]), max(partial_state["completed_inputs"]),)
     t_start = time.time()
     for i in range(args.start_input, min(args.n_inputs, args.end_input)):
         if i in partial_state["completed_inputs"]:

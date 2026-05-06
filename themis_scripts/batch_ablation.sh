@@ -4,14 +4,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$SCRIPT_DIR/common_themis_env.sh"
 source "$REPO_ROOT/scripts/common_attack_args.sh"
-source "$REPO_ROOT/slurm_scripts/common_benchmark_args.sh"
+source "$SCRIPT_DIR/common_benchmark_args.sh"
 cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 
 models=( "gpt2" "gpt2-large" )
-batches=( 1 2 4 8 16 32 64 80)
+batches=( 32 64 80 ) #  1 2 4 8 16
 methods=( "dager" "hybrid" )
 datasets=( "sst2" "cola" )
 
@@ -66,6 +67,7 @@ run_wrapper() {
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   append_safe_eval_dataset_args "$dataset" "$batch" 50 "${run_args[@]}"
   set_default_arg --device_grad cpu "${run_args[@]}"
+  set_default_arg --cache_dir "$DAGER_CACHE_DIR" "${ATTACK_EXTRA_ARGS[@]}"
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   echo "Resolved attack args: $(printf '%q ' "${run_args[@]}")"
   echo ""

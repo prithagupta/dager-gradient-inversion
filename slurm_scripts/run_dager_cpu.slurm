@@ -4,7 +4,7 @@
 #SBATCH --account=haberi2x_0000
 #SBATCH --partition=cpu
 #SBATCH --gpus=0
-#SBATCH --mem=256G
+#SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err

@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import random
+import signal
 import torch
 import atexit
 
@@ -16,6 +17,8 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger(__name__)
 _LOG_LOCK_HANDLES = []
 _LOCK_PATHS_BY_HANDLE = {}
+_PREVIOUS_SIGNAL_HANDLERS = {}
+_SIGNAL_CLEANUP_INSTALLED = False
 
 
 def _repo_root():
@@ -133,8 +136,39 @@ def release_all_log_locks():
 atexit.register(release_all_log_locks)
 
 
+def _cleanup_log_locks_on_signal(signum, frame):
+    release_all_log_locks()
+    previous = _PREVIOUS_SIGNAL_HANDLERS.get(signum)
+    if callable(previous):
+        signal.signal(signum, previous)
+        return previous(signum, frame)
+    if previous == signal.SIG_IGN:
+        return
+    if signum == signal.SIGINT:
+        raise KeyboardInterrupt
+    raise SystemExit(128 + signum)
+
+
+def install_log_lock_cleanup_handlers():
+    global _SIGNAL_CLEANUP_INSTALLED
+    if _SIGNAL_CLEANUP_INSTALLED:
+        return
+
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        try:
+            _PREVIOUS_SIGNAL_HANDLERS[signum] = signal.getsignal(signum)
+            signal.signal(signum, _cleanup_log_locks_on_signal)
+        except Exception:
+            continue
+
+    _SIGNAL_CLEANUP_INSTALLED = True
+
+
+install_log_lock_cleanup_handlers()
+
+
 def get_results_dir(attack_name, job_hash):
-    return os.path.join(_repo_root(), "aresults", attack_name, f"results_{job_hash}")
+    return os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
 
 
 def is_attack_complete(attack_name, job_hash, required_files=None):

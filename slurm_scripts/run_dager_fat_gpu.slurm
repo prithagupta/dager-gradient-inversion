@@ -5,7 +5,7 @@
 #SBATCH --partition=fat_gpu
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=6
-#SBATCH --mem=256G
+#SBATCH --mem=128G
 #SBATCH --time=48:00:00
 #SBATCH --output=/lustre/%u/logs/%x_%j.out
 #SBATCH --error=/lustre/%u/logs/%x_%j.err

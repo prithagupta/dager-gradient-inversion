@@ -1,0 +1,9 @@
+attack,model,dataset,input_index,sentence_index,reference,prediction,rouge1_fm,rouge2_fm,rougeL_fm,exact_match,token_acc,padded_token_acc,pred_len,ref_len
+synthetic_autoregressive_proto,gpt2,sst2,0,0,it confirms fincher 's status as a film maker who artfully bends technical know-how to the service of psychological insight . ,it confirms fincher,0.25,0.18181818181818182,0.25,0,0.14814814814814814,0.14814814814814814,4,27
+synthetic_autoregressive_proto,gpt2,sst2,0,1,too much of it feels unfocused and underdeveloped . ,it confirms fincher,0.18181818181818182,0.0,0.18181818181818182,0,0.0,0.0,4,11
+synthetic_autoregressive_proto,gpt2,sst2,0,2,a great ensemble cast ca n't lift this heartfelt enterprise out of the familiar . ,a great ensemble,0.33333333333333337,0.25,0.33333333333333337,0,0.17647058823529413,0.17647058823529413,3,17
+synthetic_autoregressive_proto,gpt2,sst2,0,3,"prurient playthings aside , there 's little to love about this english trifle . ",it confirms fincher,0.0,0.0,0.0,0,0.0,0.0,4,20
+synthetic_autoregressive_proto,gpt2,sst2,0,4,"it moves quickly , adroitly , and without fuss ; it does n't give you time to reflect on the inanity -- and the cold war datedness -- of its premise . ",it confirms fincher,0.06666666666666667,0.0,0.06666666666666667,0,0.02631578947368421,0.02631578947368421,4,38
+synthetic_autoregressive_proto,gpt2,sst2,0,5,"it proves quite compelling as an intense , brooding character study . ",it confirms fincher,0.15384615384615383,0.0,0.15384615384615383,0,0.07142857142857142,0.07142857142857142,4,14
+synthetic_autoregressive_proto,gpt2,sst2,0,6,bogdanovich tantalizes by offering a peep show into the lives of the era 's creme de la celluloid . ,it confirms fincher,0.0,0.0,0.0,0,0.0,0.0,4,28
+synthetic_autoregressive_proto,gpt2,sst2,0,7,looks and feels like a project better suited for the small screen . ,it confirms fincher,0.0,0.0,0.0,0,0.0,0.0,4,15

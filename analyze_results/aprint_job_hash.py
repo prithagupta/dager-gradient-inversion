@@ -16,7 +16,8 @@ from args_factory import get_args
 from utils.experiment import args_to_dict, get_hash_value_for_args, is_attack_complete
 
 
-RESULTS_ROOT = REPO_ROOT / "aresults"
+OLD_RESULTS_ROOT = REPO_ROOT / "aresults"
+RESULTS_ROOT = REPO_ROOT / "results"
 LOGS_ROOT = REPO_ROOT / "logs"
 FINAL_RESULTS_DIR = REPO_ROOT / "analyze_results" / "final_results"
 SLURM_SCRIPTS_DIR = REPO_ROOT / "slurm_scripts"
@@ -69,7 +70,7 @@ def dataset_size(dataset):
     }.get(dataset, 100000000)
 
 
-def safe_n_inputs(dataset, batch, requested=100):
+def safe_n_inputs(dataset, batch, requested=50):
     return min(requested, max(1, dataset_size(dataset) // batch))
 
 
@@ -110,7 +111,7 @@ def add_hybrid_defaults(args, lm_mode):
 
 
 def base_eval_args(dataset, batch, seed=None):
-    args = ["--rank_tol", default_rank_tol(batch), "--n_inputs", str(safe_n_inputs(dataset, batch, 100))]
+    args = ["--rank_tol", default_rank_tol(batch)]
     if seed is not None:
         args.extend(["--rng_seed", str(seed)])
     max_ids = default_max_ids(batch)
@@ -126,7 +127,7 @@ def build_gpt_cli_args(method, model, dataset, batch, seed=None, canary=False, v
     args = [
         "--dataset", dataset,
         "--split", "val",
-        "--n_inputs", str(safe_n_inputs(dataset, batch, 100)),
+        "--n_inputs", "50",
         "--batch_size", str(batch),
         "--l1_filter", "all",
         "--l2_filter", "non-overlap",
@@ -155,7 +156,7 @@ def build_llama_cli_args(method, dataset, batch, seed, canary=False):
     args = [
         "--dataset", dataset,
         "--split", "val",
-        "--n_inputs", str(safe_n_inputs(dataset, batch, 100)),
+        "--n_inputs", "50",
         "--batch_size", str(batch),
         "--l1_filter", "all",
         "--l2_filter", "non-overlap",
@@ -638,7 +639,7 @@ def main(argv=None):
         status_command(argv[1:])
     elif command == "inventory":
         inventory_command(argv[1:])
-    elif command == "repair-aresults":
+    elif command == "repair-results":
         repair_results_command(argv[1:])
     else:
         # Backwards-compatible simple mode:

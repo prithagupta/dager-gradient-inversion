@@ -9,12 +9,12 @@ SLURM_RUNNERS=(
 )
 
 run_exports=(
-  #"RUN_SCRIPT=main_benchmark.sh"
-  #"RUN_SCRIPT=main_benchmark_canary.sh"
+  "RUN_SCRIPT=main_benchmark.sh"
+  "RUN_SCRIPT=main_benchmark_canary.sh"
   "RUN_SCRIPT=batch_ablation.sh"
   "RUN_SCRIPT=batch_ablation_canary.sh"
-  "RUN_SCRIPT=main_benchmark_llama.sh"
-  "RUN_SCRIPT=main_benchmark_llama.sh,USE_SYNTHETIC_CANARY=1"
+  #"RUN_SCRIPT=main_benchmark_llama.sh"
+  #"RUN_SCRIPT=main_benchmark_llama.sh,USE_SYNTHETIC_CANARY=1"
 )
 
 for slurm_runner in "${SLURM_RUNNERS[@]}"; do
