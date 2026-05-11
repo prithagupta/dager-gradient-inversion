@@ -17,11 +17,12 @@ def _sequence_evidence_score(seq: DecodedSequence, evidence_support: dict[tuple[
     return support
 
 
-def _sequence_score(seq: DecodedSequence, evidence_support: dict[tuple[int, str], float], config: PrototypeConfig) -> float:
+def _sequence_score(seq: DecodedSequence, evidence_support: dict[tuple[int, str], float],
+                    config: PrototypeConfig) -> float:
     return (
-        config.rerank_weight_support * _sequence_evidence_score(seq, evidence_support)
-        + config.rerank_weight_coherence * seq.coherence_score
-        + config.rerank_weight_source_coverage * seq.source_coverage_score
+            config.rerank_weight_support * _sequence_evidence_score(seq, evidence_support)
+            + config.rerank_weight_coherence * seq.coherence_score
+            + config.rerank_weight_source_coverage * seq.source_coverage_score
     )
 
 
@@ -37,9 +38,9 @@ def _batch_duplicate_penalty(batch: list[DecodedSequence]) -> float:
 
 
 def rerank_candidate_batches(
-    candidate_groups: list[list[DecodedSequence]],
-    evidences: list[PositionEvidence],
-    config: PrototypeConfig,
+        candidate_groups: list[list[DecodedSequence]],
+        evidences: list[PositionEvidence],
+        config: PrototypeConfig,
 ) -> list[DecodedSequence]:
     """Jointly choose one decoded candidate per latent slot.
 
@@ -70,9 +71,9 @@ def rerank_candidate_batches(
 
 
 def rerank_batch(
-    decoded: list[DecodedSequence],
-    evidences: list[PositionEvidence],
-    config: PrototypeConfig,
+        decoded: list[DecodedSequence],
+        evidences: list[PositionEvidence],
+        config: PrototypeConfig,
 ) -> list[DecodedSequence]:
     evidence_support = _evidence_support_map(evidences)
 

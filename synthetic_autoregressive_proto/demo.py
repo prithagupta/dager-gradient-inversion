@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import random
 import sys
-from pathlib import Path
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -11,7 +12,6 @@ from synthetic_autoregressive_proto.constrained_decoder import decode_slot_candi
 from synthetic_autoregressive_proto.evidence_extractor import SyntheticEvidenceExtractor
 from synthetic_autoregressive_proto.slot_inference import infer_slots
 from synthetic_autoregressive_proto.token_graph import build_token_graph
-
 
 TOY_BATCH = [
     "this movie was charming and funny".split(),

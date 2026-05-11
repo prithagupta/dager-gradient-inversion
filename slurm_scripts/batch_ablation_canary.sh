@@ -10,10 +10,18 @@ cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 
-models=( "gpt2" "gpt2-large" )
-batches=( 1 2 4 8 16 32 64 80)
-methods=( "dager" "hybrid" )
-datasets=( "sst2" "cola" )
+MODELS_VALUE="${MODELS:-gpt2 gpt2-large}"
+BATCHES_VALUE="${BATCHES:-1 2 4 8 16 32 64 128}"
+METHODS_VALUE="${METHODS:-dager hybrid}"
+DATASETS_VALUE="${DATASETS:-rotten_tomatoes}" #sst2 cola
+MODELS_VALUE="${MODELS_VALUE//,/ }"
+BATCHES_VALUE="${BATCHES_VALUE//,/ }"
+METHODS_VALUE="${METHODS_VALUE//,/ }"
+DATASETS_VALUE="${DATASETS_VALUE//,/ }"
+IFS=' ' read -r -a models <<< "$MODELS_VALUE"
+IFS=' ' read -r -a batches <<< "$BATCHES_VALUE"
+IFS=' ' read -r -a methods <<< "$METHODS_VALUE"
+IFS=' ' read -r -a datasets <<< "$DATASETS_VALUE"
 
 echo "[CONFIG] script=batch_ablation_canary.sh"
 echo "[CONFIG] datasets=${datasets[*]}"

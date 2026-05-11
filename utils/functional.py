@@ -1,6 +1,7 @@
 import json
 import logging
 import numpy as np
+import os
 import re
 import torch
 import torch.nn.functional as F
@@ -176,8 +177,8 @@ def extract_canary_metric_summary(summary):
         key: float(value)
         for key, value in summary.items()
         if key.startswith('canary_') or key.startswith('non_canary_') or
-        key.startswith('foreign_canary_mentions') or key.startswith('pred_canary_count') or
-        key.startswith('ref_canary_count')
+           key.startswith('foreign_canary_mentions') or key.startswith('pred_canary_count') or
+           key.startswith('ref_canary_count')
     }
 
 
@@ -307,16 +308,17 @@ def _safe_aggregated_metrics(predictions, references, tokenizer, metric, fallbac
 
 
 def remove_padding(tokenizer, ids, left=False):
-    if left:
-        for i in range(ids.shape[0]):
-            if ids[i].item() != config['PAD_TOKEN']:
-                ids = ids[i:]
-                break
-    else:
-        for i in range(ids.shape[0] - 1, -1, -1):
-            if ids[i].item() != config['PAD_TOKEN']:
-                ids = ids[:i + 1]
-                break
+    pad_token = config.get('PAD_TOKEN', getattr(tokenizer, 'pad_token_id', None))
+    if pad_token is None:
+        return tokenizer.decode(ids)
+
+    start = 0
+    end = ids.shape[0]
+    while start < end and ids[start].item() == pad_token:
+        start += 1
+    while end > start and ids[end - 1].item() == pad_token:
+        end -= 1
+    ids = ids[start:end]
     return tokenizer.decode(ids)
 
 
@@ -355,13 +357,27 @@ def get_closest_tokens(inputs_embeds, unused_tokens, embeddings_weight, metric='
     return d, d.min(dim=2)[1]
 
 
-def stable_matrix_rank(grad, tol=None):
-    grad = torch.nan_to_num(
-        grad.detach().cpu(),
+def _decomp_work_tensor(grad, dtype):
+    """Use CUDA linalg when gradients are already on CUDA; keep CPU as fallback/default elsewhere."""
+    work = grad.detach()
+    if os.environ.get("DAGER_FORCE_CPU_DECOMP", "0") == "1" or work.device.type != "cuda":
+        work = work.cpu()
+    return torch.nan_to_num(
+        work,
         nan=0.0,
         posinf=1e5,
         neginf=-1e5,
-    ).to(torch.float64)
+    ).to(dtype)
+
+
+def stable_matrix_rank(grad, tol=None):
+    work_dtype = torch.float32 if grad.device.type == "cuda" and os.environ.get("DAGER_FORCE_CPU_DECOMP", "0") != "1" else torch.float64
+    grad = torch.nan_to_num(
+        grad.detach() if grad.device.type == "cuda" and os.environ.get("DAGER_FORCE_CPU_DECOMP", "0") != "1" else grad.detach().cpu(),
+        nan=0.0,
+        posinf=1e5,
+        neginf=-1e5,
+    ).to(work_dtype)
     if grad.ndim != 2 or min(grad.shape) == 0:
         return 0
     singular_values = torch.linalg.svdvals(grad)
@@ -380,14 +396,8 @@ def _orthonormalize_rows(rows):
 
 
 def get_layer_decomp(grad, B=None, tol=None, upcast=False):
-    grad = torch.nan_to_num(
-        grad.detach().cpu(),
-        nan=0.0,
-        posinf=1e5,
-        neginf=-1e5,
-    )
-    work_dtype = torch.float32 if upcast else torch.float64
-    grad = grad.to(work_dtype)
+    work_dtype = torch.float32 if (upcast or (grad.device.type == "cuda" and os.environ.get("DAGER_FORCE_CPU_DECOMP", "0") != "1")) else torch.float64
+    grad = _decomp_work_tensor(grad, work_dtype)
     if B is None:
         B = stable_matrix_rank(grad, tol=tol)
     B = min(max(int(B), 1), min(grad.shape))

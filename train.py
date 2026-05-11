@@ -10,27 +10,47 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Data
 
 from datasets import load_dataset, load_metric
 
-np.random.seed(100)
-torch.manual_seed(100)
 device = 'cuda'
 logger = logging.getLogger(__name__)
 
 
-def save_model(model, save_directory, train_method):
+def _default_cache_dir():
+    if os.environ.get('DAGER_CACHE_DIR'):
+        return os.environ['DAGER_CACHE_DIR']
+    if os.environ.get('HF_HOME'):
+        return os.path.join(os.environ['HF_HOME'], 'gia_cache')
+    return './models_cache'
+
+
+def _safe_model_name(model_path):
+    return model_path.strip('/').replace('/', '__')
+
+
+def _checkpoint_path(output_dir, dataset, model_path, train_method, n_steps):
+    model_name = _safe_model_name(model_path)
+    if train_method == 'lora':
+        return os.path.join(output_dir, f'{dataset}_{model_name}_{train_method}_steps{n_steps}.pt')
+    return os.path.join(output_dir, f'{dataset}_{model_name}_{train_method}_steps{n_steps}')
+
+
+def save_model(model, tokenizer, save_path, train_method):
     logger.info('SAVING')
 
-    # Ensure the directory exists
-    # if not os.path.exists(os.path.dirname(save_directory)):
-    # os.makedirs(os.path.dirname(save_directory))
+    parent = os.path.dirname(save_path) if train_method == 'lora' else save_path
+    os.makedirs(parent, exist_ok=True)
 
     # Save the model
     try:
         if train_method != 'lora':
-            model.save_pretrained(save_directory)
+            model.save_pretrained(save_path)
+            tokenizer.save_pretrained(save_path)
         else:
-            torch.save(model.state_dict(), save_directory)
+            torch.save(model.state_dict(), save_path)
         logger.info("Model saved successfully.")
-        logger.info(os.listdir(save_directory))
+        if train_method != 'lora':
+            logger.info(os.listdir(save_path))
+        else:
+            logger.info(save_path)
     except Exception as e:
         logger.info(f"Error saving model: {e}")
 
@@ -46,16 +66,33 @@ def main():
     parser.add_argument('--model_path', type=str, default='bert-base-uncased')
     parser.add_argument('--train_method', type=str, default='full', choices=['full', 'lora'])
     parser.add_argument('--lora_r', type=int, default=None)
-    parser.add_argument('--models_cache', type=str, default='./models_cache')
+    parser.add_argument('--models_cache', type=str, default=None,
+                        help='Deprecated alias for --cache_dir; kept for old scripts.')
+    parser.add_argument('--cache_dir', type=str, default=None)
+    parser.add_argument('--output_dir', type=str, default=None)
+    parser.add_argument('--learning_rate', type=float, default=5e-5)
+    parser.add_argument('--max_grad_norm', type=float, default=None,
+                        help='Clip gradient norm before optional training noise. Use with --noise for clipped/noisy training.')
+    parser.add_argument('--rng_seed', type=int, default=100)
+    parser.add_argument('--device', type=str, default='auto')
     args = parser.parse_args()
+    np.random.seed(args.rng_seed)
+    torch.manual_seed(args.rng_seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.rng_seed)
+    args.cache_dir = args.cache_dir or args.models_cache or _default_cache_dir()
+    args.output_dir = args.output_dir or os.path.join(args.cache_dir, 'finetuned')
+    run_device = 'cuda' if args.device == 'auto' and torch.cuda.is_available() else args.device
+    if run_device == 'auto':
+        run_device = 'cpu'
 
     seq_key = 'text' if args.dataset == 'rotten_tomatoes' else 'sentence'
     num_labels = 2
 
     # Load model and tokenizer
     model = AutoModelForSequenceClassification.from_pretrained(args.model_path, num_labels=num_labels,
-                                                               cache_dir='./models_cache').to(device)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path, use_fast=True, cache_dir=args.models_cache)
+                                                               cache_dir=args.cache_dir).to(run_device)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path, use_fast=True, cache_dir=args.cache_dir)
 
     # Configure tokenizer and model
     if tokenizer.pad_token_id is None:
@@ -108,7 +145,7 @@ def main():
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size, collate_fn=data_collator)
     eval_loader = DataLoader(eval_dataset, shuffle=True, batch_size=args.batch_size, collate_fn=data_collator)
 
-    opt = torch.optim.AdamW(model.parameters(), lr=5e-5)
+    opt = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
 
     num_training_steps = args.num_epochs * len(train_loader)
     lr_scheduler = get_scheduler(
@@ -127,7 +164,7 @@ def main():
     for epoch in range(args.num_epochs):
         model.train()
         for batch in train_loader:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v.to(run_device) for k, v in batch.items()}
             outputs = model(**batch)
             logits = outputs.logits
             predictions = torch.argmax(logits, dim=1)
@@ -139,12 +176,19 @@ def main():
 
             if args.pct_mask is not None:
                 for param in model.parameters():
-                    grad_mask = (torch.rand(param.grad.shape).to(device) > args.pct_mask).float()
+                    if param.grad is None:
+                        continue
+                    grad_mask = (torch.rand(param.grad.shape).to(run_device) > args.pct_mask).float()
                     param.grad.data = param.grad.data * grad_mask
+
+            if args.max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
             if args.noise is not None:
                 for param in model.parameters():
-                    param.grad.data = param.grad.data + torch.randn(param.grad.shape).to(device) * args.noise
+                    if param.grad is None:
+                        continue
+                    param.grad.data = param.grad.data + torch.randn(param.grad.shape).to(run_device) * args.noise
 
             opt.step()
             lr_scheduler.step()
@@ -153,7 +197,12 @@ def main():
 
             n_steps += 1
             if n_steps % args.save_every == 0:
-                save_model(model, f'./finetune/{args.train_method}_{n_steps}.pt', args.train_method)
+                save_model(
+                    model,
+                    tokenizer,
+                    _checkpoint_path(args.output_dir, args.dataset, args.model_path, args.train_method, n_steps),
+                    args.train_method,
+                )
                 logger.info("metric train: %s", train_metric.compute())
                 logger.info("loss train: %s", train_loss / n_steps)
                 train_loss = 0.0
@@ -161,7 +210,7 @@ def main():
         model.eval()
 
         for batch in eval_loader:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v.to(run_device) for k, v in batch.items()}
             with torch.no_grad():
                 outputs = model(**batch)
 
@@ -169,12 +218,15 @@ def main():
             predictions = torch.argmax(logits, dim=1)
             metric.add_batch(predictions=predictions, references=batch['labels'])
 
-        with open(f'finetune/{args.dataset}_metric.txt', 'w') as fou:
+        os.makedirs(args.output_dir, exist_ok=True)
+        with open(os.path.join(args.output_dir, f'{args.dataset}_metric.txt'), 'w') as fou:
             eval_metric = f'metric eval: {metric.compute()}'
             fou.write(eval_metric + '\n')
             logger.info(eval_metric)
     logger.info('END')
-    save_model(model, f'./finetune/{args.train_method}_{n_steps}.pt', args.train_method)
+    final_path = _checkpoint_path(args.output_dir, args.dataset, args.model_path, args.train_method, n_steps)
+    save_model(model, tokenizer, final_path, args.train_method)
+    logger.info("Final finetuned model path: %s", final_path)
 
 
 if __name__ == '__main__':

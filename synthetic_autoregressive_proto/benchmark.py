@@ -1,15 +1,14 @@
+from pathlib import Path
+
 import argparse
-import atexit
 import json
 import logging
 import os
 import re
 import sys
 import time
-import warnings
-from pathlib import Path
-
 import torch
+import warnings
 from scipy.optimize import linear_sum_assignment
 from transformers import AutoTokenizer
 
@@ -24,7 +23,15 @@ from synthetic_autoregressive_proto.evidence_io import load_evidence_file
 from synthetic_autoregressive_proto.slot_inference import infer_slots
 from synthetic_autoregressive_proto.token_graph import build_token_graph
 from utils.data import TextDataset
-from utils.experiment import load_rouge_metric, setup_random_seed, write_attack_artifacts
+from utils.experiment import (
+    args_to_dict,
+    is_attack_complete,
+    load_partial_attack_state,
+    load_rouge_metric,
+    release_all_log_locks,
+    setup_experiment_logging,
+    write_attack_artifacts,
+)
 from utils.functional import (
     _safe_aggregated_metrics,
     evaluate_prediction,
@@ -35,8 +42,9 @@ from utils.functional import (
 )
 from utils.models import _resolve_local_model_path
 
-logger = logging.getLogger("synthetic_autoregressive_proto")
-_CONSOLE_STREAM = None
+ATTACK_NAME = "autoregressivedager"
+
+logger = logging.getLogger(ATTACK_NAME)
 _PUNCT_ONLY_RE = re.compile(r"^[^\w]+$", re.UNICODE)
 
 
@@ -97,50 +105,7 @@ def _load_tokenizer(model_path: str, cache_dir: str | None, pad: str) -> AutoTok
 
 
 def _args_to_dict(args):
-    return {k: getattr(args, k) for k in sorted(vars(args))}
-
-
-def _build_output_dir(args) -> str:
-    safe_model = args.model_path.replace("/", "__")
-    safe_dataset = args.dataset.replace("/", "__")
-    variant = "canary" if args.preprocess_unique_canary_markers else "baseline"
-    evidence_suffix = ""
-    if args.evidence_file:
-        evidence_suffix = "_" + Path(args.evidence_file).stem.replace("/", "__")
-    run_name = (
-        f"{safe_dataset}_{safe_model}_b{args.batch_size}_n{args.n_inputs}_"
-        f"seed{args.rng_seed}_slots{args.n_slots or args.batch_size}_{variant}{evidence_suffix}"
-    )
-    return os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "results",
-        run_name,
-    )
-
-
-def _setup_logging(output_dir: str) -> tuple[str, str]:
-    os.makedirs(output_dir, exist_ok=True)
-    log_path = os.path.join(output_dir, "benchmark.log")
-    console_path = os.path.join(output_dir, "console_output.log")
-
-    formatter = logging.Formatter(
-        "%(asctime)s %(name)s %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-    root_logger = logging.getLogger()
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-    root_logger.setLevel(logging.INFO)
-
-    file_handler = logging.FileHandler(log_path, mode="w")
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.INFO)
-    root_logger.addHandler(file_handler)
-
-    logger.setLevel(logging.INFO)
-    logger.propagate = True
-    return log_path, console_path
+    return args_to_dict(args)
 
 
 def _suppress_noisy_logs() -> None:
@@ -168,14 +133,6 @@ def _suppress_noisy_logs() -> None:
         absl_logging.set_stderrthreshold("fatal")
     except Exception:
         pass
-
-
-def _redirect_console(console_path: str) -> None:
-    global _CONSOLE_STREAM
-    _CONSOLE_STREAM = open(console_path, "w", buffering=1, encoding="utf-8")
-    sys.stdout = _CONSOLE_STREAM
-    sys.stderr = _CONSOLE_STREAM
-    atexit.register(_CONSOLE_STREAM.close)
 
 
 def _token_set_score(pred: str, ref: str) -> float:
@@ -281,7 +238,6 @@ def build_arg_parser():
     parser.add_argument("--debug_top_positions", type=int, default=8)
     parser.add_argument("--debug_top_candidates", type=int, default=3)
     parser.add_argument("--debug_top_slots", type=int, default=8)
-    parser.add_argument("--output_dir", type=str, default=None)
     return parser
 
 
@@ -293,8 +249,6 @@ def main(argv=None):
         args.evidence_strip_canary_markers = True
     if not args.evidence_drop_punctuation:
         args.evidence_drop_punctuation = True
-    setup_random_seed(args.rng_seed)
-
     requested_slots = args.n_slots or args.batch_size
     slot_clamp_message = None
     if requested_slots != args.batch_size:
@@ -305,16 +259,25 @@ def main(argv=None):
     args.n_slots = args.batch_size
     args.top_k_per_position = max(args.top_k_per_position, min(args.batch_size, 16))
     args.slot_candidate_width = max(2, min(args.slot_candidate_width, args.top_k_per_position))
-    output_dir = args.output_dir or _build_output_dir(args)
-    log_path, console_path = _setup_logging(output_dir)
-    _redirect_console(console_path)
+
+    logger, log_path, job_hash, log_claim_acquired = setup_experiment_logging(args, ATTACK_NAME)
     _suppress_noisy_logs()
-    logger.info("Starting synthetic_autoregressive_proto benchmark")
-    logger.info("Arguments: %s", json.dumps(_args_to_dict(args), sort_keys=True))
-    logger.info("Command: %s", " ".join(sys.argv))
-    logger.info("Output dir: %s", output_dir)
+    print(f"Hash Value {job_hash} Started")
+    is_complete, results_dir = is_attack_complete(ATTACK_NAME, job_hash)
+    if not log_claim_acquired:
+        logger.info("Skipping hash %s because another job currently owns the primary log file for this run.", job_hash)
+        print(f"Hash Value {job_hash} Skipped (locked)")
+        return
+    if is_complete:
+        logger.info("Results already exist for this config at %s; skipping attack.", results_dir)
+        logger.info("Done with all.")
+        print(f"Hash Value {job_hash} is already done")
+        return
+
+    logger.info("Starting %s benchmark", ATTACK_NAME)
+    logger.info("Results dir: %s", results_dir)
     logger.info("Log path: %s", log_path)
-    logger.info("Console path: %s", console_path)
+    logger.info("Command: %s", " ".join(sys.argv))
     if slot_clamp_message:
         logger.warning(slot_clamp_message)
 
@@ -367,12 +330,49 @@ def main(argv=None):
     all_references = []
     graph_nodes = []
     graph_edges = []
+    input_times = []
+    partial_state = load_partial_attack_state(results_dir)
+    if partial_state["completed_inputs"]:
+        sentence_rows = partial_state["sentence_rows"]
+        input_rows = partial_state["input_rows"]
+        all_predictions = partial_state["predictions"]
+        all_references = partial_state["references"]
+        per_sentence_metrics = partial_state["final_results"]
+        per_input_metrics = partial_state["final_per_input_results"]
+        input_times = partial_state["input_times"]
+        graph_nodes = [
+            float(row["graph_nodes"])
+            for row in input_rows
+            if row.get("graph_nodes") is not None
+        ]
+        graph_edges = [
+            float(row["graph_edges"])
+            for row in input_rows
+            if row.get("graph_edges") is not None
+        ]
+        logger.info(
+            "Resuming from partial results in %s | completed_inputs=%s | last_input=%s",
+            results_dir,
+            len(partial_state["completed_inputs"]),
+            max(partial_state["completed_inputs"]),
+        )
 
-    end_index = min(len(dataset.seqs), args.end_input)
+    effective_n_inputs = len(dataset)
+    if effective_n_inputs != args.n_inputs:
+        logger.warning(
+            "Dataset effective_n_inputs=%s differs from requested n_inputs=%s; iterating over effective dataset length.",
+            effective_n_inputs,
+            args.n_inputs,
+        )
+
+    end_index = min(effective_n_inputs, args.end_input)
 
     for input_index in range(args.start_input, end_index):
+        if input_index in partial_state["completed_inputs"]:
+            logger.info("Skipping already completed input #%s.", input_index)
+            continue
         input_start = time.time()
-        logger.info("Processing input %s/%s", input_index + 1, len(dataset.seqs))
+        logger.info("Running input #%s of %s.", input_index, effective_n_inputs)
         references = list(dataset.seqs[input_index])
         stage_start = time.time()
         evidence_record = evidence_records.get(input_index)
@@ -422,7 +422,8 @@ def main(argv=None):
             )
             logger.info("Evidence pos %s -> %s", ev.position, candidate_summary)
         stage_start = time.time()
-        graph = evidence_record.graph if evidence_record is not None and evidence_record.graph is not None else build_token_graph(evidences, edge_threshold=config.graph_edge_threshold)
+        graph = evidence_record.graph if evidence_record is not None and evidence_record.graph is not None else build_token_graph(
+            evidences, edge_threshold=config.graph_edge_threshold)
         slots = infer_slots(
             evidences,
             n_slots=config.n_slots,
@@ -498,7 +499,7 @@ def main(argv=None):
             all_references.append(ref)
 
             row = {
-                "attack": "synthetic_autoregressive_proto",
+                "attack": ATTACK_NAME,
                 "model": args.model_path,
                 "dataset": args.dataset,
                 "input_index": input_index,
@@ -561,7 +562,7 @@ def main(argv=None):
         logger.info("%s", json.dumps(input_metric, sort_keys=True, indent=2))
 
         input_row = {
-            "attack": "synthetic_autoregressive_proto",
+            "attack": ATTACK_NAME,
             "model": args.model_path,
             "dataset": args.dataset,
             "input_index": input_index,
@@ -572,6 +573,7 @@ def main(argv=None):
         }
         input_row.update(input_metric)
         input_rows.append(input_row)
+        input_times.append(input_row["reconstruction_time_sec"])
         logger.info(
             "Input %s elapsed_time_sec=%.2f",
             input_index,
@@ -588,7 +590,10 @@ def main(argv=None):
         )
         partial_summary = {
             "Arguments": _args_to_dict(args),
-            "Attack": "synthetic_autoregressive_proto",
+            "Attack": ATTACK_NAME,
+            "Job Hash": job_hash,
+            "Result Folder": results_dir,
+            "Log Path": log_path,
             "Overall Results": partial_overall,
             "Per Input Results": summarize_metrics(per_input_metrics) if per_input_metrics else {},
             "Per Sentence Results": summarize_metrics(per_sentence_metrics) if per_sentence_metrics else {},
@@ -596,7 +601,8 @@ def main(argv=None):
         partial_canary_means = extract_canary_metric_means(partial_summary["Per Input Results"])
         if partial_canary_means:
             partial_summary["Canary Audit Results"] = partial_canary_means
-        write_attack_artifacts(output_dir, sentence_rows, input_rows, summary_results=partial_summary, status="incomplete")
+        write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_results=partial_summary,
+                               status="incomplete")
 
     overall_results = _safe_aggregated_metrics(
         all_predictions,
@@ -611,10 +617,20 @@ def main(argv=None):
 
     per_input_summary = summarize_metrics(per_input_metrics) if per_input_metrics else {}
     per_sentence_summary = summarize_metrics(per_sentence_metrics) if per_sentence_metrics else {}
+    if input_times:
+        per_input_summary["reconstruction_time_mean"] = float(sum(input_times) / len(input_times))
+        per_input_summary["reconstruction_time_std"] = float(
+            torch.tensor(input_times).float().std(unbiased=False).item())
+        per_sentence_summary["reconstruction_time_mean"] = float(sum(input_times) / len(input_times))
+        per_sentence_summary["reconstruction_time_std"] = float(
+            torch.tensor(input_times).float().std(unbiased=False).item())
 
     summary = {
         "Arguments": _args_to_dict(args),
-        "Attack": "synthetic_autoregressive_proto",
+        "Attack": ATTACK_NAME,
+        "Job Hash": job_hash,
+        "Result Folder": results_dir,
+        "Log Path": log_path,
         "Overall Results": overall_results,
         "Per Input Results": per_input_summary,
         "Per Sentence Results": per_sentence_summary,
@@ -623,21 +639,15 @@ def main(argv=None):
     if canary_means:
         summary["Canary Audit Results"] = canary_means
 
-    write_attack_artifacts(output_dir, sentence_rows, input_rows, summary_results=summary, status="complete")
+    write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_results=summary, status="complete")
     logger.info("Finished benchmark. overall_rouge2_fm=%.4f", float(overall_results.get("rouge2_fm", 0.0)))
-    logger.info("Artifacts written to %s", output_dir)
-
-    print(json.dumps({
-        "output_dir": output_dir,
-        "log_path": log_path,
-        "console_path": console_path,
-        "n_inputs_effective": len(dataset.seqs),
-        "batch_size": args.batch_size,
-        "dataset": args.dataset,
-        "model_path": args.model_path,
-        "overall_rouge2_fm": overall_results.get("rouge2_fm"),
-    }, indent=2))
+    logger.info("Artifacts written to %s", results_dir)
+    logger.info("Done with all.")
+    print(f"Hash Value {job_hash} Done")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        release_all_log_locks()

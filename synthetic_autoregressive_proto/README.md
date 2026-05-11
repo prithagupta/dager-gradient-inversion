@@ -78,10 +78,10 @@ python attack_synthetic_autoregressive_proto.py \
   --use_hf_split
 ```
 
-Outputs are written under:
+By default, outputs are written under the normal hashed result layout:
 
 ```text
-synthetic_autoregressive_proto/results/
+results/autoregressivedager/results_<job_hash>/
 ```
 
 with:
@@ -93,6 +93,10 @@ with:
 The prototype keeps its own arguments here, including autoregressive slot beam
 size and joint batch reranking. It does not add defaults to `args_factory.py`,
 so the existing DAGER/hybrid hash path is left alone.
+
+The terminal follows the main attack scripts and prints `Hash Value <hash>
+Started/Done/Skipped`. The shared log helper writes the run log under `logs/`,
+while artifacts are written under `results/autoregressivedager/results_<job_hash>/`.
 
 ## Parameter sets to try
 

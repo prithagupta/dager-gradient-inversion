@@ -10,7 +10,6 @@ cd "$REPO_ROOT"
 
 extra_args=( "$@" )
 seeds=( 40 41 42 )
-
 datasets=( "sst2" "cola" "rotten_tomatoes" )
 batches=( 8 16 32 64 )
 model="llama_3.1"

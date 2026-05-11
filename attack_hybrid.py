@@ -13,19 +13,37 @@ from transformers import AutoModelForCausalLM
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import (args_to_dict, cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric,
+from utils.experiment import (args_to_dict, cleanup_memory, get_hash_value_for_args, get_results_dir,
+                              is_attack_complete, is_attack_complete_in_index, load_rouge_metric,
                               load_partial_attack_state, write_attack_artifacts, setup_experiment_logging,
-                              release_all_log_locks)
+                              release_all_log_locks, finalize_completed_attack_log,
+                              configure_private_experiment_roots, mark_attack_complete_in_index)
 from utils.filtering_decoder import filter_decoder
 from utils.functional import (fallback_gpt2_l1_candidates, fallback_rope_l1_candidates, get_top_B_in_span,
                               log_distances, remove_padding, filter_outliers, get_span_dists,
                               evaluate_prediction, print_single_metric_dict, summarize_metrics, print_summary_table,
                               _safe_aggregated_metrics, maybe_add_canary_audit_metrics,
                               extract_canary_metric_means, extract_canary_metric_summary)
-from utils.models import ModelWrapper, _resolve_local_model_path
+from utils.models import ModelWrapper, _maybe_add_legacy_llama_rope_config, _resolve_local_model_path
 
 args = get_args()
+experiment_family = configure_private_experiment_roots(args)
+prelog_attack_prefix = "iterative_dager_lamp" if args.iterative_dager_lamp else "hybrid"
+if args.preprocess_unique_canary_markers:
+    prelog_attack_prefix = f"{prelog_attack_prefix}_canary"
+prelog_attack_name = f"{prelog_attack_prefix}_{args.loss}"
+prelog_job_hash = get_hash_value_for_args(args)
+prelog_is_complete, prelog_results_dir = is_attack_complete_in_index(prelog_attack_name, prelog_job_hash)
+if prelog_is_complete:
+    print(f"Hash Value {prelog_job_hash} is already done (completion index): {prelog_results_dir}")
+    sys.exit(0)
+prelog_is_complete, prelog_results_dir = is_attack_complete(prelog_attack_name, prelog_job_hash)
+if prelog_is_complete:
+    print(f"Hash Value {prelog_job_hash} is already done (results folder; completion index refreshed): {prelog_results_dir}")
+    sys.exit(0)
 logger, log_path, job_hash, log_claim_acquired = setup_experiment_logging(args, "hybrid_attack")
+if experiment_family:
+    logger.info("Private experiment family: %s", experiment_family)
 logger.info(f"Arguments {args}")
 logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
 
@@ -33,6 +51,13 @@ if torch.cuda.is_available():
     torch.backends.cuda.enable_flash_sdp(False)
     torch.backends.cuda.enable_mem_efficient_sdp(False)
     torch.backends.cuda.enable_math_sdp(True)
+
+
+def _log_text(text, max_chars=320):
+    text = str(text).replace("\n", " ")
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + f"... [truncated {len(text) - max_chars} chars]"
 
 
 def filter_l1(args, model_wrapper, R_Qs, max_positions=None):
@@ -45,7 +70,8 @@ def filter_l1(args, model_wrapper, R_Qs, max_positions=None):
         if max_positions is not None and p >= max_positions:
             logger.info('Stopping hybrid L1 at tokenized batch length %s.', max_positions)
             break
-        logger.info(f'L1 Position {p}')
+        if getattr(args, 'debug_candidates', False):
+            logger.info(f'L1 Position {p}')
         embeds = model_wrapper.get_embeddings(p)
         distance_values = None
         if model_wrapper.is_bert():
@@ -75,7 +101,8 @@ def filter_l1(args, model_wrapper, R_Qs, max_positions=None):
 
             res_types_new = torch.zeros_like(res_ids_new)
 
-        log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
+        if getattr(args, 'debug_candidates', False):
+            log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
         res_pos_new = torch.ones_like(res_ids_new) * p
         del embeds
 
@@ -434,16 +461,39 @@ def project_to_candidates(x_embeds, emb_matrix, candidate_mask, pad_mask, pad_to
     return ids
 
 
-def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_norm, lm_emb_matrix, candidate_mask, attention_mask, temperature):
-    if lm is None:
-        return x_embeds.sum() * 0.0
+def _lm_base_for_hidden_states(lm):
+    if hasattr(lm, 'transformer'):
+        return lm.transformer
+    if hasattr(lm, 'model'):
+        return lm.model
+    if hasattr(lm, 'base_model'):
+        return lm.base_model
+    return lm
 
-    # Keep the fuzzy LM prior inside DAGER's candidate set. The previous version
-    # built [batch, seq_len, vocab] soft distributions and LM logits every step,
-    # which is the main hybrid memory spike on GPT-2.
+
+def _lm_prior_microbatch_size(batch_size, seq_len):
+    env_value = os.environ.get('DAGER_LM_PRIOR_MICROBATCH')
+    if env_value:
+        try:
+            return max(1, min(batch_size, int(env_value)))
+        except ValueError:
+            logger.warning('Ignoring invalid DAGER_LM_PRIOR_MICROBATCH=%r', env_value)
+
+    tokens = batch_size * seq_len
+    if tokens >= 8192:
+        return min(batch_size, 16)
+    if tokens >= 4096:
+        return min(batch_size, 32)
+    return batch_size
+
+
+def _fuzzy_lm_prior_loss_chunk(lm, x_embeds, emb_norm, lm_input_emb_matrix, lm_output_emb_matrix,
+                               lm_output_bias, candidate_mask, attention_mask, temperature):
+    # Keep the fuzzy LM prior inside DAGER's candidate set. This avoids materializing
+    # [batch, seq_len, vocab] logits, which is especially important for Llama.
     x_norm = F.normalize(x_embeds, dim=-1)
     batch_size, seq_len, _ = x_embeds.shape
-    lm_embeds = x_embeds.new_zeros(batch_size, seq_len, lm_emb_matrix.shape[-1])
+    lm_embeds = x_embeds.new_zeros(batch_size, seq_len, lm_input_emb_matrix.shape[-1])
     candidate_ids_by_pos = []
     alpha_by_pos = []
 
@@ -454,10 +504,10 @@ def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_norm, lm_emb_matrix, candidate_mask, at
         logits_to_candidates = x_norm[:, pos] @ candidate_embs.T
         alpha = F.softmax(logits_to_candidates / temperature, dim=-1)
         alpha_by_pos.append(alpha)
-        lm_candidate_embs = lm_emb_matrix.index_select(0, candidate_ids)
+        lm_candidate_embs = lm_input_emb_matrix.index_select(0, candidate_ids)
         lm_embeds[:, pos] = alpha @ lm_candidate_embs
 
-    transformer = lm.transformer if hasattr(lm, 'transformer') else lm.base_model
+    transformer = _lm_base_for_hidden_states(lm)
     lm_out = transformer(
         inputs_embeds=lm_embeds,
         attention_mask=attention_mask,
@@ -470,16 +520,63 @@ def fuzzy_gpt2_lm_loss(lm, x_embeds, emb_norm, lm_emb_matrix, candidate_mask, at
     token_losses = []
     for pos in range(seq_len - 1):
         target_ids = candidate_ids_by_pos[pos + 1]
-        target_embs = lm_emb_matrix.index_select(0, target_ids)
+        target_embs = lm_output_emb_matrix.index_select(0, target_ids)
         logits_to_targets = hidden_states[:, pos] @ target_embs.T
+        if lm_output_bias is not None:
+            logits_to_targets = logits_to_targets + lm_output_bias.index_select(0, target_ids)
         log_probs = logits_to_targets.log_softmax(dim=-1)
         token_losses.append(-(log_probs * alpha_by_pos[pos + 1]).sum(dim=-1))
 
     token_loss = torch.stack(token_losses, dim=1)
     if attention_mask is not None:
         mask = attention_mask[:, 1:].float()
-        return (token_loss * mask).sum() / mask.sum().clamp_min(1.0)
-    return token_loss.mean()
+        return (token_loss * mask).sum(), mask.sum().clamp_min(1.0)
+    return token_loss.sum(), token_loss.new_tensor(float(token_loss.numel())).clamp_min(1.0)
+
+
+def fuzzy_lm_prior_loss(lm, x_embeds, emb_norm, lm_input_emb_matrix, lm_output_emb_matrix,
+                        lm_output_bias, candidate_mask, attention_mask, temperature):
+    if lm is None:
+        return x_embeds.sum() * 0.0
+
+    batch_size, seq_len, _ = x_embeds.shape
+    microbatch = _lm_prior_microbatch_size(batch_size, seq_len)
+    if microbatch >= batch_size:
+        loss_sum, denom = _fuzzy_lm_prior_loss_chunk(
+            lm, x_embeds, emb_norm, lm_input_emb_matrix, lm_output_emb_matrix,
+            lm_output_bias, candidate_mask, attention_mask, temperature,
+        )
+        return loss_sum / denom
+
+    total_loss_sum = x_embeds.new_tensor(0.0)
+    total_denom = x_embeds.new_tensor(0.0)
+    total_grad = torch.zeros_like(x_embeds)
+
+    for start in range(0, batch_size, microbatch):
+        end = min(start + microbatch, batch_size)
+        chunk_embeds = x_embeds[start:end]
+        chunk_attention_mask = None if attention_mask is None else attention_mask[start:end]
+        loss_sum, denom = _fuzzy_lm_prior_loss_chunk(
+            lm,
+            chunk_embeds,
+            emb_norm,
+            lm_input_emb_matrix,
+            lm_output_emb_matrix,
+            lm_output_bias,
+            candidate_mask,
+            chunk_attention_mask,
+            temperature,
+        )
+        chunk_grad, = torch.autograd.grad(loss_sum, chunk_embeds, retain_graph=False, create_graph=False)
+        total_grad[start:end].copy_(chunk_grad)
+        total_loss_sum = total_loss_sum + loss_sum.detach()
+        total_denom = total_denom + denom.detach()
+
+    total_denom = total_denom.clamp_min(1.0)
+    total_grad = total_grad / total_denom
+    value = total_loss_sum / total_denom
+    surrogate = (x_embeds * total_grad).sum()
+    return surrogate + (value - surrogate.detach())
 
 
 def load_lm_prior(args):
@@ -487,9 +584,6 @@ def load_lm_prior(args):
         logger.info('Hybrid LM prior disabled because coeff_perplexity=%.6g <= 0.', args.coeff_perplexity)
         return None
     if not _hybrid_uses_lm_prior(args):
-        return None
-    if args.model_path not in ['gpt2', 'openai-community/gpt2-large']:
-        logger.info('Hybrid LM prior disabled: fuzzy LM prior is currently implemented for GPT-2 vocabularies only.')
         return None
 
     lm_source = _resolve_local_model_path(args.model_path, args.cache_dir)
@@ -501,13 +595,17 @@ def load_lm_prior(args):
     if lm_dtype is not None:
         lm_kwargs['torch_dtype'] = lm_dtype
     lm_kwargs['low_cpu_mem_usage'] = True
+    if 'llama' in str(args.model_path).lower():
+        lm_kwargs.setdefault('use_safetensors', True)
+        _maybe_add_legacy_llama_rope_config(lm_kwargs, args.model_path, args.attn_implementation)
     if os.path.isdir(lm_source) or any(
             str(os.environ.get(flag, "")).lower() in {"1", "true", "yes"}
             for flag in ["HF_HUB_OFFLINE", "HF_DATASETS_OFFLINE", "TRANSFORMERS_OFFLINE"]
     ):
         lm_kwargs['local_files_only'] = True
     lm = AutoModelForCausalLM.from_pretrained(**lm_kwargs)
-    lm.config.pad_token_id = lm.config.eos_token_id
+    if getattr(lm.config, 'pad_token_id', None) is None:
+        lm.config.pad_token_id = lm.config.eos_token_id
     lm.config.use_cache = False
     lm.config.output_hidden_states = False
     lm.config.output_attentions = False
@@ -540,6 +638,17 @@ def _discrete_lm_loss_from_ids(lm, ids, attention_mask):
     attn = attention_mask.to(device)
     if input_ids.shape[1] <= 1:
         return 0.0
+    max_positions = getattr(lm.config, "n_positions", None)
+    if max_positions is None:
+        max_positions = getattr(lm.config, "max_position_embeddings", None)
+    if max_positions is None:
+        max_positions = getattr(lm.config, "n_ctx", None)
+    if max_positions is None:
+        max_positions = 512
+    max_positions = int(max_positions)
+    if input_ids.shape[1] > max_positions:
+        input_ids = input_ids[:, :max_positions].contiguous()
+        attn = attn[:, :max_positions].contiguous()
     with torch.no_grad():
         outputs = lm(input_ids=input_ids, attention_mask=attn, use_cache=False)
         logits = outputs.logits[:, :-1]
@@ -1332,7 +1441,7 @@ def reorder_decoder_sentence_ids(model_wrapper, predicted_sentences, orig_batch)
         best_score = -1
         for idx in search_indices:
             sentence = predicted_sentences[idx]['sentence'] if isinstance(predicted_sentences[idx], dict) else \
-            predicted_sentences[idx]
+                predicted_sentences[idx]
             compare_len = max(len(reference), len(sentence))
             ref_ext = reference + [pad_token] * (compare_len - len(reference))
             sent_ext = sentence + [pad_token] * (compare_len - len(sentence))
@@ -1381,7 +1490,11 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
 
     emb_matrix = model_wrapper.get_input_embeddings_weight().detach().to(args.device)
     emb_norm = F.normalize(emb_matrix, dim=-1)
-    lm_emb_matrix = lm.get_input_embeddings().weight.detach() if lm is not None else None
+    lm_input_emb_matrix = lm.get_input_embeddings().weight.detach() if lm is not None else None
+    lm_output_layer = lm.get_output_embeddings() if lm is not None else None
+    lm_output_emb_matrix = lm_output_layer.weight.detach() if lm_output_layer is not None else None
+    lm_output_bias = getattr(lm_output_layer, 'bias', None) if lm_output_layer is not None else None
+    lm_output_bias = lm_output_bias.detach() if lm_output_bias is not None else None
     input_ids = orig_batch['input_ids'].to(args.device)
     attention_mask = orig_batch['attention_mask'].to(args.device)
     pad_mask = attention_mask == 0
@@ -1462,17 +1575,30 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
         best_projected_ids = init_ids.detach().clone()
 
     for step in range(args.n_steps):
-        dummy_grads = model_wrapper.compute_grads_from_embeds(x_embeds, true_labels, attention_mask=attention_mask,
-                                                              create_graph=True, )
+        try:
+            dummy_grads = model_wrapper.compute_grads_from_embeds(x_embeds, true_labels, attention_mask=attention_mask,
+                                                                  create_graph=True, )
+        except torch.cuda.OutOfMemoryError as exc:
+            logger.warning(
+                'Hybrid continuous refinement OOM at step %d/%d; falling back to best projected ids. Error: %s',
+                step + 1,
+                args.n_steps,
+                exc,
+            )
+            optimizer.zero_grad(set_to_none=True)
+            cleanup_memory()
+            break
         rec_loss = grad_match_loss(dummy_grads, true_grads, args)
         if rec_loss.device != x_embeds.device:
             rec_loss = rec_loss.to(x_embeds.device)
         reg_loss = (x_embeds.norm(p=2, dim=2).mean() - args.init_size).square()
-        lm_loss = fuzzy_gpt2_lm_loss(
+        lm_loss = fuzzy_lm_prior_loss(
             lm,
             x_embeds,
             emb_norm,
-            lm_emb_matrix,
+            lm_input_emb_matrix,
+            lm_output_emb_matrix,
+            lm_output_bias,
             candidate_mask,
             attention_mask,
             args.hybrid_temperature,
@@ -1480,7 +1606,19 @@ def hybrid_optimize(args, model_wrapper, lm, true_grads, res_ids, orig_batch, tr
         total_loss = rec_loss + args.coeff_reg * reg_loss + args.coeff_perplexity * lm_loss
 
         optimizer.zero_grad()
-        total_loss.backward()
+        try:
+            total_loss.backward()
+        except torch.cuda.OutOfMemoryError as exc:
+            logger.warning(
+                'Hybrid backward OOM at step %d/%d; falling back to best projected ids. Error: %s',
+                step + 1,
+                args.n_steps,
+                exc,
+            )
+            optimizer.zero_grad(set_to_none=True)
+            del dummy_grads, rec_loss, reg_loss, lm_loss, total_loss
+            cleanup_memory()
+            break
         if frozen_mask is not None and x_embeds.grad is not None:
             x_embeds.grad.masked_fill_(frozen_mask, 0.0)
         optimizer.step()
@@ -1843,6 +1981,7 @@ def main():
     if is_complete:
         logger.info(f"Results already exist for this config at {results_dir} skipping attack.", )
         logger.info('Done with all.')
+        finalize_completed_attack_log(log_path, reason="results-already-exist")
         print(f"Hash Value {job_hash} is already done")
         return
 
@@ -1854,6 +1993,13 @@ def main():
                           preprocess_boundary_markers=args.preprocess_boundary_markers,
                           preprocess_unique_canary_markers=args.preprocess_unique_canary_markers,
                           canary_marker_prefix=args.canary_marker_prefix)
+    effective_n_inputs = len(dataset)
+    if effective_n_inputs != args.n_inputs:
+        logger.warning(
+            "Dataset effective_n_inputs=%s differs from requested n_inputs=%s; iterating over effective dataset length.",
+            effective_n_inputs,
+            args.n_inputs,
+        )
     model_wrapper = ModelWrapper(args)
     wrapper_tokenizer = model_wrapper.tokenizer
     lm = load_lm_prior(args)
@@ -1877,37 +2023,36 @@ def main():
         final_per_input_results = partial_state["final_per_input_results"]
         input_times = partial_state["input_times"]
         logger.info("Resuming from partial aresults in %s | completed_inputs=%s | last_input=%s",
-            results_dir, len(partial_state["completed_inputs"]), max(partial_state["completed_inputs"]),)
+                    results_dir, len(partial_state["completed_inputs"]), max(partial_state["completed_inputs"]), )
     t_start = time.time()
-    for i in range(args.start_input, min(args.n_inputs, args.end_input)):
+    for i in range(args.start_input, min(effective_n_inputs, args.end_input)):
         if i in partial_state["completed_inputs"]:
             logger.info(f"Skipping already completed input #{i}.")
             continue
         t_input_start = time.time()
         sample = dataset[i]  # (seqs, labels)
 
-        logger.info(f'Running input #{i} of {args.n_inputs}.')
+        logger.info(f'Running input #{i} of {effective_n_inputs}.')
         if args.neptune:
             args.neptune['logs/curr_input'].log(i)
 
-        logger.info('reference: ')
-        for seq in sample[0]:
+        if getattr(args, 'debug_candidates', False):
+            logger.info('reference: ')
+            for seq in sample[0]:
+                logger.info('========================')
+                logger.info(_log_text(seq))
             logger.info('========================')
-            logger.info(seq)
-
-        logger.info('========================')
 
         prediction, reference = reconstruct(args, sample, metric, model_wrapper, lm)
         predictions += prediction
         references += reference
 
-        logger.info(f'Done with input #{i} of {args.n_inputs}.')
-        logger.info('reference: ')
+        logger.info(f'Done with input #{i} of {effective_n_inputs}.')
         curr_metrics = []
         for sent_idx, (ref, pred) in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(f"Reference: {ref}")
-            logger.info(f"Prediction: {pred}")
+            logger.info("Reference: %s", _log_text(ref))
+            logger.info("Prediction: %s", _log_text(pred))
             metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
             metrics = maybe_add_canary_audit_metrics(
                 metrics, pred, ref, wrapper_tokenizer, metric,
@@ -1992,7 +2137,10 @@ def main():
         summary_results["Canary Audit Results"] = canary_summary
     logger.info(f"Experiment time {total_time_sec}")
     write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_results, status="complete")
+    added_to_index = mark_attack_complete_in_index(attack_name, job_hash, results_dir=results_dir)
+    print(f"Completion index update for {attack_name}/{job_hash}: {'added' if added_to_index else 'already present or unavailable'}")
     logger.info('Done with all.')
+    finalize_completed_attack_log(log_path, reason="experiment-complete")
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)
     print(f"Hash Value {job_hash} Done")

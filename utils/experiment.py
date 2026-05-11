@@ -1,3 +1,4 @@
+import atexit
 import hashlib
 import json
 import logging
@@ -7,7 +8,7 @@ import pandas as pd
 import random
 import signal
 import torch
-import atexit
+import time
 
 try:
     import fcntl
@@ -17,6 +18,7 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger(__name__)
 _LOG_LOCK_HANDLES = []
 _LOCK_PATHS_BY_HANDLE = {}
+_ACTIVE_LOG_PATHS = set()
 _PREVIOUS_SIGNAL_HANDLERS = {}
 _SIGNAL_CLEANUP_INSTALLED = False
 
@@ -87,6 +89,63 @@ def _log_file_completed(log_path):
     return (nonempty_lines[-1].endswith("Done with all."))
 
 
+def compact_attack_log(log_path):
+    """Trim noisy attack logs while preserving the first completed run record."""
+    if not log_path or not os.path.exists(log_path) or os.path.getsize(log_path) == 0:
+        return False
+
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+    except OSError:
+        return False
+
+    compacted = []
+    saw_done = False
+    changed = False
+    for line in lines:
+        if saw_done:
+            changed = True
+            continue
+        if " INFO     L1 Position " in line:
+            changed = True
+            continue
+        compacted.append(line)
+        if " INFO     Done with all." in line:
+            saw_done = True
+
+    if not changed:
+        return False
+
+    tmp_path = f"{log_path}.tmp"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.writelines(compacted)
+        os.replace(tmp_path, log_path)
+        return True
+    except OSError:
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
+        return False
+
+
+def finalize_completed_attack_log(log_path, reason="complete"):
+    """Flush handlers and compact a completed attack log immediately."""
+    if not log_path:
+        return False
+    try:
+        logging.shutdown()
+    except Exception:
+        pass
+    changed = compact_attack_log(log_path)
+    status = "compacted" if changed else "already compact"
+    print(f"Log cleanup after confirmed {reason}: {status} | {log_path}")
+    return changed
+
+
 def _acquire_log_lock(log_path):
     if fcntl is None:
         return None, log_path, True
@@ -129,6 +188,12 @@ def release_log_lock(lock_handle):
 
 
 def release_all_log_locks():
+    try:
+        logging.shutdown()
+    except Exception:
+        pass
+    for log_path in list(_ACTIVE_LOG_PATHS):
+        compact_attack_log(log_path)
     for handle in list(_LOG_LOCK_HANDLES):
         release_log_lock(handle)
 
@@ -168,7 +233,225 @@ install_log_lock_cleanup_handlers()
 
 
 def get_results_dir(attack_name, job_hash):
-    return os.path.join(_repo_root(), "results", attack_name, f"results_{job_hash}")
+    results_root = os.environ.get("DAGER_RESULTS_ROOT")
+    if not results_root:
+        results_root = os.path.join(_repo_root(), "results")
+    return os.path.join(results_root, attack_name, f"results_{job_hash}")
+
+
+def get_results_root():
+    results_root = os.environ.get("DAGER_RESULTS_ROOT")
+    if not results_root:
+        results_root = os.path.join(_repo_root(), "results")
+    return results_root
+
+
+def get_completion_index_path(results_root=None):
+    if results_root is None:
+        results_root = get_results_root()
+    return os.path.join(results_root, "completed_hashes.h5")
+
+
+def _completion_index_enabled():
+    return str(os.environ.get("DAGER_COMPLETION_INDEX", "1")).lower() not in {"0", "false", "no"}
+
+
+def _completion_key(attack_name, job_hash):
+    return f"{attack_name}/{job_hash}"
+
+
+def _load_completion_index(index_path):
+    return set(_load_completion_records(index_path).keys())
+
+
+def _decode_h5_string(value):
+    return value.decode("utf-8") if isinstance(value, bytes) else str(value)
+
+
+def _record_from_completion_key(key):
+    if "/" in key:
+        attack_name, hash_value = key.split("/", 1)
+    else:
+        attack_name, hash_value = "", key
+    return {
+        "key": key,
+        "attack_name": attack_name,
+        "hash_value": hash_value,
+        "result_dir": "",
+    }
+
+
+def _load_completion_records(index_path):
+    try:
+        import h5py
+    except Exception:
+        return {}
+
+    if not os.path.isfile(index_path) or os.path.getsize(index_path) == 0:
+        return {}
+
+    try:
+        with h5py.File(index_path, "r") as h5:
+            if "completed" not in h5:
+                return {}
+            group = h5["completed"]
+            records = {}
+            if "records" in group:
+                for raw_record in group["records"][()]:
+                    try:
+                        record = json.loads(_decode_h5_string(raw_record))
+                    except Exception:
+                        continue
+                    key = record.get("key")
+                    if key:
+                        records[str(key)] = {
+                            "key": str(key),
+                            "attack_name": str(record.get("attack_name", "")),
+                            "hash_value": str(record.get("hash_value", "")),
+                            "result_dir": str(record.get("result_dir", "")),
+                        }
+            if records:
+                return records
+            if "keys" in group:
+                for raw_key in group["keys"][()]:
+                    key = _decode_h5_string(raw_key)
+                    records[key] = _record_from_completion_key(key)
+                return records
+            if "hash_values" in group:
+                for raw_hash in group["hash_values"][()]:
+                    hash_value = _decode_h5_string(raw_hash)
+                    records[hash_value] = {
+                        "key": hash_value,
+                        "attack_name": "",
+                        "hash_value": hash_value,
+                        "result_dir": "",
+                    }
+            return records
+    except Exception:
+        return {}
+
+
+def _write_completion_index_records(index_path, records):
+    import h5py
+
+    create_directory_safely(index_path, is_file_path=True)
+    tmp_path = f"{index_path}.tmp.{os.getpid()}"
+    string_dtype = h5py.string_dtype(encoding="utf-8")
+    ordered_records = [records[key] for key in sorted(set(records))]
+    keys = [record.get("key", "") for record in ordered_records]
+    attack_names = [record.get("attack_name", "") for record in ordered_records]
+    hash_values = [record.get("hash_value", "") for record in ordered_records]
+    result_dirs = [record.get("result_dir", "") for record in ordered_records]
+    payload = [json.dumps(record, sort_keys=True) for record in ordered_records]
+    with h5py.File(tmp_path, "w") as h5:
+        group = h5.create_group("completed")
+        group.create_dataset("keys", data=np.array(keys, dtype=object), dtype=string_dtype)
+        group.create_dataset("attack_names", data=np.array(attack_names, dtype=object), dtype=string_dtype)
+        group.create_dataset("hash_values", data=np.array(hash_values, dtype=object), dtype=string_dtype)
+        group.create_dataset("result_dirs", data=np.array(result_dirs, dtype=object), dtype=string_dtype)
+        group.create_dataset("records", data=np.array(payload, dtype=object), dtype=string_dtype)
+        group.attrs["updated_at_unix"] = float(time.time())
+        group.attrs["count"] = int(len(ordered_records))
+    os.replace(tmp_path, index_path)
+
+
+def _write_completion_index(index_path, keys):
+    records = {str(key): _record_from_completion_key(str(key)) for key in sorted(set(keys))}
+    _write_completion_index_records(index_path, records)
+
+
+def _completion_index_lock(index_path):
+    lock_path = f"{index_path}.lock"
+    create_directory_safely(lock_path, is_file_path=True)
+    lock_handle = open(lock_path, "a+", encoding="utf-8")
+    if fcntl is not None:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+    return lock_handle, lock_path
+
+
+def _release_completion_index_lock(lock_handle, lock_path):
+    try:
+        if fcntl is not None:
+            try:
+                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+            except Exception:
+                pass
+    finally:
+        try:
+            lock_handle.close()
+        except Exception:
+            pass
+        try:
+            if lock_path and os.path.exists(lock_path):
+                os.remove(lock_path)
+        except OSError:
+            pass
+
+
+def mark_attack_complete_in_index(attack_name, job_hash, results_dir=None):
+    if not _completion_index_enabled():
+        return False
+    index_path = get_completion_index_path()
+    key = _completion_key(attack_name, job_hash)
+    lock_handle = None
+    lock_path = None
+    try:
+        lock_handle, lock_path = _completion_index_lock(index_path)
+        records = _load_completion_records(index_path)
+        already_present = key in records
+        records[key] = {
+            "key": key,
+            "attack_name": str(attack_name),
+            "hash_value": str(job_hash),
+            "result_dir": os.path.abspath(results_dir) if results_dir else "",
+        }
+        _write_completion_index_records(index_path, records)
+        if already_present:
+            logger.info("Refreshed completed hash in %s: %s", index_path, key)
+            return False
+        logger.info("Added completed hash in %s: %s", index_path, key)
+        return True
+    except Exception as exc:
+        logger.warning("Could not update completion index %s for %s: %s", index_path, key, exc)
+        return False
+    finally:
+        if lock_handle is not None:
+            _release_completion_index_lock(lock_handle, lock_path)
+
+
+def is_attack_complete_in_index(attack_name, job_hash):
+    results_dir = get_results_dir(attack_name, job_hash)
+    if not _completion_index_enabled():
+        return False, results_dir
+    index_path = get_completion_index_path()
+    completion_key = _completion_key(attack_name, job_hash)
+    completed_keys = _load_completion_index(index_path)
+    return completion_key in completed_keys, results_dir
+
+
+def get_private_experiment_family(args):
+    if getattr(args, "algo", None) == "fedavg":
+        return "fedavg"
+
+    finetuned_path = getattr(args, "finetuned_path", None)
+    if not finetuned_path:
+        return None
+
+    normalized_path = os.path.normpath(str(finetuned_path)).lower()
+    path_parts = set(normalized_path.split(os.sep))
+    if "dp" in path_parts or "noise_" in normalized_path:
+        return "dp"
+    return "fine_tune"
+
+
+def configure_private_experiment_roots(args):
+    family = get_private_experiment_family(args)
+    if family is None:
+        return None
+
+    os.environ.setdefault("DAGER_RESULTS_ROOT", os.path.join(_repo_root(), "results", family))
+    os.environ.setdefault("DAGER_LOGS_ROOT", os.path.join(_repo_root(), "logs", family))
+    return family
 
 
 def is_attack_complete(attack_name, job_hash, required_files=None):
@@ -176,6 +459,14 @@ def is_attack_complete(attack_name, job_hash, required_files=None):
         required_files = ("sentence_results.csv", "input_results.csv", "run_summary.json")
 
     results_dir = get_results_dir(attack_name, job_hash)
+    index_path = get_completion_index_path()
+    if _completion_index_enabled():
+        completion_key = _completion_key(attack_name, job_hash)
+        completed_keys = _load_completion_index(index_path)
+        if completion_key in completed_keys:
+            logger.info("Completion index hit at %s for %s", index_path, completion_key)
+            return True, results_dir
+
     if not os.path.isdir(results_dir):
         return False, results_dir
 
@@ -197,6 +488,7 @@ def is_attack_complete(attack_name, job_hash, required_files=None):
         except Exception:
             return False, results_dir
 
+    mark_attack_complete_in_index(attack_name, job_hash, results_dir=results_dir)
     return True, results_dir
 
 
@@ -282,12 +574,39 @@ def write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_resul
     if summary_results is None:
         summary_results = {}
     payload = dict(summary_results)
+    if not input_df.empty and "reconstruction_time_sec" in input_df.columns:
+        timing_df = input_df[["input_index", "reconstruction_time_sec"]].copy()
+        timing_df = timing_df.dropna(subset=["reconstruction_time_sec"])
+        if not timing_df.empty:
+            timing_df["input_index"] = timing_df["input_index"].astype(int)
+            timing_df["reconstruction_time_sec"] = timing_df["reconstruction_time_sec"].astype(float)
+            payload["Input Timings"] = {
+                "completed_inputs": int(len(timing_df)),
+                "input_indices": [int(v) for v in timing_df["input_index"].tolist()],
+                "reconstruction_time_sec": [float(v) for v in timing_df["reconstruction_time_sec"].tolist()],
+                "reconstruction_time_mean": float(timing_df["reconstruction_time_sec"].mean()),
+                "reconstruction_time_std": float(timing_df["reconstruction_time_sec"].std(ddof=0)),
+            }
     payload["status"] = status
     with open(os.path.join(results_dir, "run_summary.json"), "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
 
 def setup_random_seed(seed=1234, logger=None):
+    torch_threads = os.environ.get("DAGER_TORCH_NUM_THREADS") or os.environ.get("OMP_NUM_THREADS")
+    if torch_threads:
+        try:
+            torch.set_num_threads(max(int(torch_threads), 1))
+        except Exception as exc:
+            if logger is not None:
+                logger.warning("Could not set torch num threads from %s: %s", torch_threads, exc)
+    torch_interop_threads = os.environ.get("DAGER_TORCH_INTEROP_THREADS")
+    if torch_interop_threads:
+        try:
+            torch.set_num_interop_threads(max(int(torch_interop_threads), 1))
+        except Exception as exc:
+            if logger is not None:
+                logger.warning("Could not set torch interop threads from %s: %s", torch_interop_threads, exc)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -346,7 +665,7 @@ def load_rouge_metric(cache_dir=None, logger=None):
         else:
             hf_home = os.environ.get("HF_HOME")
             if hf_home:
-                modules_cache = os.path.join(hf_home, "gia_exp_cache", ".hf_modules")
+                modules_cache = os.path.join(hf_home, "gia_cache", ".hf_modules")
             else:
                 modules_cache = os.path.expanduser("~/.cache/huggingface/modules")
 
@@ -415,17 +734,26 @@ def load_rouge_metric(cache_dir=None, logger=None):
 
 
 def setup_experiment_logging(args, attack_name, level=logging.INFO):
-    log_dir = os.path.join(_repo_root(), "logs")
+    log_dir = os.environ.get("DAGER_LOGS_ROOT")
+    if not log_dir:
+        log_dir = os.path.join(_repo_root(), "logs")
     create_directory_safely(log_dir)
 
     hash_value = get_hash_value_for_args(args)
     primary_log_path = os.path.join(log_dir, f"{attack_name}_{hash_value}.log")
     _, log_path, lock_acquired = _acquire_log_lock(primary_log_path)
+    if lock_acquired:
+        if compact_attack_log(log_path):
+            print(f"Compacted existing log before status check: {log_path}")
+        _ACTIVE_LOG_PATHS.add(log_path)
     append_to_completed_log = lock_acquired and _log_file_completed(log_path)
 
     formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)-8s %(message)s",
                                   datefmt="%Y-%m-%d %H:%M:%S", )
-    print(f"Does the log file exits and the experiments are done {append_to_completed_log}")
+    print(f"Does the log file exists and the experiment is done {append_to_completed_log}")
+    if append_to_completed_log:
+        print(
+            f"Existing completed log reopened for hash {hash_value}; checking result folder before deciding whether to rerun.")
 
     root_logger = logging.getLogger()
     for handler in root_logger.handlers[:]:

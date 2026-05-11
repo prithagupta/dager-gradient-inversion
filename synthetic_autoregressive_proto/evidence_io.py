@@ -1,10 +1,10 @@
+from pathlib import Path
+
 import json
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from synthetic_autoregressive_proto.proto_types import CandidateToken, PositionEvidence
-
 
 Graph = dict[tuple[int, str], dict[tuple[int, str], float]]
 
@@ -118,4 +118,3 @@ def load_evidence_file(path: str | Path) -> dict[int, EvidenceRecord]:
             metadata=raw_input.get("metadata") if isinstance(raw_input.get("metadata"), dict) else None,
         )
     return records
-

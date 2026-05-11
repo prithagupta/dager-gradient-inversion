@@ -1,7 +1,8 @@
 from synthetic_autoregressive_proto.proto_types import PositionEvidence
 
 
-def _compatibility(left_token: str, right_token: str, left_sources: tuple[int, ...], right_sources: tuple[int, ...]) -> float:
+def _compatibility(left_token: str, right_token: str, left_sources: tuple[int, ...],
+                   right_sources: tuple[int, ...]) -> float:
     shared_prefix = 0
     for a, b in zip(left_token, right_token):
         if a != b:
@@ -17,16 +18,17 @@ def _compatibility(left_token: str, right_token: str, left_sources: tuple[int, .
     source_overlap = overlap / union
     lexical_bonus = 0.2 if left_token == right_token else 0.0
     return (
-        0.05
-        + 0.15 * prefix_score
-        + 0.15 * length_score
-        + 0.10 * type_score
-        + 0.55 * source_overlap
-        + lexical_bonus
+            0.05
+            + 0.15 * prefix_score
+            + 0.15 * length_score
+            + 0.10 * type_score
+            + 0.55 * source_overlap
+            + lexical_bonus
     )
 
 
-def build_token_graph(evidences: list[PositionEvidence], edge_threshold: float) -> dict[tuple[int, str], dict[tuple[int, str], float]]:
+def build_token_graph(evidences: list[PositionEvidence], edge_threshold: float) -> dict[
+    tuple[int, str], dict[tuple[int, str], float]]:
     graph: dict[tuple[int, str], dict[tuple[int, str], float]] = {}
 
     for current, nxt in zip(evidences, evidences[1:]):

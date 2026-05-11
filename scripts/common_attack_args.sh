@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DAGER_CACHE_DIR="${DAGER_CACHE_DIR:-$HF_HOME/gia_cache}"
+
 has_cli_arg() {
   local needle="$1"
   shift || true
@@ -150,7 +152,7 @@ set_default_idager_hybrid_args() {
   set_default_flag_arg "--iterative_dager_lamp" "${ATTACK_EXTRA_ARGS[@]}"
   set_default_flag_arg "--iterative_refresh_candidates" "${ATTACK_EXTRA_ARGS[@]}"
 
-  if [ "$lm_mode" = "gpt2" ]; then
+  if [ "$lm_mode" != "no_lm" ]; then
     set_default_arg "--hybrid_use_lm_prior" "true" "${ATTACK_EXTRA_ARGS[@]}"
     set_default_arg "--coeff_perplexity" "0.2" "${ATTACK_EXTRA_ARGS[@]}"
   else

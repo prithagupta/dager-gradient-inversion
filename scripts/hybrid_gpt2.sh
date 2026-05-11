@@ -19,4 +19,4 @@ set_default_hf_split_arg "$1" "${ATTACK_EXTRA_ARGS[@]}"
 
 python attack_hybrid.py --dataset "$1" --split val --batch_size "$2" \
   --l1_filter all --l2_filter non-overlap --model_path gpt2 --device auto \
-  --task seq_class --cache_dir "$HF_HOME/gia_exp_cache" "${ATTACK_EXTRA_ARGS[@]}"
+  --task seq_class --cache_dir "$DAGER_CACHE_DIR" "${ATTACK_EXTRA_ARGS[@]}"

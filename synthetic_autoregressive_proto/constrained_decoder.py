@@ -11,14 +11,14 @@ def _simple_coherence(tokens: list[str]) -> float:
 
 
 def decode_slot(
-    slot: SlotAssignment,
-    graph: dict[tuple[int, str], dict[tuple[int, str], float]],
-    max_sequence_length: int,
-    beam_size: int = 1,
-    graph_weight: float = 0.75,
-    repetition_penalty: float = 0.25,
-    common_token_penalty: float = 0.5,
-    source_bonus: float = 0.9,
+        slot: SlotAssignment,
+        graph: dict[tuple[int, str], dict[tuple[int, str], float]],
+        max_sequence_length: int,
+        beam_size: int = 1,
+        graph_weight: float = 0.75,
+        repetition_penalty: float = 0.25,
+        common_token_penalty: float = 0.5,
+        source_bonus: float = 0.9,
 ) -> DecodedSequence:
     candidates = decode_slot_candidates(
         slot,
@@ -40,14 +40,14 @@ def decode_slot(
 
 
 def decode_slot_candidates(
-    slot: SlotAssignment,
-    graph: dict[tuple[int, str], dict[tuple[int, str], float]],
-    max_sequence_length: int,
-    beam_size: int = 4,
-    graph_weight: float = 0.75,
-    repetition_penalty: float = 0.25,
-    common_token_penalty: float = 0.5,
-    source_bonus: float = 0.9,
+        slot: SlotAssignment,
+        graph: dict[tuple[int, str], dict[tuple[int, str], float]],
+        max_sequence_length: int,
+        beam_size: int = 4,
+        graph_weight: float = 0.75,
+        repetition_penalty: float = 0.25,
+        common_token_penalty: float = 0.5,
+        source_bonus: float = 0.9,
 ) -> list[DecodedSequence]:
     beams = [([], 0.0, 0.0, None)]
     for pos in sorted(slot.tokens_by_position):

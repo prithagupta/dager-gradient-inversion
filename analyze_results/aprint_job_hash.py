@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+from pathlib import Path
+
 import argparse
 import csv
 import json
-import os
 import shutil
 import sys
-from pathlib import Path
 from types import SimpleNamespace
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +14,6 @@ if str(REPO_ROOT) not in sys.path:
 
 from args_factory import get_args
 from utils.experiment import args_to_dict, get_hash_value_for_args, is_attack_complete
-
 
 OLD_RESULTS_ROOT = REPO_ROOT / "aresults"
 RESULTS_ROOT = REPO_ROOT / "results"
@@ -134,7 +133,7 @@ def build_gpt_cli_args(method, model, dataset, batch, seed=None, canary=False, v
         "--model_path", model_path,
         "--device", "auto",
         "--task", "seq_class",
-        "--cache_dir", "$HF_HOME/gia_exp_cache",
+        "--cache_dir", "$HF_HOME/gia_cache",
     ]
     extra = base_eval_args(dataset, batch, seed)
     extra = append_if_missing(extra, "--device_grad", "cpu")
@@ -145,7 +144,8 @@ def build_gpt_cli_args(method, model, dataset, batch, seed=None, canary=False, v
     elif variant == "hybrid_no_lm_prior":
         extra.extend(["--hybrid_init_mode", "dager", "--hybrid_use_lm_prior", "false", "--coeff_perplexity", "0.0"])
     elif variant == "hybrid_no_candidate_projection":
-        extra.extend(["--hybrid_init_mode", "dager", "--hybrid_use_lm_prior", "true", "--hybrid_projection_mode", "none"])
+        extra.extend(
+            ["--hybrid_init_mode", "dager", "--hybrid_use_lm_prior", "true", "--hybrid_projection_mode", "none"])
     if canary:
         extra = append_if_missing(extra, "--preprocess_unique_canary_markers")
         extra = append_if_missing(extra, "--canary_marker_prefix", "qxjkvcanary")
@@ -163,7 +163,7 @@ def build_llama_cli_args(method, dataset, batch, seed, canary=False):
         "--model_path", "meta-llama/Meta-Llama-3.1-8B",
         "--device", "auto",
         "--task", "seq_class",
-        "--cache_dir", "$HF_HOME/gia_exp_cache",
+        "--cache_dir", "$HF_HOME/gia_cache",
         "--rank_tol", "1e-8",
         "--l1_span_thresh", "1e-4",
         "--l2_span_thresh", "5e-5",
@@ -265,22 +265,28 @@ def expected_current_runs():
             add("hybrid_ablation_gpt2.sh", "hybrid_ablation", "hybrid", "gpt2-large", "sst2", batch, seed,
                 build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed), variant="hybrid_full")
             add("hybrid_ablation_gpt2.sh", "hybrid_ablation", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, variant="hybrid_no_dager_init"), variant="hybrid_no_dager_init")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, variant="hybrid_no_dager_init"),
+                variant="hybrid_no_dager_init")
             add("hybrid_ablation_gpt2.sh", "hybrid_ablation", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, variant="hybrid_no_lm_prior"), variant="hybrid_no_lm_prior")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, variant="hybrid_no_lm_prior"),
+                variant="hybrid_no_lm_prior")
             add("hybrid_ablation_gpt2.sh", "hybrid_ablation", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, variant="hybrid_no_candidate_projection"), variant="hybrid_no_candidate_projection")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed,
+                                   variant="hybrid_no_candidate_projection"), variant="hybrid_no_candidate_projection")
 
             add("hybrid_ablation_gpt2_canary.sh", "hybrid_ablation_canary", "dager", "gpt2-large", "sst2", batch, seed,
                 build_gpt_cli_args("dager", "gpt2-large", "sst2", batch, seed, canary=True), variant="dager_only")
             add("hybrid_ablation_gpt2_canary.sh", "hybrid_ablation_canary", "hybrid", "gpt2-large", "sst2", batch, seed,
                 build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True), variant="hybrid_full")
             add("hybrid_ablation_gpt2_canary.sh", "hybrid_ablation_canary", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True, variant="hybrid_no_dager_init"), variant="hybrid_no_dager_init")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True,
+                                   variant="hybrid_no_dager_init"), variant="hybrid_no_dager_init")
             add("hybrid_ablation_gpt2_canary.sh", "hybrid_ablation_canary", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True, variant="hybrid_no_lm_prior"), variant="hybrid_no_lm_prior")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True,
+                                   variant="hybrid_no_lm_prior"), variant="hybrid_no_lm_prior")
             add("hybrid_ablation_gpt2_canary.sh", "hybrid_ablation_canary", "hybrid", "gpt2-large", "sst2", batch, seed,
-                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True, variant="hybrid_no_candidate_projection"), variant="hybrid_no_candidate_projection")
+                build_gpt_cli_args("hybrid", "gpt2-large", "sst2", batch, seed, canary=True,
+                                   variant="hybrid_no_candidate_projection"), variant="hybrid_no_candidate_projection")
 
     for dataset in ["sst2", "cola", "rotten_tomatoes"]:
         for batch in [8, 16, 32, 64]:
@@ -289,9 +295,11 @@ def expected_current_runs():
                     build_llama_cli_args("dager", dataset, batch, seed))
                 add("main_benchmark_llama.sh", "main_benchmark_llama", "hybrid", "llama_3.1", dataset, batch, seed,
                     build_llama_cli_args("hybrid", dataset, batch, seed))
-                add("main_benchmark_llama.sh", "main_benchmark_llama_canary", "dager", "llama_3.1", dataset, batch, seed,
+                add("main_benchmark_llama.sh", "main_benchmark_llama_canary", "dager", "llama_3.1", dataset, batch,
+                    seed,
                     build_llama_cli_args("dager", dataset, batch, seed, canary=True))
-                add("main_benchmark_llama.sh", "main_benchmark_llama_canary", "hybrid", "llama_3.1", dataset, batch, seed,
+                add("main_benchmark_llama.sh", "main_benchmark_llama_canary", "hybrid", "llama_3.1", dataset, batch,
+                    seed,
                     build_llama_cli_args("hybrid", dataset, batch, seed, canary=True))
 
     return rows
@@ -319,12 +327,14 @@ def aggregate_expected_rows(rows):
         row["associated_categories"] = ";".join(sorted(set(row["associated_categories"])))
         row["associated_variants"] = ";".join(sorted(set(row["associated_variants"])))
         out.append(row)
-    out.sort(key=lambda r: (r["done_or_remaining"], r["associated_experiment_scripts"], r["method"], r["model"], r["dataset"], r["batch_size"], r["rng_seed"]))
+    out.sort(key=lambda r: (r["done_or_remaining"], r["associated_experiment_scripts"], r["method"], r["model"],
+                            r["dataset"], r["batch_size"], r["rng_seed"]))
     return out
 
 
 def inventory_command(argv):
-    parser = argparse.ArgumentParser(description="Collect current Slurm experiment hashes and identify obsolete result folders.")
+    parser = argparse.ArgumentParser(
+        description="Collect current Slurm experiment hashes and identify obsolete result folders.")
     parser.add_argument("--current-output", default=str(FINAL_RESULTS_DIR / "current_slurm_runs.csv"))
     parser.add_argument("--remove-output", default=str(FINAL_RESULTS_DIR / "result_folders_to_remove.csv"))
     args = parser.parse_args(argv)
@@ -386,7 +396,8 @@ def inventory_command(argv):
             "log_file_path": str(log_path) if log_prefix else "",
             "log_exists": str(log_path.exists()) if log_prefix else "",
             "reason": "not_in_current_slurm_experiments",
-            "arguments_json": json.dumps(args_to_dict(SimpleNamespace(**(summary.get("Arguments") or {}))), sort_keys=True, default=str),
+            "arguments_json": json.dumps(args_to_dict(SimpleNamespace(**(summary.get("Arguments") or {}))),
+                                         sort_keys=True, default=str),
         })
 
     remove_fields = [
@@ -514,7 +525,8 @@ def _delete_tree_and_logs(results_dir, log_prefix, hash_value, apply_changes):
 
 
 def repair_results_command(argv):
-    parser = argparse.ArgumentParser(description="Recompute canonical hashes from run_summary.json, scrub run_id, and optionally rename completed result/log paths.")
+    parser = argparse.ArgumentParser(
+        description="Recompute canonical hashes from run_summary.json, scrub run_id, and optionally rename completed result/log paths.")
     parser.add_argument("--apply", action="store_true", help="Apply renames and CSV cleanup. Default is dry-run.")
     parser.add_argument("--output", default=str(FINAL_RESULTS_DIR / "hash_repair_report.csv"))
     args = parser.parse_args(argv)
@@ -598,7 +610,8 @@ def repair_results_command(argv):
             "log_rename_status": log_rename_status,
             "scrubbed_sentence_results_run_id": scrubbed_sentence,
             "scrubbed_input_results_run_id": scrubbed_input,
-            "arguments_json": json.dumps(args_to_dict(SimpleNamespace(**(summary.get("Arguments") or {}))), sort_keys=True, default=str),
+            "arguments_json": json.dumps(args_to_dict(SimpleNamespace(**(summary.get("Arguments") or {}))),
+                                         sort_keys=True, default=str),
         })
 
     fieldnames = [

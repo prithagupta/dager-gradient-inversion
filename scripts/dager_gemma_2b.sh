@@ -18,4 +18,4 @@ set_default_hf_split_arg "$1" "${ATTACK_EXTRA_ARGS[@]}"
 
 python attack.py --dataset "$1" --split val --batch_size "$2" \
   --l1_filter all --l2_filter non-overlap --model_path google/gemma-2b --device auto \
-  --task seq_class --cache_dir "$HF_HOME/gia_exp_cache" --pad left "${ATTACK_EXTRA_ARGS[@]}"
+  --task seq_class --cache_dir "$DAGER_CACHE_DIR" --pad left "${ATTACK_EXTRA_ARGS[@]}"

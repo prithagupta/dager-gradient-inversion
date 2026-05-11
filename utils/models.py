@@ -477,19 +477,44 @@ class ModelWrapper():
             self.model.model.config._attn_implementation = "eager"
 
     def compute_grads_fed_avg(self, batch, labels, create_graph=False):
+        if self.args.avg_lr is None or self.args.avg_epochs is None or self.args.b_mini is None:
+            raise ValueError(
+                "FedAvg requires --avg_lr, --avg_epochs, and --b_mini. "
+                "For the compact GPT-2/SST-2 setting use --avg_epochs 10 --avg_lr 1e-4 --b_mini 4."
+            )
+        if self.args.b_mini <= 0:
+            raise ValueError(f"FedAvg requires --b_mini > 0, got {self.args.b_mini}.")
+
         og_weights = [param.data.clone() for param in self.model.parameters()]
 
         self.model.eval()
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.avg_lr)
 
         n_minib = batch['input_ids'].shape[0] // self.args.b_mini
-        logger.info(n_minib)
+        if n_minib <= 0:
+            raise ValueError(
+                f"FedAvg minibatch size b_mini={self.args.b_mini} is larger than batch_size={batch['input_ids'].shape[0]}."
+            )
+        if batch['input_ids'].shape[0] % self.args.b_mini != 0:
+            logger.warning(
+                "FedAvg batch_size=%s is not divisible by b_mini=%s; the final partial minibatch is ignored.",
+                batch['input_ids'].shape[0],
+                self.args.b_mini,
+            )
+        if getattr(self.args, "debug_candidates", False):
+            logger.info(
+                "FedAvg local update: epochs=%s lr=%s b_mini=%s n_minib=%s",
+                self.args.avg_epochs,
+                self.args.avg_lr,
+                self.args.b_mini,
+                n_minib,
+            )
         for _ in range(self.args.avg_epochs):
             for i in range(n_minib):
-                logger.info(batch['input_ids'].shape)
                 b_mini = {k: batch[k][i * self.args.b_mini:(i + 1) * self.args.b_mini] for k in batch.keys()}
                 y_mini = labels[:, i * self.args.b_mini:(i + 1) * self.args.b_mini]
-                logger.info("%s %s", b_mini['input_ids'].shape, y_mini)
+                if getattr(self.args, "debug_candidates", False):
+                    logger.info("FedAvg minibatch shape=%s labels=%s", b_mini['input_ids'].shape, y_mini)
                 optimizer.zero_grad()
                 outs = self.model(**b_mini, labels=y_mini)
                 outs.loss.backward()
@@ -595,7 +620,8 @@ class ModelWrapper():
             self.model.train()
 
         original_device = x_embeds.device
-        requested_grad_device = torch.device(self.args.device_grad) if self.args.precision != '8bit' else original_device
+        requested_grad_device = torch.device(
+            self.args.device_grad) if self.args.precision != '8bit' else original_device
         grad_device = requested_grad_device
         if create_graph and requested_grad_device != original_device:
             grad_device = original_device

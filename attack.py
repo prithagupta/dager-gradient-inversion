@@ -11,9 +11,11 @@ warnings.filterwarnings("ignore")
 
 from args_factory import get_args
 from utils.data import TextDataset
-from utils.experiment import (args_to_dict, cleanup_memory, get_results_dir, is_attack_complete, load_rouge_metric,
+from utils.experiment import (args_to_dict, cleanup_memory, get_hash_value_for_args, get_results_dir,
+                              is_attack_complete, is_attack_complete_in_index, load_rouge_metric,
                               load_partial_attack_state, write_attack_artifacts, setup_experiment_logging,
-                              release_all_log_locks)
+                              release_all_log_locks, finalize_completed_attack_log,
+                              configure_private_experiment_roots, mark_attack_complete_in_index)
 from utils.filtering_decoder import filter_decoder
 from utils.filtering_encoder import filter_encoder
 from utils.functional import (fallback_gpt2_l1_candidates, fallback_rope_l1_candidates, get_top_B_in_span,
@@ -26,13 +28,34 @@ from utils.models import ModelWrapper
 
 # old seed: 100
 args = get_args()
+experiment_family = configure_private_experiment_roots(args)
+prelog_attack_prefix = "dager_canary" if args.preprocess_unique_canary_markers else "dager"
+prelog_attack_name = f"{prelog_attack_prefix}_{args.loss}"
+prelog_job_hash = get_hash_value_for_args(args)
+prelog_is_complete, prelog_results_dir = is_attack_complete_in_index(prelog_attack_name, prelog_job_hash)
+if prelog_is_complete:
+    print(f"Hash Value {prelog_job_hash} is already done (completion index): {prelog_results_dir}")
+    sys.exit(0)
+prelog_is_complete, prelog_results_dir = is_attack_complete(prelog_attack_name, prelog_job_hash)
+if prelog_is_complete:
+    print(f"Hash Value {prelog_job_hash} is already done (results folder; completion index refreshed): {prelog_results_dir}")
+    sys.exit(0)
 logger, log_path, job_hash, log_claim_acquired = setup_experiment_logging(args, "dager_attack")
+if experiment_family:
+    logger.info("Private experiment family: %s", experiment_family)
 logger.info(f"Arguments {args}")
 logger.info('\n\n\nCommand: %s\n\n\n', ' '.join(sys.argv))
 
 total_correct_tokens = 0
 total_tokens = 0
 total_correct_maxB_tokens = 0
+
+
+def _log_text(text, max_chars=320):
+    text = str(text).replace("\n", " ")
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + f"... [truncated {len(text) - max_chars} chars]"
 
 
 def _all_token_positions(mask, start=0, stop=None):
@@ -52,7 +75,8 @@ def filter_l1(args, model_wrapper, R_Qs):
     n_tokens = 0
 
     while True:
-        logger.info(f'L1 Position {p}')
+        if getattr(args, 'debug_candidates', False):
+            logger.info(f'L1 Position {p}')
         embeds = model_wrapper.get_embeddings(p)
         distance_values = None
         if model_wrapper.is_bert():
@@ -76,7 +100,8 @@ def filter_l1(args, model_wrapper, R_Qs):
                                               maxB=max(50 * model_wrapper.args.batch_size,
                                                        int(0.05 * len(model_wrapper.tokenizer))))
             res_types_new = torch.zeros_like(res_ids_new)
-        log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
+        if getattr(args, 'debug_candidates', False):
+            log_distances(res_ids_new, R_Qs[0], embeds, args.dist_norm, p, dists=distance_values, log=logger)
         res_pos_new = torch.ones_like(res_ids_new) * p
 
         del embeds
@@ -134,7 +159,7 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
         total_true_token_count, total_true_token_count2 = 0, 0
         for i in range(orig_batch['input_ids'].shape[1]):
             total_true_token_count2 += args.batch_size - (
-                        orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
+                    orig_batch['input_ids'][:, i] == model_wrapper.pad_token).sum()
             uniques = torch.unique(orig_batch['input_ids'][:, i])
             total_true_token_count += uniques.numel()
             if model_wrapper.pad_token in uniques.tolist():
@@ -223,7 +248,8 @@ def reconstruct(args, device, sample, metric, model_wrapper: ModelWrapper):
                                               device=orig_sentence.device,
                                               dtype=orig_sentence.dtype, )
                 boolsq2 = torch.logical_or(boolsq2, torch.isin(orig_sentence, special_tokens))
-            logger.info(sizesq2)
+            if getattr(args, 'debug_candidates', False):
+                logger.info(sizesq2)
 
             if args.task == 'next_token_pred':
                 rec_l2.append(_all_token_positions(boolsq2, stop=-1))
@@ -398,6 +424,7 @@ def main():
     if is_complete:
         logger.info(f"Results already exist for this config at {results_dir}; skipping attack.")
         logger.info('Done with all.')
+        finalize_completed_attack_log(log_path, reason="results-already-exist")
         print(f"Hash Value {job_hash} is already done")
         return
 
@@ -409,6 +436,13 @@ def main():
                           preprocess_boundary_markers=args.preprocess_boundary_markers,
                           preprocess_unique_canary_markers=args.preprocess_unique_canary_markers,
                           canary_marker_prefix=args.canary_marker_prefix)
+    effective_n_inputs = len(dataset)
+    if effective_n_inputs != args.n_inputs:
+        logger.warning(
+            "Dataset effective_n_inputs=%s differs from requested n_inputs=%s; iterating over effective dataset length.",
+            effective_n_inputs,
+            args.n_inputs,
+        )
     model_wrapper = ModelWrapper(args)
     wrapper_tokenizer = model_wrapper.tokenizer
 
@@ -431,36 +465,36 @@ def main():
         final_per_input_results = partial_state["final_per_input_results"]
         input_times = partial_state["input_times"]
         logger.info("Resuming from partial results in %s | completed_inputs=%s | last_input=%s", results_dir,
-                    len(partial_state["completed_inputs"]), max(partial_state["completed_inputs"]),)
+                    len(partial_state["completed_inputs"]), max(partial_state["completed_inputs"]), )
     t_start = time.time()
-    for i in range(args.start_input, min(args.n_inputs, args.end_input)):
+    for i in range(args.start_input, min(effective_n_inputs, args.end_input)):
         if i in partial_state["completed_inputs"]:
             logger.info(f"Skipping already completed input #{i}.")
             continue
         t_input_start = time.time()
         sample = dataset[i]  # (seqs, labels)
 
-        logger.info(f'Running input #{i} of {args.n_inputs}.')
+        logger.info(f'Running input #{i} of {effective_n_inputs}.')
         if args.neptune:
             args.neptune['logs/curr_input'].log(i)
 
-        logger.info('reference: ')
-        for seq in sample[0]:
+        if getattr(args, 'debug_candidates', False):
+            logger.info('reference: ')
+            for seq in sample[0]:
+                logger.info('========================')
+                logger.info(_log_text(seq))
             logger.info('========================')
-            logger.info(seq)
-
-        logger.info('========================')
 
         prediction, reference = reconstruct(args, device, sample, metric, model_wrapper)
         predictions += prediction
         references += reference
 
-        logger.info(f'Done with input #{i} of {args.n_inputs}.')
+        logger.info(f'Done with input #{i} of {effective_n_inputs}.')
         curr_metrics = []
         for sent_idx, (ref, pred) in enumerate(zip(reference, prediction)):
             logger.info('========================')
-            logger.info(f"Reference: {ref}")
-            logger.info(f"Prediction: {pred}")
+            logger.info("Reference: %s", _log_text(ref))
+            logger.info("Prediction: %s", _log_text(pred))
             metrics = evaluate_prediction(pred, ref, wrapper_tokenizer, metric)
             metrics = maybe_add_canary_audit_metrics(
                 metrics, pred, ref, wrapper_tokenizer, metric,
@@ -546,7 +580,10 @@ def main():
         summary_results["Canary Audit Results"] = canary_summary
     logger.info(f"Experiment time {total_time_sec}")
     write_attack_artifacts(results_dir, sentence_rows, input_rows, summary_results, status="complete")
+    added_to_index = mark_attack_complete_in_index(attack_name, job_hash, results_dir=results_dir)
+    print(f"Completion index update for {attack_name}/{job_hash}: {'added' if added_to_index else 'already present or unavailable'}")
     logger.info('Done with all.')
+    finalize_completed_attack_log(log_path, reason="experiment-complete")
     print(f"Hash Value {job_hash} Done")
     if args.neptune:
         args.neptune['logs/curr_input'].log(args.n_inputs)

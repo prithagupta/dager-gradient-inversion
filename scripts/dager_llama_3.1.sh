@@ -18,6 +18,6 @@ set_default_arg "--n_inputs" "50" "${ATTACK_EXTRA_ARGS[@]}"
 set_default_hf_split_arg "$1" "${ATTACK_EXTRA_ARGS[@]}"
 
 python attack.py --dataset "$1" --split val --batch_size "$2" --l1_filter all --l2_filter non-overlap \
-  --model_path meta-llama/Meta-Llama-3.1-8B --device auto --task seq_class --cache_dir $HF_HOME/gia_exp_cache \
+  --model_path meta-llama/Meta-Llama-3.1-8B --device auto --task seq_class --cache_dir "$DAGER_CACHE_DIR" \
   --rank_tol 1e-8 --l1_span_thresh 1e-4 --l2_span_thresh 5e-5 --pad left --precision full --n_incorrect 8 \
   --attn_implementation sdpa "${ATTACK_EXTRA_ARGS[@]}"

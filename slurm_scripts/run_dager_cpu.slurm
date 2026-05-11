@@ -37,22 +37,27 @@ set +u
 conda activate dager-cuda
 set -u
 
-# HuggingFace cache: keep everything under $HF_HOME/gia_exp_cache
+# HuggingFace cache: keep everything under $HF_HOME/gia_cache
 export HF_HOME="${HF_HOME:-${DATA_FOLDER:-/lustre/$USER}/.cache/huggingface}"
-export CACHE_DIR="${HF_HOME}/gia_exp_cache"
-export HF_HUB_CACHE="${HF_HUB_CACHE:-${CACHE_DIR}/.hf_hub}"
-export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HUB_CACHE}"
-export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-${CACHE_DIR}/.hf_datasets}"
-export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-${CACHE_DIR}/.transformers}"
-export HF_MODULES_CACHE="${HF_MODULES_CACHE:-${CACHE_DIR}/.hf_modules}"
-export HF_EVALUATE_CACHE="${HF_EVALUATE_CACHE:-${CACHE_DIR}/.hf_evaluate}"
-export HF_METRICS_CACHE="${HF_METRICS_CACHE:-${CACHE_DIR}/.hf_metrics}"
+export DAGER_CACHE_DIR="${DAGER_CACHE_DIR:-$HF_HOME/gia_cache}"
+export CACHE_DIR="${DAGER_CACHE_DIR}"
+export HF_HUB_CACHE="${CACHE_DIR}/.hf_hub"
+export HUGGINGFACE_HUB_CACHE="$HF_HUB_CACHE"
+export HF_DATASETS_CACHE="${CACHE_DIR}/.hf_datasets"
+export TRANSFORMERS_CACHE="${CACHE_DIR}/.transformers"
+export HF_MODULES_CACHE="${CACHE_DIR}/.hf_modules"
+export HF_EVALUATE_CACHE="${CACHE_DIR}/.hf_evaluate"
+export HF_METRICS_CACHE="${CACHE_DIR}/.hf_metrics"
 export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 export HF_DATASETS_OFFLINE="${HF_DATASETS_OFFLINE:-1}"
 export TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-1}"
 export HF_EVALUATE_OFFLINE="${HF_EVALUATE_OFFLINE:-1}"
 export HF_UPDATE_DOWNLOAD_COUNTS="${HF_UPDATE_DOWNLOAD_COUNTS:-0}"
 export PYTHONUNBUFFERED=1
+if [[ "$CACHE_DIR" == *gia_exp_cache* ]]; then
+  echo "[ERROR] CACHE_DIR unexpectedly points to gia_exp_cache: $CACHE_DIR" >&2
+  exit 1
+fi
 
 # Threads
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-${SLURM_CPUS_ON_NODE:-4}}"
@@ -67,6 +72,7 @@ echo "[INFO] Project dir: $PROJECT_DIR"
 echo "[INFO] Script path: $SCRIPT_PATH"
 echo "[INFO] Script args: $SCRIPT_ARGS"
 echo "[INFO] HF_HOME: $HF_HOME"
+echo "[INFO] DAGER_CACHE_DIR: $DAGER_CACHE_DIR"
 echo "[INFO] CACHE_DIR: $CACHE_DIR"
 echo "[INFO] HF_HUB_CACHE: $HF_HUB_CACHE"
 echo "[INFO] HF_DATASETS_CACHE: $HF_DATASETS_CACHE"

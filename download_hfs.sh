@@ -6,9 +6,10 @@ set -euo pipefail
 #   bash download_hfs.sh
 #
 # Everything lives under:
-#   $HF_HOME/gia_exp_cache
+#   ${DAGER_CACHE_DIR:-$HF_HOME/gia_cache}
 
-CACHE_DIR="${HF_HOME}/gia_exp_cache"
+export DAGER_CACHE_DIR="${DAGER_CACHE_DIR:-$HF_HOME/gia_cache}"
+CACHE_DIR="${DAGER_CACHE_DIR}"
 mkdir -p "${CACHE_DIR}"
 
 # Keep all Hugging Face internal caches under the same root.
@@ -27,6 +28,7 @@ SKIP_EXISTING="1"
 TRY_ONLINE_GLUE="1"
 
 echo "HF_HOME=${HF_HOME}"
+echo "DAGER_CACHE_DIR=${DAGER_CACHE_DIR}"
 echo "CACHE_DIR=${CACHE_DIR}"
 echo "HF_HUB_CACHE=${HF_HUB_CACHE}"
 echo "HF_DATASETS_CACHE=${HF_DATASETS_CACHE}"

@@ -150,7 +150,8 @@ def filter_decoder(args, model_wrapper, R_Qs, res_ids, max_ids=-1):
 
     i = 1
     while True:
-        logger.info(f'Position {i}')
+        if getattr(args, 'debug_candidates', False):
+            logger.info(f'Position {i}')
 
         top_B_incorrect_sentences_len = [[] for _ in range(args.batch_size)]
         top_B_incorrect_scores_len = [torch.inf for _ in range(args.batch_size)]
@@ -230,7 +231,8 @@ def filter_decoder(args, model_wrapper, R_Qs, res_ids, max_ids=-1):
                 sizesq2, correct_sentences = filter_outliers(sizesq2, stage='sequence', std_thrs=args.l2_std_thrs,
                                                              maxB=args.batch_size)
                 is_complete = True
-                logger.info(sizesq2.min())
+                if getattr(args, 'debug_candidates', False):
+                    logger.info(sizesq2.min())
             else:
                 new_batch = torch.cat((batch[els_b], ends[els_ends].unsqueeze(1)), dim=-1).int().to(args.device)
                 is_new_batch_incorrect = is_batch_incorrect[els_b].to(args.device)

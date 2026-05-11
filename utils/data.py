@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import os
 import torch
@@ -12,8 +13,8 @@ class TextDataset:
                  preprocess_numbered_markers=False, preprocess_boundary_markers=False,
                  preprocess_unique_canary_markers=False, canary_marker_prefix=DEFAULT_CANARY_MARKER_PREFIX):
         if cache_dir is None:
-            cache_dir = "/lustre/guptap69/.cache/huggingface/gia_exp_cache"
-
+            cache_dir = os.path.join(os.environ['HF_HOME'], "gia_cache")
+        logger = logging.getLogger(__name__)
         seq_keys = {
             'cola': 'sentence',
             'sst2': 'sentence',
@@ -159,6 +160,12 @@ class TextDataset:
                     f"{extra_guidance}".strip(),
                     RuntimeWarning,
                 )
+                logger.info(
+                    f"Requested n_inputs={effective_n_inputs} with batch_size={batch_size} "
+                    f"({n_samples} total samples), but split '{selected_split_name}' for dataset '{dataset}' "
+                    f"contains only {available_samples} samples. Auto-capping n_inputs to {max_inputs}. "
+                    f"{extra_guidance}".strip()
+                )
                 effective_n_inputs = max_inputs
                 n_samples = effective_n_inputs * batch_size
 
@@ -199,6 +206,12 @@ class TextDataset:
         # Slice
         self.seqs = []
         self.labels = []
+        self.n_inputs_requested = n_inputs
+        self.n_inputs = effective_n_inputs
+        self.batch_size = batch_size
+        self.dataset = dataset
+        self.split = split
+        self.source_split = source_split if dataset in ['cola', 'sst2', 'rte'] else split
         for i in range(effective_n_inputs):
             seqs = []
             for j in range(batch_size):
@@ -217,3 +230,6 @@ class TextDataset:
 
     def __getitem__(self, idx):
         return (self.seqs[idx], self.labels[idx])
+
+    def __len__(self):
+        return len(self.seqs)

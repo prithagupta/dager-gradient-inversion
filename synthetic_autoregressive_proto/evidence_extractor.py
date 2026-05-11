@@ -10,10 +10,10 @@ class SyntheticEvidenceExtractor:
         self.rng = random.Random(rng_seed)
 
     def extract(
-        self,
-        sequences: list[list[str]],
-        top_k_per_position: int,
-        frequency_penalty: float = 0.35,
+            self,
+            sequences: list[list[str]],
+            top_k_per_position: int,
+            frequency_penalty: float = 0.35,
     ) -> list[PositionEvidence]:
         max_len = max(len(seq) for seq in sequences)
         evidences: list[PositionEvidence] = []

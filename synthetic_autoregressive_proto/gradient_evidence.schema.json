@@ -2,7 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Synthetic autoregressive prototype evidence",
   "type": "object",
-  "required": ["inputs"],
+  "required": [
+    "inputs"
+  ],
   "properties": {
     "version": {
       "type": "integer",
@@ -16,7 +18,10 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["input_index", "positions"],
+        "required": [
+          "input_index",
+          "positions"
+        ],
         "properties": {
           "input_index": {
             "type": "integer",
@@ -36,7 +41,10 @@
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["position", "candidates"],
+              "required": [
+                "position",
+                "candidates"
+              ],
               "properties": {
                 "position": {
                   "type": "integer",
@@ -47,7 +55,9 @@
                   "minItems": 1,
                   "items": {
                     "type": "object",
-                    "required": ["token"],
+                    "required": [
+                      "token"
+                    ],
                     "properties": {
                       "token": {
                         "type": "string",
@@ -81,13 +91,22 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["from", "to"],
+              "required": [
+                "from",
+                "to"
+              ],
               "properties": {
                 "from": {
                   "type": "array",
                   "prefixItems": [
-                    { "type": "integer", "minimum": 0 },
-                    { "type": "string", "minLength": 1 }
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   ],
                   "minItems": 2,
                   "maxItems": 2
@@ -95,8 +114,14 @@
                 "to": {
                   "type": "array",
                   "prefixItems": [
-                    { "type": "integer", "minimum": 0 },
-                    { "type": "string", "minLength": 1 }
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   ],
                   "minItems": 2,
                   "maxItems": 2

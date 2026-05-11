@@ -12,4 +12,4 @@ set_default_arg "--n_inputs" "50" "${ATTACK_EXTRA_ARGS[@]}"
 set_default_hf_split_arg "$1" "${ATTACK_EXTRA_ARGS[@]}"
 
 python attack.py --dataset "$1" --split val --batch_size "$2" --l1_filter all --l2_filter non-overlap \
-  --model_path openai-community/gpt2-large --device auto --task seq_class --cache_dir "$HF_HOME/gia_exp_cache" "${ATTACK_EXTRA_ARGS[@]}"
+  --model_path openai-community/gpt2-large --device auto --task seq_class --cache_dir "$DAGER_CACHE_DIR" "${ATTACK_EXTRA_ARGS[@]}"

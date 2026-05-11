@@ -12,7 +12,7 @@ cd "$REPO_ROOT"
 extra_args=( "$@" )
 seeds=( 40 41 42 )
 datasets=( "sst2" "cola" "rotten_tomatoes" )
-batches=( 32 64 ) # 16
+batches=( 8 16 32 64 ) # 16
 models=( "gpt2" "gpt2-large" )
 methods=( "dager" "hybrid" )
 
@@ -51,7 +51,7 @@ run_wrapper() {
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   run_args+=( --rng_seed "$seed" )
   append_safe_eval_dataset_args "$dataset" "$batch" 50 "${run_args[@]}"
-  set_default_arg --device_grad cpu "${run_args[@]}"
+  set_default_arg --device_grad cuda "${run_args[@]}"
   set_default_arg --cache_dir "$DAGER_CACHE_DIR" "${ATTACK_EXTRA_ARGS[@]}"
   run_args=( "${ATTACK_EXTRA_ARGS[@]}" )
   echo "Resolved attack args: $(printf '%q ' "${run_args[@]}")"

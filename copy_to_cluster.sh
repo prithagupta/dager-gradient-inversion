@@ -5,9 +5,8 @@ rsync -avz --progress \
   --exclude "__pycache__" \
   --exclude "*.pyc" \
   --exclude ".DS_Store" \
-  --exclude "results/" \
   --exclude "aresults/" \
-  --exclude "logs/" \
+  --exclude "models_cache/" \
   --exclude "analyze_results/" \
   --exclude ".idea/" \
   --exclude "copy_to_cluster.sh" \
